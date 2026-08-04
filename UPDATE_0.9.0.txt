@@ -1,0 +1,27 @@
+VERSION 0.9.0 – PREMIUM UX PREVIEW
+
+NAVIGATION
+- Drei klar getrennte Bereiche: Coach, Liga und Managerbüro
+- Gruppierte Desktop-Navigation
+- Mobile Bottom-Navigation für Coach, Aufstellung, Liga und Managerbüro
+- Bestehende Funktionen bleiben erreichbar
+
+DASHBOARD
+- Neues Horn-Capital-Hero
+- H2H-Duell prominent mit beiden Wappen
+- Kompakte Budget-, Teamwert-, Startelf- und Pflichtverkauf-Kennzahlen
+- Coach-Aufgaben und Top-Spieler in klaren Listen
+- Schnellzugriffe auf Transfers, Bundesliga, LigaInsider und Analyse
+
+SCOUT CENTER
+- Neuer eigener Menüpunkt
+- Suche, Positions- und Vereinsfilter
+- Top-Matchups als Premium-Spielerkarten
+- Direkter Kauf aus dem aktuellen Bundesliga-Kader
+- Kompakte Liste aller verfügbaren Live-Spieler
+
+DESIGN
+- Einheitliche Karten, Abstände, Farben und Buttons
+- Mobile Bedienung für Samsung priorisiert
+- Tabellen und Modale visuell vereinheitlicht
+- Funktionierende Cloud-, Transfer-, Regelwerk- und Drag-and-drop-Logik aus 0.8.1 übernommen

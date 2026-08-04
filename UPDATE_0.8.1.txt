@@ -1,0 +1,18 @@
+VERSION 0.8.1
+
+BEHOBEN
+- Spieler kaufen/speichern funktionierte wegen eines fehlenden Entwurfsobjekts nicht.
+- Verkaufsdialog referenzierte ein nicht vorhandenes Marktwertfeld.
+- Beide Transferwege lassen sich wieder speichern.
+
+WAPPEN
+- Wappenbilder werden nicht mehr kreisförmig beschnitten oder gestreckt.
+- Der Kreis ist jetzt ein separater Rahmen.
+- Das vollständige Wappen liegt zentriert mit einheitlichem Innenabstand darin.
+
+AUFSTELLUNG
+- Spielfeld passt sich automatisch an die Zahl der aufgestellten Abwehr-, Mittelfeld- und Sturmspieler an.
+- Formation wird automatisch angezeigt, z. B. 3-4-3.
+- Drag-and-drop zwischen Spielfeld und Bank am Laptop.
+- Langes Antippen und Ziehen auf Samsung/Android.
+- Einfaches Antippen bleibt als zuverlässige Alternative bestehen.
