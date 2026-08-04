@@ -307,3 +307,6 @@
   .strength-row-rich{grid-template-columns:minmax(135px,1fr) 64px 54px}
   .strength-method{line-height:1.45}
 }
+
+.error-card{max-width:720px;margin:20px auto;border-color:#991b1b;background:#32161d}
+.error-card p{margin:10px 0 16px;color:#fecaca}

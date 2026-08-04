@@ -1,0 +1,11 @@
+VERSION 0.7.7
+
+BEHOBEN
+- Menüpunkt Einstellungen reagierte nicht.
+- Ursache: Hilfsfunktionen für Teamstärken, Matchups und Spieltage fehlten nach der Datenmigration.
+- Wiederhergestellt: strength, strengthDetail, strengthFreshness, fixture, matchup, score, rankPlayers, mdRecord, top3 und mandatoryStatus.
+- Einstellungen und Bundesliga-Teamstärken öffnen wieder.
+- Zusätzliche Fehleranzeige verhindert künftig ein scheinbar wirkungsloses Menü.
+
+DATEN
+- Vorhandene Cloud-, Kader-, Transfer- und Finanzdaten bleiben erhalten.
