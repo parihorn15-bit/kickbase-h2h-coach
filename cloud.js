@@ -94,7 +94,7 @@
         "";
 
       localStorage.setItem("kickbaseCoachV07", JSON.stringify(data));
-      render();
+      if (!window.h2hEditingInProgress?.()) render();
     } catch (err) {
       console.warn("Teamstärken konnten nicht geladen werden:", err);
     }
@@ -124,10 +124,14 @@
         const remoteTime = row.updated_at || "";
         const shouldApply = initial || (remoteTime && remoteTime > lastCloudUpdated);
         if (shouldApply && row.state) {
-          data = mergeData(row.state);
-          localStorage.setItem("kickbaseCoachV06", JSON.stringify(data));
-          lastCloudUpdated = remoteTime;
-          render();
+          if (window.h2hEditingInProgress?.()) {
+            setCloudState("Eingabe wird geschützt", "working");
+          } else {
+            data = mergeData(row.state);
+            localStorage.setItem("kickbaseCoachV07", JSON.stringify(data));
+            lastCloudUpdated = remoteTime;
+            render();
+          }
         }
         setCloudState("Cloud aktuell", "good");
       }

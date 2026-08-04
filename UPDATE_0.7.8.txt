@@ -1,0 +1,21 @@
+VERSION 0.7.8
+
+MOBILE-BUGFIXES
+- Kauf- und Verkaufsformulare werden während der Eingabe nicht mehr durch Cloud-Polling neu gerendert.
+- Kaufentwürfe werden in der Sitzung zwischengespeichert.
+- Enter löst kein unerwartetes Formular-Neuladen mehr aus.
+- Tagesbonus, Verkauf, eigene Finanzbuchung und Export verwenden das lokale Gerätedatum statt UTC.
+
+WAPPEN
+- Alle sechs selbst erstellten Teamwappen integriert.
+- Einsatz im aktuellen H2H-Duell, weiteren Paarungen und der Tabelle.
+
+LIVE-VEREINSDATEN
+- Neue Supabase-Tabelle bundesliga_clubs.
+- Neuer GitHub-Workflow update-club-data.yml.
+- Benötigt zusätzlich das GitHub Secret FOOTBALL_DATA_API_KEY.
+- Migration SUPABASE_CLUBDATA_MIGRATION.sql einmalig ausführen.
+
+WICHTIG
+Die Live-Vereinsdatenbasis ist technisch vorbereitet. In einem Folgerelease werden
+die Daten zusätzlich als Vereinsprofile sichtbar in die Bundesliga-Seite eingebaut.
