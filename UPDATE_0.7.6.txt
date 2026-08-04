@@ -1,0 +1,14 @@
+VERSION 0.7.6 – STABILITÄTSUPDATE
+
+BEHOBEN
+- Einstellungen/Teamstärken konnten nach Updates auf Android leer bleiben.
+- Alte Daten ohne teamStrengthDetails werden automatisch migriert.
+- Fehlende oder leere Supabase-Tabelle blockiert die App nicht mehr.
+- Unvollständige Cloud-Werte verursachen keinen JavaScript-Absturz.
+- Zahlen in Form/Offensive/Defensive werden sicher formatiert.
+- Basiswerte können vollständig zurückgesetzt werden.
+
+DATEN
+- Vorhandene Kader-, Transfer-, Finanz- und H2H-Daten bleiben erhalten.
+- Cloud-Teamstärken werden geladen, sobald die Tabelle verfügbar ist.
+- Ansonsten verwendet die App weiterhin die lokalen Vorsaison-Basiswerte.

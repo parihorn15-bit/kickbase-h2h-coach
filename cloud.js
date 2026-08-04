@@ -56,26 +56,43 @@
         .from("team_strengths")
         .select("*")
         .order("overall", { ascending: false });
-      if (error) throw error;
-      if (!Array.isArray(rows) || !rows.length) return;
 
-      data.teamStrength = { ...data.teamStrength };
-      data.teamStrengthDetails = {};
+      if (error) {
+        // Fehlende Tabelle oder Rechte sollen die App nicht blockieren.
+        console.warn("Teamstärken-Cloud nicht verfügbar:", error.message || error);
+        return;
+      }
+      if (!Array.isArray(rows) || rows.length === 0) return;
+
+      data.teamStrength = {
+        ...(window.TEAM_STRENGTH_BASELINE || {}),
+        ...(data.teamStrength || {})
+      };
+      data.teamStrengthDetails = {
+        ...(data.teamStrengthDetails || {})
+      };
+
       for (const row of rows) {
+        if (!row || !row.team || !Number.isFinite(Number(row.overall))) continue;
         data.teamStrength[row.team] = Number(row.overall);
         data.teamStrengthDetails[row.team] = {
-          season: Number(row.season_score),
-          form: Number(row.form_score),
-          attack: Number(row.attack_score),
-          defence: Number(row.defence_score),
-          home: Number(row.home_score),
-          away: Number(row.away_score),
-          matchesPlayed: Number(row.matches_played),
-          source: row.source,
-          sourceUpdatedAt: row.source_updated_at
+          season: Number(row.season_score ?? row.overall ?? 5),
+          form: Number(row.form_score ?? row.overall ?? 5),
+          attack: Number(row.attack_score ?? row.overall ?? 5),
+          defence: Number(row.defence_score ?? row.overall ?? 5),
+          home: Number(row.home_score ?? row.overall ?? 5),
+          away: Number(row.away_score ?? row.overall ?? 5),
+          matchesPlayed: Number(row.matches_played ?? 0),
+          source: row.source || "OpenLigaDB",
+          sourceUpdatedAt: row.source_updated_at || row.updated_at || ""
         };
       }
-      data.teamStrengthCloudUpdatedAt = rows[0]?.updated_at || "";
+
+      data.teamStrengthCloudUpdatedAt =
+        rows.find(r => r?.updated_at)?.updated_at ||
+        data.teamStrengthCloudUpdatedAt ||
+        "";
+
       localStorage.setItem("kickbaseCoachV07", JSON.stringify(data));
       render();
     } catch (err) {
