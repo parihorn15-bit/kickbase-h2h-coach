@@ -32,8 +32,8 @@ const H2H_SCHEDULE=buildH2HSchedule();
 function managerById(id){return (data.leagueManagers||LEAGUE_MANAGERS).find(x=>x.id===id)||LEAGUE_MANAGERS.find(x=>x.id===id)}
 function managerLabel(id){const m=managerById(id);return m?`${m.team} (${m.manager})`:id}
 function otherManagerOptions(selected=''){return MANAGER_OPTIONS.map(m=>`<option value="${esc(m.team)}" ${selected===m.team?'selected':''}>${esc(m.team)} (${esc(m.manager)})</option>`).join('')}const DAILY_BONUSES=Array.from({length:10},(_,i)=>({label:`Tag ${i+1}`,amount:(i+1)*10000}));const ACHIEVEMENT_BONUSES=[{label:'Spieltagssieger',amount:1000000},{label:'Spieltagspunkte Silber (≥ 1.000)',amount:250000},{label:'Spieltagspunkte Gold (≥ 1.500)',amount:500000},{label:'Jahrhundertspiel (≥ 2.000)',amount:1000000},{label:'Topscorer (200 Punkte)',amount:100000},{label:'Matchwinner (300 Punkte)',amount:500000},{label:'Weltklasse (400 Punkte)',amount:1000000},{label:'Fußballgott (500 Punkte)',amount:2000000},{label:'MVP',amount:1000000},{label:'Tormaschine',amount:250000},{label:'Bronzenes Händchen (3 Mio. Gewinn)',amount:250000},{label:'Silbernes Händchen (5 Mio. Gewinn)',amount:500000},{label:'Goldenes Händchen (10 Mio. Gewinn)',amount:1000000},{label:'Königstransfer (25 Mio. Gewinn)',amount:2000000},{label:'Glückliches Händchen',amount:1000000},{label:'Meister',amount:2000000},{label:'Vizemeister',amount:1000000}];const SEEDED_DATA={"version":3,"settings":{"currentMd":1,"mode":"quick","startCapital":200000000,"homeBonus":1,"lineupSize":11},"players":[{"id":"4eb80f64-293c-4b3a-a93b-3989361b1027","name":"Axel Tape","team":"Bayer 04 Leverkusen","position":"Abwehr","buyDate":"2026-08-02","buyPrice":5071935,"marketAtBuy":0,"marketValue":4655501,"avgPoints":0,"note":""},{"id":"41172e46-cd74-405a-bf78-fa8884a27cac","name":"Robin Gosens","team":"FC Schalke 04","position":"Abwehr","buyDate":"2026-08-03","buyPrice":11445599,"marketAtBuy":0,"marketValue":11407285,"avgPoints":0,"note":"","soldDate":"2026-08-03","salePrice":11407285,"saleReason":"Sinkender Marktwert"},{"id":"016bc246-b164-4a17-a686-cd4a2e90c0d3","name":"Dominik Kohr","team":"1. FSV Mainz 05","position":"Abwehr","buyDate":"2026-08-03","buyPrice":6543210,"marketAtBuy":0,"marketValue":6627684,"avgPoints":0,"note":""},{"id":"6629cde9-bacc-4a2c-8cf1-d2bd98c55480","name":"Jovan Milosevic","team":"VfB Stuttgart","position":"Sturm","buyDate":"2026-08-03","buyPrice":4141414,"marketAtBuy":0,"marketValue":3539303,"avgPoints":0,"note":""}],"finances":[{"id":"start","date":"2026-08-01","type":"Startkapital","description":"Start ohne Kader","amount":200000000},{"id":"ac5941c7-600d-4b97-b27e-1af756a30baf","date":"2026-08-02","type":"Spielerkauf","description":"Kauf Axel Tape","amount":-5071935},{"id":"158bd348-1fc2-4dcd-85fe-0541c4901cfc","date":"2026-08-02","type":"Erfolgsbonus","description":"Kreisliga","amount":1000000},{"id":"466b9c05-c952-4ffa-802b-0861146ef671","date":"2026-08-02","type":"Erfolgsbonus","description":"Regionalliga","amount":1000000},{"id":"80b55a26-862c-4308-930c-2a0b0bac48af","date":"2026-08-02","type":"Erfolgsbonus","description":"Erster Deal","amount":100000},{"id":"ddee6a22-5c27-4387-baa0-caf7cdec2f05","date":"2026-08-03","type":"Tagesanmeldebonus","description":"Tag 1","amount":10000},{"id":"23eb8316-babe-4af3-bf4b-0921645d3098","date":"2026-08-04","type":"Tagesanmeldebonus","description":"Tag 2","amount":20000},{"id":"618181e0-a4f3-46a0-98af-eea7ba7d8d04","date":"2026-08-03","type":"Spielerkauf","description":"Kauf Robin Gosens","amount":-11445599},{"id":"4c3c279c-c039-4ecc-9b56-e105e858bbc1","date":"2026-08-03","type":"Spielerkauf","description":"Kauf Dominik Kohr","amount":-6543210},{"id":"b9c2a384-9ece-4b1f-a87b-4b00ae137cc4","date":"2026-08-03","type":"Spielerkauf","description":"Kauf Jovan Milosevic","amount":-4141414},{"id":"a511955c-44d8-46db-9b75-8fd010f78f26","date":"2026-08-03","type":"Spielerverkauf","description":"Verkauf Robin Gosens","amount":11407285}],"matchdays":[{"id":"6abff25d-b7c8-4738-80c1-fda4f34ebf2b","md":1,"mvp":"","points":{},"lineup":[],"soldPlayer":"","soldDate":"","soldPrice":0}],"opponents":[],"h2h":[],"teamStrength":{"1. FC Köln":5,"1. FC Union Berlin":5,"1. FSV Mainz 05":5,"Bayer 04 Leverkusen":5,"Borussia Dortmund":5,"Borussia Mönchengladbach":5,"Eintracht Frankfurt":5,"FC Augsburg":5,"FC Bayern München":5,"FC Schalke 04":5,"Hamburger SV":5,"RB Leipzig":5,"SC Paderborn 07":5,"SV Elversberg":5,"SV Werder Bremen":5,"Sport-Club Freiburg":5,"TSG Hoffenheim":5,"VfB Stuttgart":5}};const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));const id=()=>crypto.randomUUID?.()||Math.random().toString(36).slice(2);const FALLBACK_TEAMS=['1. FC Köln','1. FC Union Berlin','1. FSV Mainz 05','Bayer 04 Leverkusen','Borussia Dortmund','Borussia Mönchengladbach','Eintracht Frankfurt','FC Augsburg','FC Bayern München','FC Schalke 04','Hamburger SV','RB Leipzig','SC Paderborn 07','SV Elversberg','SV Werder Bremen','Sport-Club Freiburg','TSG Hoffenheim','VfB Stuttgart'];const TEAMS=[...new Set([...(Array.isArray(FIXTURES)?FIXTURES.flatMap(x=>[x.home,x.away]).filter(Boolean):[]),...FALLBACK_TEAMS])].sort((a,b)=>a.localeCompare(b,'de'));
-const defaults={version:7,settings:{currentMd:1,mode:'quick',startCapital:200000000,homeBonus:1,lineupSize:11},players:[],finances:[{id:'start',date:'2026-08-01',type:'Startkapital',description:'Start ohne Kader',amount:200000000}],matchdays:[],opponents:[],h2h:[],leagueManagers:LEAGUE_MANAGERS,lineupIntel:{pending:[],lastImport:''},teamStrength:Object.fromEntries(TEAMS.map(t=>[t,5]))};
-let data=load(),page='dashboard';function mergeData(x){return {...structuredClone(defaults),...x,version:7,settings:{...defaults.settings,...x.settings},leagueManagers:LEAGUE_MANAGERS,lineupIntel:{...defaults.lineupIntel,...x.lineupIntel},teamStrength:{...defaults.teamStrength,...x.teamStrength}}}function load(){try{const raw=localStorage.getItem('kickbaseCoachV07')||localStorage.getItem('kickbaseCoachV06')||localStorage.getItem('kickbaseCoachV05')||localStorage.getItem('kickbaseCoachV04')||localStorage.getItem('kickbaseCoachV03')||localStorage.getItem('kickbaseCoachV2');return raw?mergeData(JSON.parse(raw)):mergeData(SEEDED_DATA)}catch{return mergeData(SEEDED_DATA)}}function save(){localStorage.setItem('kickbaseCoachV07',JSON.stringify(data));if(window.cloudQueueSave)window.cloudQueueSave();toast('Gespeichert')}function touch(){save();render()}function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1300)}
+const defaults={version:7,ui:{transferFilter:'all',transferSearch:'',leagueTab:'current'},settings:{currentMd:1,mode:'quick',startCapital:200000000,homeBonus:1,lineupSize:11},players:[],finances:[{id:'start',date:'2026-08-01',type:'Startkapital',description:'Start ohne Kader',amount:200000000}],matchdays:[],opponents:[],h2h:[],leagueManagers:LEAGUE_MANAGERS,lineupIntel:{pending:[],lastImport:''},teamStrength:Object.fromEntries(TEAMS.map(t=>[t,5]))};
+let data=load(),page='dashboard';function mergeData(x){return {...structuredClone(defaults),...x,version:7,ui:{...defaults.ui,...x.ui},settings:{...defaults.settings,...x.settings},leagueManagers:LEAGUE_MANAGERS,lineupIntel:{...defaults.lineupIntel,...x.lineupIntel},teamStrength:{...defaults.teamStrength,...x.teamStrength}}}function load(){try{const raw=localStorage.getItem('kickbaseCoachV07')||localStorage.getItem('kickbaseCoachV06')||localStorage.getItem('kickbaseCoachV05')||localStorage.getItem('kickbaseCoachV04')||localStorage.getItem('kickbaseCoachV03')||localStorage.getItem('kickbaseCoachV2');return raw?mergeData(JSON.parse(raw)):mergeData(SEEDED_DATA)}catch{return mergeData(SEEDED_DATA)}}function save(){localStorage.setItem('kickbaseCoachV07',JSON.stringify(data));if(window.cloudQueueSave)window.cloudQueueSave();toast('Gespeichert')}function touch(){save();render()}function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1300)}
 const activePlayers=()=>data.players.filter(p=>!p.soldDate);const soldPlayers=()=>data.players.filter(p=>p.soldDate);const financeTotal=()=>data.finances.reduce((a,x)=>a+(+x.amount||0),0);const squadValue=()=>activePlayers().reduce((a,p)=>a+(+p.marketValue||0),0);const wealth=()=>financeTotal()+squadValue();const realized=()=>soldPlayers().reduce((a,p)=>a+(+p.salePrice||0)-(+p.buyPrice||0),0);const unrealized=()=>activePlayers().reduce((a,p)=>a+(+p.marketValue||0)-(+p.buyPrice||0),0);
 function fixture(team,md=data.settings.currentMd){const f=FIXTURES.find(x=>x.md===md&&(x.home===team||x.away===team));if(!f)return null;return{opp:f.home===team?f.away:f.home,ha:f.home===team?'H':'A',date:f.date}}function strength(t){return +data.teamStrength[t]||5}function matchup(p,md=data.settings.currentMd){const f=fixture(p.team,md);if(!f)return 5;return Math.max(1,Math.min(10,5+strength(p.team)-strength(f.opp)+(f.ha==='H'?+data.settings.homeBonus:0)))}function score(p){return (+p.avgPoints||0)+matchup(p)*10+(LI_SCORE[p.liStatus||'Unbekannt']||0)}function rankPlayers(){return [...activePlayers()].sort((a,b)=>score(b)-score(a))}function mdRecord(md){let x=data.matchdays.find(x=>x.md===md);if(!x){x={id:id(),md,mvp:'',points:{},lineup:[],soldPlayer:'',soldDate:'',soldPrice:0};data.matchdays.push(x)}return x}function top3(md){const r=mdRecord(md);return activePlayers().map(p=>({p,pts:+r.points[p.id]||0})).sort((a,b)=>b.pts-a.pts).slice(0,3)}function mandatoryStatus(md){const r=mdRecord(md),mvpOwned=activePlayers().find(p=>p.name.trim().toLowerCase()===r.mvp.trim().toLowerCase());const top=top3(md);let valid=false,required='';if(!r.mvp)return{state:'waiting',text:'Bundesliga-MVP fehlt'};if(mvpOwned){required=mvpOwned.name;valid=r.soldPlayer===required}else{required='Wahl aus: '+top.map(x=>x.p.name).filter(Boolean).join(', ');valid=top.some(x=>x.p.name===r.soldPlayer)}return{state:valid?'done':'open',text:valid?'Erledigt':required,mvpOwned:!!mvpOwned}}
 const nav=[['dashboard','🏠 Dashboard'],['squad','👥 Kader'],['matchday','⚽ Spieltag'],['transfers','💸 Transfers'],['finances','💰 Finanzen'],['analysis','📊 Analyse'],['lineupintel','🩺 LigaInsider'],['competition','🏆 Liga'],['settings','⚙️ Einstellungen']];function init(){const n=$('#nav');n.innerHTML=nav.map(([k,l])=>`<button class="nav-btn" data-page="${k}">${l}</button>`).join('');$$('[data-page]').forEach(b=>b.onclick=()=>{page=b.dataset.page;render();$('#sidebar').classList.remove('open')});$('#menuBtn').onclick=()=>$('#sidebar').classList.toggle('open');$('#currentMd').innerHTML=Array.from({length:34},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('');$('#currentMd').value=data.settings.currentMd;$('#currentMd').onchange=e=>{data.settings.currentMd=+e.target.value;touch()};$$('[data-mode]').forEach(b=>b.onclick=()=>{data.settings.mode=b.dataset.mode;touch()});$('#exportBtn').onclick=exportData;$('#importFile').onchange=importData;$('#resetBtn').onclick=()=>{if(confirm('Wirklich alle Daten löschen?')){localStorage.removeItem('kickbaseCoachV05');localStorage.removeItem('kickbaseCoachV04');localStorage.removeItem('kickbaseCoachV03');localStorage.removeItem('kickbaseCoachV2');data=mergeData(SEEDED_DATA);touch()}};render()}
@@ -82,22 +82,83 @@ function matchday(){
 }
 
 function transfers(){
-  const rows=[...data.players].sort((a,b)=>(b.buyDate||'').localeCompare(a.buyDate||''));
+  const filter=data.ui?.transferFilter||'all';
+  const search=(data.ui?.transferSearch||'').trim().toLocaleLowerCase('de-DE');
+  const all=[...data.players].sort((a,b)=>(b.buyDate||'').localeCompare(a.buyDate||''));
+  const rows=all.filter(p=>{
+    const statusOk=filter==='all'||(filter==='active'&&!p.soldDate)||(filter==='sold'&&p.soldDate);
+    const text=[p.name,p.team,p.position,p.buyReason,p.saleReason,p.buySource,p.saleSource,p.buyCounterparty,p.saleCounterparty].join(' ').toLocaleLowerCase('de-DE');
+    return statusOk&&(!search||text.includes(search));
+  });
+  const summary={
+    all:all.length,
+    active:all.filter(p=>!p.soldDate).length,
+    sold:all.filter(p=>p.soldDate).length
+  };
   const cards=rows.map(p=>{
     const gain=p.soldDate?(+p.salePrice||0)-(+p.buyPrice||0):(+p.marketValue||0)-(+p.buyPrice||0);
-    return `<article class="transfer-mobile-card">
-      <div class="transfer-mobile-head"><div><b>${esc(p.name)}</b><small>${esc(p.team)} · ${esc(p.position||'')}</small></div><span class="pill ${p.soldDate?'neutral':'good'}">${p.soldDate?'Verkauft':'Im Kader'}</span></div>
-      <div class="transfer-mobile-grid">
-        <div><span>Kaufdatum</span><b>${esc(p.buyDate||'–')}</b></div>
-        <div><span>Kaufpreis</span><b>${euro(p.buyPrice)}</b></div>
-        <div><span>Gekauft von</span><b>${esc(p.buySource||'Transfermarkt')}${p.buyCounterparty?` · ${esc(p.buyCounterparty)}`:''}</b></div>
-        <div><span>Kaufgrund</span><b>${esc(p.buyReason||'–')}</b></div>
-        ${p.soldDate?`<div><span>Verkaufsdatum</span><b>${esc(p.soldDate)}</b></div><div><span>Verkaufspreis</span><b>${euro(p.salePrice)}</b></div><div><span>Verkauft an</span><b>${esc(p.saleSource||'Transfermarkt')}${p.saleCounterparty?` · ${esc(p.saleCounterparty)}`:''}</b></div><div><span>Verkaufsgrund</span><b>${esc(p.saleReason||'–')}</b></div>`:`<div><span>Aktueller Marktwert</span><b>${euro(p.marketValue)}</b></div>`}
+    return `<article class="transfer-compact-card">
+      <button class="transfer-summary" data-transfer-toggle="${p.id}">
+        <div class="transfer-main">
+          <div class="transfer-name-line"><b>${esc(p.name)}</b><span class="pill ${p.soldDate?'neutral':'good'}">${p.soldDate?'Verkauft':'Im Kader'}</span></div>
+          <small>${esc(p.team)} · ${esc(p.position||'')}</small>
+        </div>
+        <div class="transfer-money">
+          <span>${p.soldDate?'Gewinn/Verlust':'Unrealisiert'}</span>
+          <b class="${gain>=0?'money-pos':'money-neg'}">${euro(gain)}</b>
+        </div>
+        <span class="transfer-chevron">⌄</span>
+      </button>
+      <div class="transfer-details" id="transfer-details-${p.id}" hidden>
+        <div class="transfer-detail-grid">
+          <div><span>Kaufdatum</span><b>${esc(p.buyDate||'–')}</b></div>
+          <div><span>Kaufpreis</span><b>${euro(p.buyPrice)}</b></div>
+          <div><span>Gekauft von</span><b>${esc(p.buySource||'Transfermarkt')}${p.buyCounterparty?` · ${esc(p.buyCounterparty)}`:''}</b></div>
+          <div><span>Kaufgrund</span><b>${esc(p.buyReason||'–')}</b></div>
+          ${p.soldDate?`
+            <div><span>Verkaufsdatum</span><b>${esc(p.soldDate)}</b></div>
+            <div><span>Verkaufspreis</span><b>${euro(p.salePrice)}</b></div>
+            <div><span>Verkauft an</span><b>${esc(p.saleSource||'Transfermarkt')}${p.saleCounterparty?` · ${esc(p.saleCounterparty)}`:''}</b></div>
+            <div><span>Verkaufsgrund</span><b>${esc(p.saleReason||'–')}</b></div>
+          `:`
+            <div><span>Aktueller Marktwert</span><b>${euro(p.marketValue)}</b></div>
+            <div><span>Kaufabweichung</span><b>${euro((+p.marketValue||0)-(+p.buyPrice||0))}</b></div>
+          `}
+        </div>
+        <div class="row-actions transfer-card-actions">
+          <button class="btn secondary small" data-edit-transfer="${p.id}">Bearbeiten</button>
+          ${p.soldDate?'':`<button class="btn danger small" data-sell-player="${p.id}">Verkaufen</button>`}
+          <button class="btn danger-outline small" data-delete-transfer="${p.id}">Löschen</button>
+        </div>
       </div>
-      <div class="transfer-mobile-foot"><strong class="${gain>=0?'money-pos':'money-neg'}">${p.soldDate?'Realisierter':'Unrealisierter'} Wert: ${euro(gain)}</strong><div class="row-actions"><button class="btn secondary small" data-edit-transfer="${p.id}">Bearbeiten</button>${p.soldDate?'':`<button class="btn danger small" data-sell-player="${p.id}">Verkaufen</button>`}<button class="btn danger-outline small" data-delete-transfer="${p.id}">Löschen</button></div></div>
     </article>`;
   }).join('');
-  return `<div class="transfer-actions"><button class="action-card" id="buyPlayer"><strong>🟢 Spieler kaufen</strong><span>Name, Verein, Kaufpreis und Kaufgrund erfassen.</span></button><button class="action-card" id="sellPlayerOpen"><strong>🔴 Spieler verkaufen</strong><span>Aktiven Spieler wählen; Kaufpreis wird automatisch übernommen.</span></button></div><div id="transferForm"></div><div class="grid kpis" style="margin-top:17px"><div class="card kpi"><span>Verfügbares Budget</span><strong>${euro(financeTotal())}</strong></div><div class="card kpi"><span>Realisierter Gewinn</span><strong>${euro(realized())}</strong></div><div class="card kpi"><span>Unrealisiert</span><strong>${euro(unrealized())}</strong></div><div class="card kpi"><span>Kader</span><strong>${activePlayers().length}/14</strong></div></div><div class="card" style="margin-top:17px"><div class="section-head"><div><h2>Transferhistorie</h2><p>Käufe und Verkäufe bearbeiten, rückgängig machen oder löschen.</p></div></div>${rows.length?`<div class="transfer-mobile-list">${cards}</div><div class="table-wrap transfer-desktop-table"><table><thead><tr><th>Spieler</th><th>Kauf</th><th>Von</th><th>Kaufpreis</th><th>Kaufgrund</th><th>Status</th><th>Verkauf</th><th>An</th><th>Verkaufspreis</th><th>Verkaufsgrund</th><th>Gewinn</th><th>Aktionen</th></tr></thead><tbody>${rows.map(p=>`<tr><td><b>${esc(p.name)}</b><br><span class="muted">${esc(p.team)} · ${esc(p.position||'')}</span></td><td>${esc(p.buyDate||'')}</td><td>${esc(p.buySource||'Nicht angegeben')}${p.buyCounterparty?`<br><span class="muted">${esc(p.buyCounterparty)}</span>`:''}</td><td>${euro(p.buyPrice)}</td><td>${esc(p.buyReason||'–')}</td><td><span class="pill ${p.soldDate?'neutral':'good'}">${p.soldDate?'Verkauft':'Im Kader'}</span></td><td>${esc(p.soldDate||'–')}</td><td>${p.soldDate?`${esc(p.saleSource||'Nicht angegeben')}${p.saleCounterparty?`<br><span class="muted">${esc(p.saleCounterparty)}</span>`:''}`:'–'}</td><td>${p.soldDate?euro(p.salePrice):'–'}</td><td>${esc(p.saleReason||'–')}</td><td class="${p.soldDate&&(+p.salePrice-+p.buyPrice)>=0?'money-pos':'money-neg'}">${p.soldDate?euro(+p.salePrice-+p.buyPrice):'–'}</td><td><div class="row-actions"><button class="btn secondary small" data-edit-transfer="${p.id}">Bearbeiten</button>${p.soldDate?'':`<button class="btn danger small" data-sell-player="${p.id}">Verkaufen</button>`}<button class="btn danger-outline small" data-delete-transfer="${p.id}">Löschen</button></div></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Noch keine Transfers. Starte mit „Spieler kaufen“.</div>'}</div><div id="modalArea"></div>`;
+  return `<div class="transfer-actions">
+    <button class="action-card" id="buyPlayer"><strong>🟢 Spieler kaufen</strong><span>Neuen Transfer erfassen.</span></button>
+    <button class="action-card" id="sellPlayerOpen"><strong>🔴 Spieler verkaufen</strong><span>Aktiven Spieler verkaufen.</span></button>
+  </div>
+  <div id="transferForm"></div>
+  <div class="grid kpis" style="margin-top:17px">
+    <div class="card kpi"><span>Budget</span><strong>${euro(financeTotal())}</strong></div>
+    <div class="card kpi"><span>Aktiv</span><strong>${summary.active}</strong></div>
+    <div class="card kpi"><span>Verkauft</span><strong>${summary.sold}</strong></div>
+    <div class="card kpi"><span>Realisierter Gewinn</span><strong>${euro(realized())}</strong></div>
+  </div>
+  <div class="card" style="margin-top:17px">
+    <div class="section-head transfer-history-head">
+      <div><h2>Transferhistorie</h2><p>${rows.length} von ${summary.all} Transfers angezeigt.</p></div>
+    </div>
+    <div class="transfer-toolbar">
+      <div class="segmented">
+        <button data-transfer-filter="all" class="${filter==='all'?'active':''}">Alle ${summary.all}</button>
+        <button data-transfer-filter="active" class="${filter==='active'?'active':''}">Im Kader ${summary.active}</button>
+        <button data-transfer-filter="sold" class="${filter==='sold'?'active':''}">Verkauft ${summary.sold}</button>
+      </div>
+      <input id="transferSearch" type="search" value="${esc(data.ui?.transferSearch||'')}" placeholder="Spieler, Verein oder Grund suchen">
+    </div>
+    <div class="transfer-compact-list">${cards||'<div class="empty">Keine passenden Transfers gefunden.</div>'}</div>
+  </div>
+  <div id="modalArea"></div>`;
 }
 function finances(){const bonuses=data.finances.filter(x=>!['Startkapital','Spielerkauf','Spielerverkauf'].includes(x.type)).reduce((a,x)=>a+(+x.amount||0),0);return `<div class="grid kpis"><div class="card kpi"><span>Startkapital</span><strong>${euro(data.settings.startCapital)}</strong></div><div class="card kpi"><span>Boni</span><strong>${euro(bonuses)}</strong></div><div class="card kpi"><span>Kontostand</span><strong>${euro(financeTotal())}</strong></div><div class="card kpi"><span>Gesamtvermögen</span><strong>${euro(wealth())}</strong></div></div><div class="grid two" style="margin-top:17px"><div class="card"><div class="section-head"><div><h2>Schnellbonus</h2><p>Ein Klick übernimmt Betrag und Beschreibung.</p></div></div><h3 style="margin:14px 0 8px">Tagesanmeldebonus</h3><div class="quick-grid">${DAILY_BONUSES.map(x=>`<button class="quick-money" data-quick-bonus="daily" data-label="${esc(x.label)}" data-amount="${x.amount}"><span>${esc(x.label)}</span><b>${euro(x.amount)}</b></button>`).join('')}</div><h3 style="margin:18px 0 8px">Erfolgsbonus</h3><div class="quick-grid achievements">${ACHIEVEMENT_BONUSES.map(x=>`<button class="quick-money" data-quick-bonus="achievement" data-label="${esc(x.label)}" data-amount="${x.amount}"><span>${esc(x.label)}</span><b>${euro(x.amount)}</b></button>`).join('')}</div></div><div class="card"><div class="section-head"><div><h2>Finanzbuchungen</h2><p>Boni, Korrekturen und Geldbewegungen.</p></div><button class="btn" id="addFinance">Eigene Buchung</button></div><div class="table-wrap"><table><thead><tr><th>Datum</th><th>Typ</th><th>Beschreibung</th><th>Betrag</th><th></th></tr></thead><tbody>${[...data.finances].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(x=>`<tr><td>${esc(x.date)}</td><td>${esc(x.type)}</td><td>${esc(x.description)}</td><td class="${+x.amount>=0?'money-pos':'money-neg'}">${euro(x.amount)}</td><td>${x.id==='start'?'':`<button class="btn danger small" data-del-fin="${x.id}">×</button>`}</td></tr>`).join('')}</tbody></table></div><div id="financeForm"></div></div></div>`}
 function analysis(){const max=Math.max(1,...data.players.map(p=>Math.abs((p.soldDate?+p.salePrice:+p.marketValue)-(+p.buyPrice||0))));return `<div class="grid two"><div class="card"><h2>Spielerwertentwicklung</h2>${data.players.length?data.players.map(p=>{const g=(p.soldDate?+p.salePrice:+p.marketValue)-(+p.buyPrice||0);return `<div class="bar-row"><span>${esc(p.name)}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.abs(g)/max*100}%;background:${g>=0?'linear-gradient(90deg,#22c55e,#22d3ee)':'#ef4444'}"></div></div><b class="${g>=0?'money-pos':'money-neg'}">${euro(g)}</b></div>`}).join(''):'<div class="empty">Keine Daten.</div>'}</div><div class="card"><h2>Kennzahlen</h2><div class="decision good" style="margin-top:13px">Effizientester Spieler: ${esc([...data.players].sort((a,b)=>(+b.avgPoints/(+b.buyPrice||1))-(+a.avgPoints/(+a.buyPrice||1)))[0]?.name||'–')}</div><div class="decision">Bester Matchup-Score: ${esc(rankPlayers()[0]?.name||'–')}</div><div class="decision">Realisierter Gewinn: ${euro(realized())}</div><div class="decision">Unrealisierter Gewinn: ${euro(unrealized())}</div></div></div><div class="card" style="margin-top:17px"><h2>Nächste fünf Spieltage</h2><div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>Spieler</th>${[0,1,2,3,4].map(i=>`<th>ST ${data.settings.currentMd+i}</th>`).join('')}</tr></thead><tbody>${activePlayers().map(p=>`<tr><td><b>${esc(p.name)}</b></td>${[0,1,2,3,4].map(i=>{const f=fixture(p.team,data.settings.currentMd+i);return `<td>${f?`${esc(f.opp)} (${f.ha})`:'–'}</td>`}).join('')}</tr>`).join('')}</tbody></table></div></div>`}
@@ -174,33 +235,64 @@ function detectLiChanges(raw){
 
 function competition(){
   const currentMd=+data.settings.currentMd||1;
+  const tab=data.ui?.leagueTab||'current';
   const schedule=H2H_SCHEDULE.filter(x=>x.md===currentMd);
   const myGame=schedule.find(x=>x.home==='me'||x.away==='me');
   const myOpponent=myGame?(myGame.home==='me'?myGame.away:myGame.home):null;
-  const managerCards=(data.leagueManagers||LEAGUE_MANAGERS).map(m=>`<article class="manager-card ${m.isMe?'is-me':''}">
-    <div class="manager-avatar">${esc((m.manager||'?').slice(0,1))}</div>
-    <div><b>${esc(m.team)}</b><small>${esc(m.manager)}${m.isMe?' · Du':''}</small></div>
-  </article>`).join('');
-  const matchCards=schedule.map(g=>{
-    const result=(data.h2h||[]).find(x=>+x.md===currentMd&&((x.homeId===g.home&&x.awayId===g.away)||(x.homeId===g.away&&x.awayId===g.home)));
-    const home=managerById(g.home),away=managerById(g.away);
-    return `<article class="h2h-match ${g.home==='me'||g.away==='me'?'my-match':''}">
-      <div><b>${esc(home?.team||g.home)}</b><small>${esc(home?.manager||'')}</small></div>
-      <div class="h2h-score">${result?`${result.homePoints ?? '–'} : ${result.awayPoints ?? '–'}`:'vs'}</div>
-      <div class="right"><b>${esc(away?.team||g.away)}</b><small>${esc(away?.manager||'')}</small></div>
-      <button class="btn secondary small" data-h2h-edit="${currentMd}|${g.home}|${g.away}">${result?'Bearbeiten':'Ergebnis'}</button>
-    </article>`;
-  }).join('');
-  const myRounds=H2H_SCHEDULE.filter(x=>x.home==='me'||x.away==='me').map(g=>{
-    const opp=g.home==='me'?g.away:g.home;
-    return `<div class="schedule-chip ${g.md===currentMd?'active':''}"><span>ST ${g.md}</span><b>${esc(managerById(opp)?.team||opp)}</b></div>`;
-  }).join('');
-  return `<div class="grid kpis"><div class="card kpi"><span>Dein Team</span><strong>Horn Capital FC</strong></div><div class="card kpi"><span>Aktueller Spieltag</span><strong>${currentMd}</strong></div><div class="card kpi"><span>Nächster Gegner</span><strong>${esc(managerById(myOpponent)?.team||'–')}</strong></div><div class="card kpi"><span>Manager</span><strong>6</strong></div></div>
-  <div class="grid two" style="margin-top:17px">
-    <div class="card"><div class="section-head"><div><h2>Eure Liga</h2><p>Fest hinterlegte Manager und Teamnamen.</p></div></div><div class="manager-grid">${managerCards}</div></div>
-    <div class="card"><div class="section-head"><div><h2>Spieltag ${currentMd}</h2><p>Wiederkehrender Fünfer-Zyklus aus euren Matchups.</p></div></div><div class="h2h-list">${matchCards}</div></div>
+  const resultFor=g=>(data.h2h||[]).find(x=>+x.md===+g.md&&((x.homeId===g.home&&x.awayId===g.away)||(x.homeId===g.away&&x.awayId===g.home)));
+  const currentContent=()=>{
+    const cards=schedule.map(g=>{
+      const result=resultFor(g),home=managerById(g.home),away=managerById(g.away);
+      return `<article class="league-current-match ${g.home==='me'||g.away==='me'?'my-match':''}">
+        <div class="league-team"><b>${esc(home?.team||g.home)}</b><small>${esc(home?.manager||'')}</small></div>
+        <div class="league-score">${result?`${result.homePoints ?? '–'} : ${result.awayPoints ?? '–'}`:'vs'}</div>
+        <div class="league-team right"><b>${esc(away?.team||g.away)}</b><small>${esc(away?.manager||'')}</small></div>
+        <button class="btn secondary small" data-h2h-edit="${currentMd}|${g.home}|${g.away}">${result?'Ergebnis bearbeiten':'Ergebnis eintragen'}</button>
+      </article>`;
+    }).join('');
+    return `<div class="league-hero">
+      <span>Dein Gegner · Spieltag ${currentMd}</span>
+      <strong>${esc(managerById(myOpponent)?.team||'–')}</strong>
+      <small>${esc(managerById(myOpponent)?.manager||'')}</small>
+    </div>
+    <div class="league-current-list">${cards}</div>`;
+  };
+  const scheduleContent=()=>{
+    const rounds=Array.from({length:34},(_,i)=>i+1).map(md=>{
+      const games=H2H_SCHEDULE.filter(x=>x.md===md);
+      const my=games.find(x=>x.home==='me'||x.away==='me');
+      const opp=my?(my.home==='me'?my.away:my.home):null;
+      const res=my?resultFor(my):null;
+      return `<button class="league-round-card ${md===currentMd?'active':''}" data-set-md="${md}">
+        <span>Spieltag ${md}</span>
+        <b>${esc(managerById(opp)?.team||'–')}</b>
+        <small>${res?`${res.homePoints} : ${res.awayPoints}`:'Noch kein Ergebnis'}</small>
+      </button>`;
+    }).join('');
+    return `<div class="league-schedule-grid">${rounds}</div>`;
+  };
+  const teamsContent=()=>{
+    return `<div class="league-team-grid">${(data.leagueManagers||LEAGUE_MANAGERS).map(m=>`
+      <article class="league-team-card ${m.isMe?'is-me':''}">
+        <div class="manager-avatar">${esc((m.manager||'?').slice(0,1))}</div>
+        <div><b>${esc(m.team)}</b><small>${esc(m.manager)}${m.isMe?' · Du':''}</small></div>
+      </article>`).join('')}</div>`;
+  };
+  const content=tab==='schedule'?scheduleContent():tab==='teams'?teamsContent():currentContent();
+  return `<div class="grid kpis">
+    <div class="card kpi"><span>Dein Team</span><strong>Horn Capital FC</strong></div>
+    <div class="card kpi"><span>Spieltag</span><strong>${currentMd}</strong></div>
+    <div class="card kpi"><span>Nächster Gegner</span><strong>${esc(managerById(myOpponent)?.team||'–')}</strong></div>
+    <div class="card kpi"><span>Manager</span><strong>6</strong></div>
   </div>
-  <div class="card" style="margin-top:17px"><div class="section-head"><div><h2>Deine H2H-Gegner</h2><p>Alle 34 Spieltage werden automatisch aus dem wiederkehrenden Ablauf erzeugt.</p></div></div><div class="schedule-strip">${myRounds}</div></div>
+  <div class="card league-shell" style="margin-top:17px">
+    <div class="league-tabs">
+      <button data-league-tab="current" class="${tab==='current'?'active':''}">Aktueller Spieltag</button>
+      <button data-league-tab="schedule" class="${tab==='schedule'?'active':''}">Mein Spielplan</button>
+      <button data-league-tab="teams" class="${tab==='teams'?'active':''}">Teams</button>
+    </div>
+    <div class="league-tab-content">${content}</div>
+  </div>
   <div id="competitionModal"></div>`;
 }
 function editH2H(md,homeId,awayId){
@@ -308,7 +400,13 @@ function deleteTransfer(pid){
 }
 
 function playerForm(p={}){return `<div class="card" style="margin-top:16px"><h3>${p.id?'Spielerdetails bearbeiten':'Spieler kaufen'}</h3><div class="form-grid" style="margin-top:12px"><label>Name<input id="pfName" value="${esc(p.name||'')}"></label><label>Verein<select id="pfTeam">${TEAMS.map(t=>`<option ${p.team===t?'selected':''}>${esc(t)}</option>`).join('')}</select></label><label>Position<select id="pfPos">${['Tor','Abwehr','Mittelfeld','Sturm'].map(x=>`<option ${p.position===x?'selected':''}>${x}</option>`).join('')}</select></label><label>Kaufdatum<input id="pfDate" type="date" value="${esc(p.buyDate||'')}"></label><label>Kaufpreis (€)<input id="pfBuy" class="money-field" inputmode="numeric" value="${p.buyPrice?moneyInput(p.buyPrice):''}" placeholder="z. B. 5.071.935 €"></label><label>Marktwert beim Kauf (€) – optional<input id="pfMwb" class="money-field" inputmode="numeric" value="${p.marketAtBuy?moneyInput(p.marketAtBuy):''}"></label><label>Aktueller Marktwert (€)<input id="pfMw" class="money-field" inputmode="numeric" value="${p.marketValue?moneyInput(p.marketValue):''}"></label><label>Ø Punkte<input id="pfAvg" type="number" step="0.1" value="${p.avgPoints||''}"></label><label>Gekauft von<select id="pfBuySource">${TRANSFER_SOURCES.map(x=>`<option ${p.buySource===x?'selected':''}>${esc(x)}</option>`).join('')}</select></label><label>Mitspieler<select id="pfBuyCounterparty"><option value="">Bitte auswählen</option>${otherManagerOptions(p.buyCounterparty||'')}</select></label><label class="wide">Kaufgrund<select id="pfBuyReason">${BUY_REASONS.map(x=>`<option ${p.buyReason===x?'selected':''}>${esc(x)}</option>`).join('')}</select></label><label class="wide">Notiz<input id="pfNote" value="${esc(p.note||'')}"></label><div class="full"><button class="btn" id="savePlayer">Speichern</button></div></div></div>`}
-function bind(){bindMoneyFields();$$('[data-h2h-edit]').forEach(b=>b.onclick=()=>{const [md,h,a]=b.dataset.h2hEdit.split('|');editH2H(md,h,a)});
+function bind(){bindMoneyFields();
+$$('[data-transfer-filter]').forEach(b=>b.onclick=()=>{data.ui.transferFilter=b.dataset.transferFilter;save();render()});
+if($('#transferSearch'))$('#transferSearch').oninput=e=>{data.ui.transferSearch=e.target.value;save();render()};
+$$('[data-transfer-toggle]').forEach(b=>b.onclick=()=>{const el=$(`#transfer-details-${b.dataset.transferToggle}`);if(el)el.hidden=!el.hidden});
+$$('[data-league-tab]').forEach(b=>b.onclick=()=>{data.ui.leagueTab=b.dataset.leagueTab;save();render()});
+$$('[data-set-md]').forEach(b=>b.onclick=()=>{data.settings.currentMd=+b.dataset.setMd;data.ui.leagueTab='current';touch()});
+$$('[data-h2h-edit]').forEach(b=>b.onclick=()=>{const [md,h,a]=b.dataset.h2hEdit.split('|');editH2H(md,h,a)});
 if($('#liAnalyze'))$('#liAnalyze').onclick=()=>{const changes=detectLiChanges($('#liPaste').value);data.lineupIntel.pending=changes;save();render();toast(changes.length?`${changes.length} Änderung(en) erkannt`:'Keine eindeutigen Änderungen erkannt')};
 if($('#liClear'))$('#liClear').onclick=()=>{$('#liPaste').value=''};
 if($('#liApply'))$('#liApply').onclick=()=>{(data.lineupIntel.pending||[]).forEach(c=>{const p=data.players.find(x=>x.id===c.playerId);if(p){p.liStatus=c.newStatus;p.liUpdatedAt=new Date().toISOString()}});data.lineupIntel.lastImport=new Date().toISOString();data.lineupIntel.pending=[];touch();toast('LigaInsider-Status übernommen')};
