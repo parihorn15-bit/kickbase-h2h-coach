@@ -48,6 +48,41 @@
     if (panel) panel.hidden = true;
   }
 
+
+  async function fetchTeamStrengths() {
+    if (!client || !currentUser) return;
+    try {
+      const { data: rows, error } = await client
+        .from("team_strengths")
+        .select("*")
+        .order("overall", { ascending: false });
+      if (error) throw error;
+      if (!Array.isArray(rows) || !rows.length) return;
+
+      data.teamStrength = { ...data.teamStrength };
+      data.teamStrengthDetails = {};
+      for (const row of rows) {
+        data.teamStrength[row.team] = Number(row.overall);
+        data.teamStrengthDetails[row.team] = {
+          season: Number(row.season_score),
+          form: Number(row.form_score),
+          attack: Number(row.attack_score),
+          defence: Number(row.defence_score),
+          home: Number(row.home_score),
+          away: Number(row.away_score),
+          matchesPlayed: Number(row.matches_played),
+          source: row.source,
+          sourceUpdatedAt: row.source_updated_at
+        };
+      }
+      data.teamStrengthCloudUpdatedAt = rows[0]?.updated_at || "";
+      localStorage.setItem("kickbaseCoachV07", JSON.stringify(data));
+      render();
+    } catch (err) {
+      console.warn("Teamstärken konnten nicht geladen werden:", err);
+    }
+  }
+
   async function fetchCloudState({initial=false}={}) {
     if (!client || !currentUser || syncing) return;
     syncing = true;
@@ -80,6 +115,7 @@
         setCloudState("Cloud aktuell", "good");
       }
       cloudReady = true;
+      await fetchTeamStrengths();
     } catch (err) {
       console.error(err);
       setCloudState("Cloud-Fehler", "bad");
@@ -200,6 +236,7 @@
     byId("cloudSyncNow")?.addEventListener("click", () => fetchCloudState({initial:true}));
     byId("cloudUploadLocal")?.addEventListener("click", async () => {
       cloudReady = true;
+      await fetchTeamStrengths();
       await pushCloudState();
     });
 
@@ -211,10 +248,10 @@
     });
 
     document.addEventListener("visibilitychange", () => {
-      if (!document.hidden && currentUser) fetchCloudState();
+      if (!document.hidden && currentUser) { fetchCloudState(); fetchTeamStrengths(); }
     });
     window.addEventListener("focus", () => {
-      if (currentUser) fetchCloudState();
+      if (currentUser) { fetchCloudState(); fetchTeamStrengths(); }
     });
   }
 

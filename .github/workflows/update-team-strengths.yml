@@ -1,0 +1,25 @@
+name: Teamstärken aktualisieren
+
+on:
+  schedule:
+    # Täglich um 05:15 UTC; zusätzlich manuell startbar.
+    - cron: "15 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: OpenLigaDB abrufen und Supabase aktualisieren
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/update-team-strengths.mjs

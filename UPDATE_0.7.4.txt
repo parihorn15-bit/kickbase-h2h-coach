@@ -1,0 +1,13 @@
+VERSION 0.7.4
+
+AUTOMATISCHE TEAMSTÄRKEN
+- täglicher GitHub-Workflow
+- OpenLigaDB als Ergebnisquelle
+- Supabase-Tabelle team_strengths
+- Form, Offensive, Defensive, Heim- und Auswärtswerte
+- App lädt dieselben Werte auf Samsung und Laptop
+- Vorsaisonbasis bleibt aktiv, solange keine Saisonspiele abgeschlossen sind
+
+LIGAINSiDER
+- weiterhin kontrollierter halbautomatischer Import
+- keine ungeprüfte automatische Übernahme

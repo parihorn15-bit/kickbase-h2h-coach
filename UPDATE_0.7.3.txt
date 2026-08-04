@@ -1,0 +1,17 @@
+VERSION 0.7.3
+
+LIGA
+- Komplett neues Design
+- Nur noch Teamnamen, keine echten Namen der Manager
+- Großes eigenes Duell
+- Zwei weitere Paarungen als kompakte Zeilen
+- Vor/Zurück-Navigation zwischen Spieltagen
+- Mein Spielplan als klare Liste
+- Tabelle ohne Zusatzinformationen
+
+TEAMSTÄRKEN
+- Alte 5,0-Platzhalter werden automatisch ersetzt
+- Basis aus Bundesliga 2025/26 und 2024/25
+- Aufsteiger nach 2. Bundesliga 2025/26 mit Aufsteigerabschlag
+- Datenstand 04.08.2026
+- Werte können weiterhin manuell angepasst oder auf Basis zurückgesetzt werden

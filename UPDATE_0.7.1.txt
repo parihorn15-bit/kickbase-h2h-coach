@@ -1,0 +1,13 @@
+VERSION 0.7.1
+
+VERBESSERT
+- Transferhistorie kompakter und aufklappbar
+- Filter: Alle / Im Kader / Verkauft
+- Suche nach Spieler, Verein oder Transfergrund
+- Aktionen erst nach Aufklappen sichtbar
+- Liga in drei Reiter getrennt:
+  1. Aktueller Spieltag
+  2. Mein Spielplan
+  3. Teams
+- Der aktuelle H2H-Gegner wird hervorgehoben
+- Spieltag kann direkt aus dem Ligaspielplan ausgewählt werden

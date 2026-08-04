@@ -46,3 +46,243 @@
   .cloud-panel{align-items:end;padding:0}
   .cloud-panel-card{border-radius:22px 22px 0 0;padding:18px;max-height:88vh;overflow:auto}
 }
+
+.row-actions{display:flex;gap:6px;flex-wrap:wrap;min-width:190px}
+.danger-outline{background:transparent!important;border:1px solid #ef4444!important;color:#fca5a5!important}
+.transfer-edit-modal{width:min(900px,96vw);max-height:92vh;overflow:auto}
+@media(max-width:760px){
+  .row-actions{min-width:150px}
+  .row-actions .btn{flex:1}
+  .transfer-edit-modal{width:100%;max-height:94vh;border-radius:20px 20px 0 0}
+}
+
+/* Version 0.7 – Liga und mobile Transfers */
+.transfer-mobile-list{display:none;gap:12px}
+.transfer-mobile-card{background:#0b1729;border:1px solid var(--line);border-radius:16px;padding:14px}
+.transfer-mobile-head,.transfer-mobile-foot{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.transfer-mobile-head small,.manager-card small,.h2h-match small{display:block;color:var(--muted);font-size:11px;margin-top:4px}
+.transfer-mobile-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.transfer-mobile-grid>div{background:#111f34;border-radius:11px;padding:10px}
+.transfer-mobile-grid span{display:block;color:var(--muted);font-size:10px;margin-bottom:4px}
+.transfer-mobile-grid b{font-size:12px}
+.manager-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+.manager-card{display:flex;align-items:center;gap:10px;background:#0b1729;border:1px solid var(--line);border-radius:14px;padding:12px}
+.manager-card.is-me{border-color:#22c55e;background:linear-gradient(145deg,#113427,#0b1729)}
+.manager-avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#243b5f;font-weight:900}
+.h2h-list{display:grid;gap:10px;margin-top:12px}
+.h2h-match{display:grid;grid-template-columns:1fr auto 1fr auto;align-items:center;gap:10px;background:#0b1729;border:1px solid var(--line);border-radius:14px;padding:12px}
+.h2h-match.my-match{border-color:#22c55e}
+.h2h-match .right{text-align:right}
+.h2h-score{font-weight:900;font-size:18px;color:#dbeafe}
+.schedule-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:12px}
+.schedule-chip{background:#0b1729;border:1px solid var(--line);border-radius:12px;padding:10px}
+.schedule-chip.active{border-color:#60a5fa;background:#142b4d}
+.schedule-chip span{display:block;color:var(--muted);font-size:10px}
+.schedule-chip b{font-size:12px}
+@media(max-width:760px){
+  .transfer-mobile-list{display:grid}
+  .transfer-desktop-table{display:none}
+  .transfer-mobile-head,.transfer-mobile-foot{align-items:flex-start;flex-direction:column}
+  .transfer-mobile-foot .row-actions{width:100%}
+  .transfer-mobile-foot .row-actions .btn{flex:1}
+  .manager-grid{grid-template-columns:1fr}
+  .h2h-match{grid-template-columns:1fr auto 1fr}
+  .h2h-match .btn{grid-column:1/-1;width:100%}
+  .schedule-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+/* Version 0.7.1 – Übersichtliche Transfers und Liga */
+.transfer-toolbar{display:flex;gap:12px;justify-content:space-between;align-items:center;margin:14px 0}
+.segmented{display:inline-flex;background:#0b1729;border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+.segmented button,.league-tabs button{border:0;background:transparent;color:var(--muted);padding:9px 12px;border-radius:9px;font-weight:800;cursor:pointer}
+.segmented button.active,.league-tabs button.active{background:#2563eb;color:white}
+.transfer-toolbar input{max-width:360px}
+.transfer-compact-list{display:grid;gap:9px}
+.transfer-compact-card{background:#0b1729;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.transfer-summary{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto 24px;align-items:center;gap:14px;padding:14px;background:transparent;border:0;color:inherit;text-align:left;cursor:pointer}
+.transfer-name-line{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.transfer-main small{display:block;color:var(--muted);font-size:11px;margin-top:4px}
+.transfer-money{text-align:right}
+.transfer-money span{display:block;color:var(--muted);font-size:10px}
+.transfer-money b{font-size:14px}
+.transfer-chevron{font-size:20px;color:var(--muted)}
+.transfer-details{border-top:1px solid var(--line);padding:14px;background:#0e1a2c}
+.transfer-detail-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.transfer-detail-grid>div{background:#142238;border-radius:10px;padding:10px}
+.transfer-detail-grid span{display:block;color:var(--muted);font-size:10px;margin-bottom:4px}
+.transfer-detail-grid b{font-size:12px}
+.transfer-card-actions{margin-top:12px}
+.league-shell{padding:0;overflow:hidden}
+.league-tabs{display:flex;gap:4px;padding:10px;border-bottom:1px solid var(--line);overflow:auto}
+.league-tab-content{padding:16px}
+.league-hero{background:linear-gradient(135deg,#123c2b,#13243e);border:1px solid #166534;border-radius:16px;padding:18px;margin-bottom:14px}
+.league-hero span,.league-hero small{display:block;color:var(--muted)}
+.league-hero strong{display:block;font-size:24px;margin:5px 0}
+.league-current-list{display:grid;gap:10px}
+.league-current-match{display:grid;grid-template-columns:1fr auto 1fr auto;gap:12px;align-items:center;background:#0b1729;border:1px solid var(--line);border-radius:14px;padding:13px}
+.league-current-match.my-match{border-color:#22c55e}
+.league-team small{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.league-team.right{text-align:right}
+.league-score{font-size:18px;font-weight:900}
+.league-schedule-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.league-round-card{background:#0b1729;border:1px solid var(--line);border-radius:13px;padding:12px;color:inherit;text-align:left;cursor:pointer}
+.league-round-card.active{border-color:#60a5fa;background:#142b4d}
+.league-round-card span,.league-round-card small{display:block;color:var(--muted);font-size:10px}
+.league-round-card b{display:block;margin:5px 0;font-size:13px}
+.league-team-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.league-team-card{display:flex;align-items:center;gap:10px;background:#0b1729;border:1px solid var(--line);border-radius:14px;padding:13px}
+.league-team-card.is-me{border-color:#22c55e;background:linear-gradient(145deg,#113427,#0b1729)}
+.league-team-card small{display:block;color:var(--muted);font-size:11px;margin-top:4px}
+@media(max-width:760px){
+  .transfer-toolbar{align-items:stretch;flex-direction:column}
+  .transfer-toolbar input{max-width:none}
+  .segmented{width:100%;display:grid;grid-template-columns:repeat(3,1fr)}
+  .segmented button{padding:10px 4px;font-size:11px}
+  .transfer-summary{grid-template-columns:minmax(0,1fr) auto 18px;padding:12px}
+  .transfer-detail-grid{grid-template-columns:1fr 1fr}
+  .transfer-money b{font-size:12px}
+  .league-current-match{grid-template-columns:1fr auto 1fr}
+  .league-current-match .btn{grid-column:1/-1;width:100%}
+  .league-team-grid{grid-template-columns:1fr}
+  .league-schedule-grid{grid-template-columns:1fr 1fr}
+}
+
+/* Version 0.7.2 – Tabelle mit Zahnrad + neu strukturierte Liga */
+.transfer-history-card{overflow:hidden}
+.transfer-history-table table{min-width:1050px}
+.transfer-history-table td small{display:block;color:var(--muted);font-size:10px;margin-top:3px}
+.action-cell{width:54px;text-align:center;position:sticky;right:0;background:#0f1b2d}
+.transfer-history-table th:last-child{position:sticky;right:0;background:#172840;z-index:2}
+.gear-button{width:38px;height:38px;border-radius:10px;border:1px solid #415574;background:#22334d;color:#fff;font-size:19px;cursor:pointer;display:inline-grid;place-items:center}
+.gear-button:hover{background:#30476a;border-color:#60a5fa}
+.table-help{color:var(--muted);font-size:11px;margin:10px 2px 0}
+.manage-transfer-modal{width:min(620px,96vw)}
+.manage-transfer-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:15px 0}
+.manage-transfer-summary>div{background:#111f34;border-radius:12px;padding:12px}
+.manage-transfer-summary span{display:block;color:var(--muted);font-size:10px;margin-bottom:5px}
+.manage-transfer-actions{display:grid;gap:9px}
+.manage-action{display:flex;align-items:center;gap:13px;width:100%;text-align:left;border:1px solid var(--line);background:#0b1729;color:#fff;border-radius:13px;padding:13px;cursor:pointer}
+.manage-action>span{font-size:22px;width:34px;text-align:center}
+.manage-action b,.manage-action small{display:block}
+.manage-action small{color:var(--muted);font-size:11px;margin-top:3px}
+.manage-action:hover{border-color:#60a5fa;background:#132844}
+.danger-action{border-color:#7f1d1d}
+.delete-action{border-color:#991b1b;color:#fecaca}
+
+.league-clean-shell{padding:0;overflow:hidden}
+.league-clean-header{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:18px;border-bottom:1px solid var(--line)}
+.league-clean-header p{margin-top:4px}
+.current-md-badge{background:#123c2b;color:#86efac;border:1px solid #166534;border-radius:999px;padding:8px 12px;font-weight:800;font-size:12px}
+.clean-tabs{padding:10px 14px;background:#0b1729}
+.league-current-clean{padding:4px}
+.featured-match{background:linear-gradient(145deg,#13243e,#0b1729);border:1px solid #285685;border-radius:18px;padding:18px}
+.featured-label{text-align:center;color:#93c5fd;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px}
+.match-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px}
+.match-team{text-align:center;min-width:0}
+.match-team b,.match-team small{display:block}
+.match-team b{margin-top:8px;font-size:15px}
+.match-team small{color:var(--muted);font-size:11px;margin-top:3px}
+.team-monogram{width:58px;height:58px;border-radius:16px;margin:auto;display:grid;place-items:center;background:#1f3656;border:1px solid #456388;font-weight:900;font-size:18px}
+.match-score{font-size:24px;font-weight:900;color:#fff}
+.match-edit{display:block;margin:16px auto 0}
+.other-matches-head{font-weight:800;margin:18px 0 10px}
+.other-matches-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.small-match{background:#0b1729;border:1px solid var(--line);border-radius:14px;padding:13px}
+.small-match .team-monogram{width:40px;height:40px;border-radius:11px;font-size:12px}
+.small-match .match-team b{font-size:12px}
+.small-match .match-score{font-size:15px}
+.small-match .match-edit{width:100%;font-size:11px;padding:8px}
+.league-schedule-list{display:grid;gap:7px}
+.schedule-row{display:grid;grid-template-columns:55px minmax(0,1fr) auto 20px;align-items:center;gap:10px;width:100%;border:1px solid var(--line);background:#0b1729;color:#fff;border-radius:12px;padding:11px 12px;text-align:left;cursor:pointer}
+.schedule-row.active{border-color:#22c55e;background:#123025}
+.schedule-md{font-weight:900;color:#93c5fd}
+.schedule-opponent b,.schedule-opponent small{display:block}
+.schedule-opponent small{font-size:10px;color:var(--muted);margin-top:2px}
+.schedule-result{font-weight:900}
+.league-table-wrap{overflow:auto}
+.league-table{width:100%;min-width:650px}
+.league-table td small{display:block;color:var(--muted);font-size:10px;margin-top:3px}
+.my-table-row{background:#113427}
+.my-table-row td:first-child{border-left:3px solid #22c55e}
+
+@media(max-width:760px){
+  .transfer-history-table table{min-width:760px}
+  .transfer-history-table .optional-col{display:none}
+  .manage-transfer-summary{grid-template-columns:1fr}
+  .league-clean-header{align-items:flex-start}
+  .current-md-badge{white-space:nowrap}
+  .other-matches-grid{grid-template-columns:1fr}
+  .match-row{gap:8px}
+  .team-monogram{width:48px;height:48px}
+  .match-team b{font-size:12px}
+  .match-score{font-size:19px}
+}
+
+/* Version 0.7.3 – Liga komplett neu + Teamstärken */
+.league-redesign{max-width:1050px;margin:0 auto;background:#0c1523;border:1px solid #25364e;border-radius:22px;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.22)}
+.league-page-header{display:flex;align-items:center;justify-content:space-between;padding:22px 24px 16px;background:linear-gradient(180deg,#14233a,#0c1523)}
+.league-page-header span{font-size:11px;color:#7dd3fc;font-weight:900;letter-spacing:.08em}
+.league-page-header h2{font-size:28px;margin-top:4px}
+.league-current-pill{border:1px solid #3b82f6;background:#102a4d;color:#bfdbfe;border-radius:999px;padding:9px 13px;font-weight:900}
+.league-nav{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid #25364e;border-bottom:1px solid #25364e;background:#09111d}
+.league-nav button{padding:15px;border:0;background:transparent;color:#94a3b8;font-weight:900;cursor:pointer;border-bottom:3px solid transparent}
+.league-nav button.active{color:#fff;border-color:#22c55e;background:#0e1d2e}
+.league-content{padding:22px}
+.league-round-top{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;text-align:center;margin-bottom:18px}
+.league-round-top span{display:block;color:#94a3b8;font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+.league-round-top strong{display:block;font-size:22px;margin-top:3px}
+.round-arrow{width:40px;height:40px;border-radius:50%;border:1px solid #334a68;background:#13243a;color:#fff;font-size:25px;cursor:pointer}
+.round-arrow:disabled{opacity:.25;cursor:not-allowed}
+.league-main-duel{display:grid;grid-template-columns:1fr 130px 1fr;align-items:center;gap:18px;padding:28px 20px;border:1px solid #294362;background:linear-gradient(145deg,#12233a,#0a1422);border-radius:20px}
+.main-team{font-size:20px;font-weight:950;text-align:center;line-height:1.25}
+.main-team.my-side{color:#86efac}
+.main-versus{text-align:center}
+.main-versus>span{display:block;font-size:28px;font-weight:950}
+.text-action{border:0;background:transparent;color:#60a5fa;font-weight:800;margin-top:9px;cursor:pointer}
+.league-other-title{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;font-weight:900;margin:22px 0 9px}
+.league-other-list{display:grid;gap:8px}
+.league-other-row{display:grid;grid-template-columns:1fr 70px 1fr;align-items:center;width:100%;padding:14px 16px;border:1px solid #263a54;background:#0e1b2c;color:#fff;border-radius:13px;cursor:pointer}
+.league-other-row span:first-child{text-align:left}.league-other-row span:last-child{text-align:right}.league-other-row b{text-align:center;color:#94a3b8}
+.my-season-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.season-line{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:10px;border:1px solid #263a54;background:#0d1929;color:#fff;border-radius:12px;padding:12px;text-align:left;cursor:pointer}
+.season-line.active{border-color:#22c55e;background:#102d23}
+.season-number{font-weight:950;color:#7dd3fc}
+.season-opponent{font-weight:800}
+.season-score{font-weight:950;color:#94a3b8}
+.minimal-table-wrap{overflow:auto;border:1px solid #25364e;border-radius:15px}
+.minimal-league-table{width:100%;min-width:650px;border-collapse:collapse}
+.minimal-league-table th{background:#13243a;color:#94a3b8;font-size:11px;text-transform:uppercase}
+.minimal-league-table th,.minimal-league-table td{padding:13px 12px;border-bottom:1px solid #22324a}
+.minimal-league-table tr:last-child td{border-bottom:0}
+.minimal-league-table tr.is-me{background:#113225}
+.minimal-league-table tr.is-me td:first-child{border-left:4px solid #22c55e}
+
+.strength-card{overflow:hidden}
+.strength-method{background:#0b1729;border:1px solid var(--line);border-radius:11px;padding:10px 12px;color:#cbd5e1;font-size:11px;margin:13px 0}
+.strength-list{display:grid;gap:8px;max-height:580px;overflow:auto;padding-right:4px}
+.strength-row{display:grid;grid-template-columns:minmax(180px,1fr) minmax(100px,180px) 66px;gap:10px;align-items:center;background:#0b1729;border:1px solid var(--line);border-radius:11px;padding:9px 10px}
+.strength-row>span{font-size:12px;font-weight:800}
+.strength-track{height:8px;background:#1e293b;border-radius:99px;overflow:hidden}
+.strength-track i{display:block;height:100%;background:linear-gradient(90deg,#38bdf8,#22c55e);border-radius:99px}
+.strength-row input{text-align:center;padding:7px}
+
+@media(max-width:760px){
+  .league-redesign{border-radius:16px}
+  .league-page-header{padding:18px}
+  .league-page-header h2{font-size:23px}
+  .league-content{padding:14px}
+  .league-nav button{font-size:11px;padding:13px 5px}
+  .league-main-duel{grid-template-columns:1fr 64px 1fr;padding:22px 10px;gap:7px}
+  .main-team{font-size:13px}
+  .main-versus>span{font-size:20px}
+  .text-action{font-size:10px}
+  .league-other-row{grid-template-columns:1fr 46px 1fr;padding:12px 10px;font-size:11px}
+  .my-season-list{grid-template-columns:1fr}
+  .strength-row{grid-template-columns:minmax(130px,1fr) 80px 58px}
+  .strength-row>span{font-size:11px}
+}
+
+.strength-row-rich>span small{display:block;color:var(--muted);font-size:9px;font-weight:500;margin-top:3px}
+@media(max-width:760px){
+  .strength-row-rich{grid-template-columns:minmax(145px,1fr) 70px 55px}
+}

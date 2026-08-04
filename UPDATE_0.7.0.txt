@@ -1,0 +1,13 @@
+VERSION 0.7.0
+
+NEU
+- Eure sechs Manager fest integriert
+- Mitspieler-Dropdown bei Käufen und Verkäufen
+- H2H-Paarungen für 34 Spieltage aus dem wiederkehrenden Fünfer-Zyklus
+- H2H-Ergebnisse direkt in der App eintragen und bearbeiten
+- Mobile Transferkarten mit Bearbeiten/Verkaufen/Löschen ohne horizontales Scrollen
+- Bestehende Cloud- und lokale Daten werden übernommen
+
+UPDATE
+Alle Dateien im GitHub-Repository ersetzen, committen und auf den grünen
+GitHub-Actions-Lauf warten. Danach App vollständig schließen und neu öffnen.

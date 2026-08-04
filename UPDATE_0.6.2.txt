@@ -1,0 +1,12 @@
+VERSION 0.6.2
+
+NEU
+- Alte Transfers bearbeiten
+- Komplette Transfers löschen
+- Verkäufe rückgängig machen
+- Finanzbuchungen werden beim Bearbeiten automatisch korrigiert
+- Beim Löschen werden Kauf-/Verkaufsbuchungen ebenfalls entfernt
+
+UPDATE
+Alle Dateien in GitHub ersetzen und auf das erfolgreiche GitHub-Actions-Deployment warten.
+Anschließend App neu laden oder einmal vollständig schließen und erneut öffnen.

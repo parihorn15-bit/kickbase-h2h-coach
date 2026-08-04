@@ -1,0 +1,6 @@
+Version 0.6.1
+
+Behoben:
+- Vereins-Drop-down im Modul Spieler kaufen funktioniert wieder.
+- Vereinsliste besitzt nun eine feste Bundesliga-Fallback-Liste und ist nicht mehr von geladenen Spielplandaten abhängig.
+- Service-Worker-Cache wurde erhöht, damit Browser die Korrektur laden.

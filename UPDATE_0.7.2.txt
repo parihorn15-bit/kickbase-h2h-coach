@@ -1,0 +1,20 @@
+VERSION 0.7.2
+
+TRANSFERS
+- Karten oberhalb der Transferhistorie vollständig entfernt
+- Nur noch eine zentrale Tabelle
+- Pro Transfer ein Zahnrad-Symbol
+- Zahnrad öffnet: Bearbeiten, Verkaufen, Verkauf rückgängig, Löschen
+- Filter und Suche bleiben erhalten
+
+LIGA
+- Dashboard-Kacheln entfernt
+- Klare Reiter: Aktueller Spieltag / Mein Spielplan / Tabelle
+- Eigenes Duell groß hervorgehoben
+- Weitere zwei Paarungen kompakt darunter
+- Automatisch berechnete H2H-Tabelle aus eingetragenen Ergebnissen
+
+WICHTIG
+Nach dem GitHub-Update die installierte App vollständig schließen.
+Bei alter Darstellung einmal Strg+F5 am PC ausführen bzw. auf Android
+Website-Daten/Cache der App löschen und erneut öffnen.
