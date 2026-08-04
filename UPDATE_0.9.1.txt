@@ -1,0 +1,21 @@
+VERSION 0.9.1
+
+KICKBASE-LIGAWAPPEN
+- Die eigentlichen runden Logos werden nun direkt angezeigt.
+- Kein zusätzlicher quadratischer Bildbereich und kein innerer Kreisrahmen.
+- Neue transparente, kreisförmige WebP-Dateien aus den bereitgestellten Originalen.
+- Einheitliche Darstellung auf Dashboard, H2H-Spieltag und Tabelle.
+
+BUNDESLIGA-VEREINSLOGOS
+- Live-Vereinslogos werden in den Bundesliga-Partien eingeblendet.
+- Im Scout Center ersetzen Vereinslogos die Initialen, solange kein rechtssicheres Spielerfoto vorhanden ist.
+- Logos stammen weiterhin aus der eingerichteten football-data.org-Livequelle.
+
+COACH AI
+- Neue datenbasierte Coach-Auswertung auf dem Dashboard.
+- Berücksichtigt Matchups, Startelf, LigaInsider-Status, Marktwertentwicklung und offene Ligaregeln.
+- Liefert konkrete, anklickbare Hinweise.
+- Keine erfundenen Gewinnwahrscheinlichkeiten und keine Garantieprognosen.
+
+SPIELFELD
+- Das bestehende Spielfeld aus Version 0.9.0 bleibt unverändert.

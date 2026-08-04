@@ -560,3 +560,71 @@ table thead th{background:#132238!important;color:#92a6be!important}
   .scout-filters{grid-template-columns:1fr}.scout-filters input{grid-column:auto}
   .bottom-nav{bottom:6px}
 }
+
+/* Version 0.9.1 – echte runde Teamwappen, Bundesliga-Logos, Coach AI */
+
+/* Kickbase team badges: the actual asset is circular; no extra square or inner frame. */
+.round-team-crest{
+  display:block!important;
+  aspect-ratio:1/1;
+  object-fit:cover!important;
+  object-position:center!important;
+  border-radius:50%!important;
+  background:transparent!important;
+  border:1px solid rgba(132,159,194,.56);
+  box-shadow:0 8px 22px rgba(0,0,0,.33);
+  padding:0!important;
+  overflow:hidden;
+}
+.round-team-crest.crest-fallback{display:grid!important;place-items:center;background:#20344d!important;color:white;font-weight:900}
+.hero-crest{width:74px;height:74px}
+.spotlight-crest{width:78px;height:78px}
+.main-crest{width:94px;height:94px}
+.mini-crest{width:38px;height:38px}
+.table-crest{width:34px;height:34px}
+.team-crest{width:42px;height:42px}
+
+/* Bundesliga club logos */
+.fixture-club-crest,.scout-club-crest,.scout-list-club-crest,.bl-club-crest{
+  display:block;
+  object-fit:contain;
+  object-position:center;
+  flex:0 0 auto;
+}
+.fixture-club-crest{width:32px;height:32px}
+.bl-team.home,.bl-team.away{display:flex;align-items:center;gap:8px}
+.bl-team.home{justify-content:flex-end}
+.bl-team.away{justify-content:flex-start}
+.bl-team>span{min-width:0}
+.scout-club-crest{width:52px;height:52px}
+.scout-list-club-crest{width:34px;height:34px}
+.bl-club-fallback{display:grid;place-items:center;border-radius:50%;background:#20344d;color:#fff;font-size:9px;font-weight:900}
+
+/* Coach AI */
+.coach-ai-panel{border-color:#315174;background:linear-gradient(145deg,#101f33,#0b1727)}
+.coach-ai-panel .premium-panel-head>small{color:var(--muted);font-size:9px}
+.coach-ai-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.coach-ai-card{
+  display:grid;grid-template-columns:40px minmax(0,1fr);gap:10px;
+  align-items:start;width:100%;border:1px solid #27405c;background:#091421;
+  color:#fff;border-radius:14px;padding:11px;text-align:left;
+}
+.coach-ai-card.good{border-color:#23633f;background:#0d281d}
+.coach-ai-card.warn{border-color:#7b571c;background:#30250f}
+.coach-ai-card.bad{border-color:#842b36;background:#31151c}
+.coach-ai-card.info{border-color:#285a84;background:#10243a}
+.coach-ai-icon{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.07);display:grid;place-items:center;font-size:18px}
+.coach-ai-card b,.coach-ai-card small,.coach-ai-card i{display:block}
+.coach-ai-card small{color:#c3cfdd;font-size:10px;line-height:1.4;margin-top:4px}
+.coach-ai-card i{grid-column:2;font-style:normal;color:#7dd3fc;font-size:9px;font-weight:800;margin-top:3px}
+.coach-ai-disclaimer{color:#71839a;font-size:9px;line-height:1.4;margin-top:9px}
+
+@media(max-width:760px){
+  .hero-crest{width:60px;height:60px}
+  .spotlight-crest{width:64px;height:64px}
+  .main-crest{width:72px;height:72px}
+  .mini-crest{width:30px;height:30px}
+  .coach-ai-grid{grid-template-columns:1fr}
+  .fixture-club-crest{width:26px;height:26px}
+  .bl-team.home,.bl-team.away{gap:5px}
+}
