@@ -95,43 +95,21 @@ function transfers(){
     active:all.filter(p=>!p.soldDate).length,
     sold:all.filter(p=>p.soldDate).length
   };
-  const cards=rows.map(p=>{
+  const tableRows=rows.map(p=>{
     const gain=p.soldDate?(+p.salePrice||0)-(+p.buyPrice||0):(+p.marketValue||0)-(+p.buyPrice||0);
-    return `<article class="transfer-compact-card">
-      <button class="transfer-summary" data-transfer-toggle="${p.id}">
-        <div class="transfer-main">
-          <div class="transfer-name-line"><b>${esc(p.name)}</b><span class="pill ${p.soldDate?'neutral':'good'}">${p.soldDate?'Verkauft':'Im Kader'}</span></div>
-          <small>${esc(p.team)} · ${esc(p.position||'')}</small>
-        </div>
-        <div class="transfer-money">
-          <span>${p.soldDate?'Gewinn/Verlust':'Unrealisiert'}</span>
-          <b class="${gain>=0?'money-pos':'money-neg'}">${euro(gain)}</b>
-        </div>
-        <span class="transfer-chevron">⌄</span>
-      </button>
-      <div class="transfer-details" id="transfer-details-${p.id}" hidden>
-        <div class="transfer-detail-grid">
-          <div><span>Kaufdatum</span><b>${esc(p.buyDate||'–')}</b></div>
-          <div><span>Kaufpreis</span><b>${euro(p.buyPrice)}</b></div>
-          <div><span>Gekauft von</span><b>${esc(p.buySource||'Transfermarkt')}${p.buyCounterparty?` · ${esc(p.buyCounterparty)}`:''}</b></div>
-          <div><span>Kaufgrund</span><b>${esc(p.buyReason||'–')}</b></div>
-          ${p.soldDate?`
-            <div><span>Verkaufsdatum</span><b>${esc(p.soldDate)}</b></div>
-            <div><span>Verkaufspreis</span><b>${euro(p.salePrice)}</b></div>
-            <div><span>Verkauft an</span><b>${esc(p.saleSource||'Transfermarkt')}${p.saleCounterparty?` · ${esc(p.saleCounterparty)}`:''}</b></div>
-            <div><span>Verkaufsgrund</span><b>${esc(p.saleReason||'–')}</b></div>
-          `:`
-            <div><span>Aktueller Marktwert</span><b>${euro(p.marketValue)}</b></div>
-            <div><span>Kaufabweichung</span><b>${euro((+p.marketValue||0)-(+p.buyPrice||0))}</b></div>
-          `}
-        </div>
-        <div class="row-actions transfer-card-actions">
-          <button class="btn secondary small" data-edit-transfer="${p.id}">Bearbeiten</button>
-          ${p.soldDate?'':`<button class="btn danger small" data-sell-player="${p.id}">Verkaufen</button>`}
-          <button class="btn danger-outline small" data-delete-transfer="${p.id}">Löschen</button>
-        </div>
-      </div>
-    </article>`;
+    return `<tr>
+      <td><b>${esc(p.name)}</b><small>${esc(p.team)} · ${esc(p.position||'')}</small></td>
+      <td>${esc(p.buyDate||'–')}</td>
+      <td>${esc(p.buySource||'Transfermarkt')}${p.buyCounterparty?`<small>${esc(p.buyCounterparty)}</small>`:''}</td>
+      <td>${euro(p.buyPrice)}</td>
+      <td class="optional-col">${esc(p.buyReason||'–')}</td>
+      <td><span class="pill ${p.soldDate?'neutral':'good'}">${p.soldDate?'Verkauft':'Im Kader'}</span></td>
+      <td>${p.soldDate?esc(p.soldDate):'–'}</td>
+      <td class="optional-col">${p.soldDate?`${esc(p.saleSource||'Transfermarkt')}${p.saleCounterparty?`<small>${esc(p.saleCounterparty)}</small>`:''}`:'–'}</td>
+      <td>${p.soldDate?euro(p.salePrice):'–'}</td>
+      <td class="${gain>=0?'money-pos':'money-neg'}">${euro(gain)}</td>
+      <td class="action-cell"><button class="gear-button" data-manage-transfer="${p.id}" title="Transfer verwalten" aria-label="Transfer von ${esc(p.name)} verwalten">⚙</button></td>
+    </tr>`;
   }).join('');
   return `<div class="transfer-actions">
     <button class="action-card" id="buyPlayer"><strong>🟢 Spieler kaufen</strong><span>Neuen Transfer erfassen.</span></button>
@@ -140,13 +118,13 @@ function transfers(){
   <div id="transferForm"></div>
   <div class="grid kpis" style="margin-top:17px">
     <div class="card kpi"><span>Budget</span><strong>${euro(financeTotal())}</strong></div>
-    <div class="card kpi"><span>Aktiv</span><strong>${summary.active}</strong></div>
+    <div class="card kpi"><span>Im Kader</span><strong>${summary.active}</strong></div>
     <div class="card kpi"><span>Verkauft</span><strong>${summary.sold}</strong></div>
     <div class="card kpi"><span>Realisierter Gewinn</span><strong>${euro(realized())}</strong></div>
   </div>
-  <div class="card" style="margin-top:17px">
-    <div class="section-head transfer-history-head">
-      <div><h2>Transferhistorie</h2><p>${rows.length} von ${summary.all} Transfers angezeigt.</p></div>
+  <div class="card transfer-history-card" style="margin-top:17px">
+    <div class="section-head">
+      <div><h2>Transferhistorie</h2><p>Alle Transfers zentral in einer Tabelle verwalten.</p></div>
     </div>
     <div class="transfer-toolbar">
       <div class="segmented">
@@ -156,7 +134,16 @@ function transfers(){
       </div>
       <input id="transferSearch" type="search" value="${esc(data.ui?.transferSearch||'')}" placeholder="Spieler, Verein oder Grund suchen">
     </div>
-    <div class="transfer-compact-list">${cards||'<div class="empty">Keine passenden Transfers gefunden.</div>'}</div>
+    <div class="table-wrap transfer-history-table">
+      <table>
+        <thead><tr>
+          <th>Spieler</th><th>Kauf</th><th>Von</th><th>Kaufpreis</th><th class="optional-col">Kaufgrund</th>
+          <th>Status</th><th>Verkauf</th><th class="optional-col">An</th><th>Verkaufspreis</th><th>Gewinn/Wert</th><th></th>
+        </tr></thead>
+        <tbody>${tableRows||`<tr><td colspan="11"><div class="empty">Keine passenden Transfers gefunden.</div></td></tr>`}</tbody>
+      </table>
+    </div>
+    <p class="table-help">⚙ öffnet Bearbeiten, Verkaufen, Rückgängig und Löschen.</p>
   </div>
   <div id="modalArea"></div>`;
 }
@@ -233,63 +220,73 @@ function detectLiChanges(raw){
   return changes;
 }
 
+function calculateLeagueTable(){
+  const rows=(data.leagueManagers||LEAGUE_MANAGERS).map(m=>({
+    id:m.id,team:m.team,manager:m.manager,isMe:m.isMe||false,
+    played:0,wins:0,draws:0,losses:0,pointsFor:0,pointsAgainst:0,tablePoints:0
+  }));
+  const byId=Object.fromEntries(rows.map(r=>[r.id,r]));
+  (data.h2h||[]).forEach(g=>{
+    const home=byId[g.homeId],away=byId[g.awayId];
+    if(!home||!away||g.homePoints===undefined||g.awayPoints===undefined)return;
+    const hp=+g.homePoints,ap=+g.awayPoints;
+    home.played++;away.played++;
+    home.pointsFor+=hp;home.pointsAgainst+=ap;
+    away.pointsFor+=ap;away.pointsAgainst+=hp;
+    if(hp>ap){home.wins++;away.losses++;home.tablePoints+=3}
+    else if(ap>hp){away.wins++;home.losses++;away.tablePoints+=3}
+    else{home.draws++;away.draws++;home.tablePoints++;away.tablePoints++}
+  });
+  return rows.sort((a,b)=>b.tablePoints-a.tablePoints||(b.pointsFor-b.pointsAgainst)-(a.pointsFor-a.pointsAgainst)||b.pointsFor-a.pointsFor);
+}
 function competition(){
   const currentMd=+data.settings.currentMd||1;
   const tab=data.ui?.leagueTab||'current';
   const schedule=H2H_SCHEDULE.filter(x=>x.md===currentMd);
   const myGame=schedule.find(x=>x.home==='me'||x.away==='me');
-  const myOpponent=myGame?(myGame.home==='me'?myGame.away:myGame.home):null;
+  const otherGames=schedule.filter(x=>x!==myGame);
   const resultFor=g=>(data.h2h||[]).find(x=>+x.md===+g.md&&((x.homeId===g.home&&x.awayId===g.away)||(x.homeId===g.away&&x.awayId===g.home)));
-  const currentContent=()=>{
-    const cards=schedule.map(g=>{
-      const result=resultFor(g),home=managerById(g.home),away=managerById(g.away);
-      return `<article class="league-current-match ${g.home==='me'||g.away==='me'?'my-match':''}">
-        <div class="league-team"><b>${esc(home?.team||g.home)}</b><small>${esc(home?.manager||'')}</small></div>
-        <div class="league-score">${result?`${result.homePoints ?? '–'} : ${result.awayPoints ?? '–'}`:'vs'}</div>
-        <div class="league-team right"><b>${esc(away?.team||g.away)}</b><small>${esc(away?.manager||'')}</small></div>
-        <button class="btn secondary small" data-h2h-edit="${currentMd}|${g.home}|${g.away}">${result?'Ergebnis bearbeiten':'Ergebnis eintragen'}</button>
-      </article>`;
-    }).join('');
-    return `<div class="league-hero">
-      <span>Dein Gegner · Spieltag ${currentMd}</span>
-      <strong>${esc(managerById(myOpponent)?.team||'–')}</strong>
-      <small>${esc(managerById(myOpponent)?.manager||'')}</small>
+  const matchBlock=(g,featured=false)=>{
+    if(!g)return '';
+    const result=resultFor(g),home=managerById(g.home),away=managerById(g.away);
+    return `<article class="${featured?'featured-match':'small-match'}">
+      ${featured?`<div class="featured-label">Dein Duell · Spieltag ${currentMd}</div>`:''}
+      <div class="match-row">
+        <div class="match-team"><div class="team-monogram">${esc((home?.team||'?').slice(0,2).toUpperCase())}</div><b>${esc(home?.team||g.home)}</b><small>${esc(home?.manager||'')}</small></div>
+        <div class="match-score">${result?`${result.homePoints} : ${result.awayPoints}`:'VS'}</div>
+        <div class="match-team"><div class="team-monogram">${esc((away?.team||'?').slice(0,2).toUpperCase())}</div><b>${esc(away?.team||g.away)}</b><small>${esc(away?.manager||'')}</small></div>
+      </div>
+      <button class="btn secondary match-edit" data-h2h-edit="${currentMd}|${g.home}|${g.away}">${result?'Ergebnis bearbeiten':'Ergebnis eintragen'}</button>
+    </article>`;
+  };
+  const currentContent=`<div class="league-current-clean">
+    ${matchBlock(myGame,true)}
+    <div class="other-matches-head">Weitere Paarungen</div>
+    <div class="other-matches-grid">${otherGames.map(g=>matchBlock(g,false)).join('')}</div>
+  </div>`;
+  const scheduleContent=`<div class="league-schedule-list">${Array.from({length:34},(_,i)=>i+1).map(md=>{
+    const game=H2H_SCHEDULE.find(x=>x.md===md&&(x.home==='me'||x.away==='me'));
+    const opp=game?(game.home==='me'?game.away:game.home):null;
+    const res=game?resultFor(game):null;
+    return `<button class="schedule-row ${md===currentMd?'active':''}" data-set-md="${md}">
+      <span class="schedule-md">ST ${md}</span>
+      <span class="schedule-opponent">${esc(managerById(opp)?.team||'–')}<small>${esc(managerById(opp)?.manager||'')}</small></span>
+      <span class="schedule-result">${res?`${res.homePoints} : ${res.awayPoints}`:'–'}</span>
+      <span>›</span>
+    </button>`;
+  }).join('')}</div>`;
+  const standings=calculateLeagueTable();
+  const teamsContent=`<div class="league-table-wrap"><table class="league-table"><thead><tr><th>#</th><th>Team</th><th>Sp.</th><th>S</th><th>U</th><th>N</th><th>Diff.</th><th>Pkt.</th></tr></thead><tbody>${standings.map((r,i)=>`<tr class="${r.isMe?'my-table-row':''}"><td>${i+1}</td><td><b>${esc(r.team)}</b><small>${esc(r.manager)}${r.isMe?' · Du':''}</small></td><td>${r.played}</td><td>${r.wins}</td><td>${r.draws}</td><td>${r.losses}</td><td>${r.pointsFor-r.pointsAgainst>=0?'+':''}${r.pointsFor-r.pointsAgainst}</td><td><b>${r.tablePoints}</b></td></tr>`).join('')}</tbody></table></div>`;
+  const content=tab==='schedule'?scheduleContent:tab==='teams'?teamsContent:currentContent;
+  return `<div class="card league-clean-shell">
+    <div class="league-clean-header">
+      <div><h2>H2H-Liga</h2><p>Spieltag, eigener Spielplan und Tabelle – klar getrennt.</p></div>
+      <div class="current-md-badge">Spieltag ${currentMd}</div>
     </div>
-    <div class="league-current-list">${cards}</div>`;
-  };
-  const scheduleContent=()=>{
-    const rounds=Array.from({length:34},(_,i)=>i+1).map(md=>{
-      const games=H2H_SCHEDULE.filter(x=>x.md===md);
-      const my=games.find(x=>x.home==='me'||x.away==='me');
-      const opp=my?(my.home==='me'?my.away:my.home):null;
-      const res=my?resultFor(my):null;
-      return `<button class="league-round-card ${md===currentMd?'active':''}" data-set-md="${md}">
-        <span>Spieltag ${md}</span>
-        <b>${esc(managerById(opp)?.team||'–')}</b>
-        <small>${res?`${res.homePoints} : ${res.awayPoints}`:'Noch kein Ergebnis'}</small>
-      </button>`;
-    }).join('');
-    return `<div class="league-schedule-grid">${rounds}</div>`;
-  };
-  const teamsContent=()=>{
-    return `<div class="league-team-grid">${(data.leagueManagers||LEAGUE_MANAGERS).map(m=>`
-      <article class="league-team-card ${m.isMe?'is-me':''}">
-        <div class="manager-avatar">${esc((m.manager||'?').slice(0,1))}</div>
-        <div><b>${esc(m.team)}</b><small>${esc(m.manager)}${m.isMe?' · Du':''}</small></div>
-      </article>`).join('')}</div>`;
-  };
-  const content=tab==='schedule'?scheduleContent():tab==='teams'?teamsContent():currentContent();
-  return `<div class="grid kpis">
-    <div class="card kpi"><span>Dein Team</span><strong>Horn Capital FC</strong></div>
-    <div class="card kpi"><span>Spieltag</span><strong>${currentMd}</strong></div>
-    <div class="card kpi"><span>Nächster Gegner</span><strong>${esc(managerById(myOpponent)?.team||'–')}</strong></div>
-    <div class="card kpi"><span>Manager</span><strong>6</strong></div>
-  </div>
-  <div class="card league-shell" style="margin-top:17px">
-    <div class="league-tabs">
+    <div class="league-tabs clean-tabs">
       <button data-league-tab="current" class="${tab==='current'?'active':''}">Aktueller Spieltag</button>
       <button data-league-tab="schedule" class="${tab==='schedule'?'active':''}">Mein Spielplan</button>
-      <button data-league-tab="teams" class="${tab==='teams'?'active':''}">Teams</button>
+      <button data-league-tab="teams" class="${tab==='teams'?'active':''}">Tabelle</button>
     </div>
     <div class="league-tab-content">${content}</div>
   </div>
@@ -344,6 +341,39 @@ function syncTransferFinance(p){
     delete p.saleFinanceId;
   }
 }
+
+function manageTransfer(pid){
+  const p=data.players.find(x=>x.id===pid);if(!p)return;
+  const gain=p.soldDate?(+p.salePrice||0)-(+p.buyPrice||0):(+p.marketValue||0)-(+p.buyPrice||0);
+  $('#modalArea').innerHTML=`<div class="modal-backdrop"><div class="card modal-card manage-transfer-modal">
+    <div class="section-head">
+      <div><h2>${esc(p.name)}</h2><p>${esc(p.team)} · ${esc(p.position||'')}</p></div>
+      <button class="btn secondary" id="closeManageTransfer">Schließen</button>
+    </div>
+    <div class="manage-transfer-summary">
+      <div><span>Kaufpreis</span><b>${euro(p.buyPrice)}</b></div>
+      <div><span>${p.soldDate?'Verkaufspreis':'Marktwert'}</span><b>${euro(p.soldDate?p.salePrice:p.marketValue)}</b></div>
+      <div><span>${p.soldDate?'Gewinn/Verlust':'Unrealisiert'}</span><b class="${gain>=0?'money-pos':'money-neg'}">${euro(gain)}</b></div>
+    </div>
+    <div class="manage-transfer-actions">
+      <button class="manage-action" id="manageEdit"><span>✏️</span><div><b>Bearbeiten</b><small>Kauf- und Verkaufsdaten korrigieren</small></div></button>
+      ${p.soldDate
+        ? `<button class="manage-action" id="manageUndo"><span>↩️</span><div><b>Verkauf rückgängig</b><small>Spieler wieder in den Kader aufnehmen</small></div></button>`
+        : `<button class="manage-action danger-action" id="manageSell"><span>🔴</span><div><b>Spieler verkaufen</b><small>Verkaufsdaten erfassen</small></div></button>`}
+      <button class="manage-action delete-action" id="manageDelete"><span>🗑️</span><div><b>Kompletten Transfer löschen</b><small>Entfernt auch verknüpfte Finanzbuchungen</small></div></button>
+    </div>
+  </div></div>`;
+  $('#closeManageTransfer').onclick=()=>{$('#modalArea').innerHTML=''};
+  $('#manageEdit').onclick=()=>editTransfer(pid);
+  if($('#manageSell'))$('#manageSell').onclick=()=>sellPlayer(pid);
+  if($('#manageUndo'))$('#manageUndo').onclick=()=>{
+    if(!confirm(`Den Verkauf von ${p.name} rückgängig machen?`))return;
+    p.soldDate='';p.salePrice=0;p.saleReason='';p.saleSource='';p.saleCounterparty='';
+    syncTransferFinance(p);$('#modalArea').innerHTML='';touch();toast('Verkauf rückgängig gemacht');
+  };
+  $('#manageDelete').onclick=()=>deleteTransfer(pid);
+}
+
 function editTransfer(pid){
   const p=data.players.find(x=>x.id===pid);if(!p)return;
   $('#modalArea').innerHTML=`<div class="modal-backdrop"><div class="card modal-card transfer-edit-modal"><div class="section-head"><div><h2>Transfer bearbeiten</h2><p>Kauf und – falls vorhanden – Verkauf von ${esc(p.name)}.</p></div><button class="btn secondary" id="closeTransferEdit">Schließen</button></div><div class="form-grid" style="margin-top:14px">
@@ -403,7 +433,7 @@ function playerForm(p={}){return `<div class="card" style="margin-top:16px"><h3>
 function bind(){bindMoneyFields();
 $$('[data-transfer-filter]').forEach(b=>b.onclick=()=>{data.ui.transferFilter=b.dataset.transferFilter;save();render()});
 if($('#transferSearch'))$('#transferSearch').oninput=e=>{data.ui.transferSearch=e.target.value;save();render()};
-$$('[data-transfer-toggle]').forEach(b=>b.onclick=()=>{const el=$(`#transfer-details-${b.dataset.transferToggle}`);if(el)el.hidden=!el.hidden});
+$$('[data-manage-transfer]').forEach(b=>b.onclick=()=>manageTransfer(b.dataset.manageTransfer));
 $$('[data-league-tab]').forEach(b=>b.onclick=()=>{data.ui.leagueTab=b.dataset.leagueTab;save();render()});
 $$('[data-set-md]').forEach(b=>b.onclick=()=>{data.settings.currentMd=+b.dataset.setMd;data.ui.leagueTab='current';touch()});
 $$('[data-h2h-edit]').forEach(b=>b.onclick=()=>{const [md,h,a]=b.dataset.h2hEdit.split('|');editH2H(md,h,a)});
