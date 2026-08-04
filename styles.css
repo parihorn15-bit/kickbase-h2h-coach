@@ -286,3 +286,14 @@
 @media(max-width:760px){
   .strength-row-rich{grid-template-columns:minmax(145px,1fr) 70px 55px}
 }
+
+.bl-page{display:grid;gap:16px}
+.bl-page-head{display:flex;justify-content:space-between;align-items:center;gap:16px;background:linear-gradient(145deg,#13243a,#0b1729);border:1px solid var(--line);border-radius:18px;padding:18px}
+.bl-page-head>div:first-child>span{color:#7dd3fc;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.1em}
+.bl-page-head h2{font-size:27px;margin:4px 0}.bl-page-head p{color:var(--muted);font-size:12px}
+.bl-md-nav{display:flex;align-items:center;gap:8px;flex-shrink:0}.bl-md-nav button{width:38px;height:38px;border-radius:10px;border:1px solid #3a506d;background:#182a42;color:#fff;font-size:22px}.bl-md-nav button:disabled{opacity:.25}.bl-md-nav select{min-width:140px}
+.bl-main-grid{align-items:start}.bl-fixture-list{display:grid;gap:8px;margin-top:12px}.bl-fixture-card{background:#0b1729;border:1px solid var(--line);border-radius:13px;padding:10px 12px}.bl-fixture-card.has-squad-player{border-color:#22c55e;background:linear-gradient(145deg,#102d23,#0b1729)}
+.bl-date{text-align:center;color:var(--muted);font-size:9px;margin-bottom:6px}.bl-match-row{display:grid;grid-template-columns:1fr 52px 1fr;align-items:center;gap:8px}.bl-team b,.bl-team small{display:block}.bl-team b{font-size:12px}.bl-team small{color:#86efac;font-size:9px;margin-top:3px}.bl-team.home{text-align:right}.bl-score{text-align:center;font-size:14px;font-weight:900}
+.bl-matchup-table{min-width:680px}.bl-matchup-table td small{display:block;color:var(--muted);font-size:9px;margin-top:3px}.matchup-number{display:inline-grid;place-items:center;min-width:42px;padding:6px 8px;border-radius:9px;font-weight:950}.matchup-number.good{background:#123c2b;color:#86efac}.matchup-number.warn{background:#3d3215;color:#fde68a}.matchup-number.bad{background:#4a1d25;color:#fecaca}
+.bl-legend{display:flex;gap:13px;flex-wrap:wrap;margin-top:12px;color:var(--muted);font-size:10px}.legend-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}.legend-dot.good{background:#22c55e}.legend-dot.warn{background:#f59e0b}.legend-dot.bad{background:#ef4444}
+@media(max-width:760px){.bl-page-head{align-items:flex-start;flex-direction:column}.bl-md-nav{width:100%}.bl-md-nav select{flex:1}.bl-main-grid{grid-template-columns:1fr}.bl-match-row{grid-template-columns:1fr 40px 1fr}.bl-team b{font-size:10px}}

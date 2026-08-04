@@ -1,0 +1,8 @@
+VERSION 0.7.5
+
+- 306 Bundesliga-Partien integriert
+- 34 Spieltage mit jeweils 9 Partien geprüft
+- eigener Menüpunkt Bundesliga
+- Gegner und Heim/Auswärts werden wieder automatisch gefunden
+- Matchup-Score verwendet Spielplan und Teamstärken
+- Kaderspieler werden in den Partien hervorgehoben
