@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="de"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b1220"><title>Kickbase H2H Coach 0.6</title>
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><link rel="stylesheet" href="styles.css">
+</head><body>
+<div class="app">
+<aside id="sidebar"><div class="brand"><div class="logo">H2H</div><div><b>Kickbase Coach</b><small>Version 0.6 Alpha · Mobile-first · 2026/27</small></div></div><nav id="nav"></nav><div class="aside-actions"><button id="exportBtn">Sicherung exportieren</button><label>Sicherung importieren<input id="importFile" type="file" accept="application/json" hidden></label><button id="resetBtn" class="danger">Daten zurücksetzen</button></div></aside>
+<main><header><button id="menuBtn">☰</button><div><h1 id="pageTitle">Dashboard</h1><p id="pageSub">Schnelle Entscheidungen, detaillierte Analyse bei Bedarf.</p></div><div class="header-actions"><button id="cloudBadge" class="cloud-badge" data-kind="neutral">Cloud startet …</button><div class="mode"><button data-mode="quick">⚡ Schnell</button><button data-mode="analysis">🔍 Analyse</button></div><label>Spieltag <select id="currentMd"></select></label></div></header><section id="content"></section></main>
+</div>
+<div id="cloudPanel" class="cloud-panel" hidden>
+  <div class="cloud-panel-card">
+    <div class="section-head">
+      <div><h2>Cloud-Synchronisierung</h2><p>Ein Konto – Samsung und Laptop.</p></div>
+      <button id="cloudClose" class="btn secondary small">Schließen</button>
+    </div>
+    <div id="cloudLoginArea">
+      <label>E-Mail-Adresse
+        <input id="cloudEmail" type="email" autocomplete="email" placeholder="deine@email.de">
+      </label>
+      <button id="cloudLoginBtn" class="btn">Login-Link senden</button>
+    </div>
+    <div id="cloudUserArea" hidden>
+      <div class="notice">Angemeldet als <b id="cloudEmailShown"></b></div>
+      <div class="toolbar">
+        <button id="cloudSyncNow" class="btn">Jetzt synchronisieren</button>
+        <button id="cloudUploadLocal" class="btn secondary">Lokalen Stand hochladen</button>
+        <button id="cloudLogoutBtn" class="btn danger">Abmelden</button>
+      </div>
+    </div>
+    <p id="cloudMessage" class="muted"></p>
+  </div>
+</div>
+<div id="toast"></div>
+<script>window.FIXTURES=[];</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script src="cloud.js"></script>
+<script>
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js'));
+}
+</script>
+</body></html>
