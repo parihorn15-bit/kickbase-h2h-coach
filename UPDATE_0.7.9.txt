@@ -1,0 +1,11 @@
+VERSION 0.7.9
+
+- Liga-Wappen neu zentriert und mit einheitlichem Innenabstand
+- Bundesliga > Vereine zeigt Live-Wappen, Tabelle, Trainer, Stadion und Form
+- Bundesliga > Spieler zeigt aktuelle Kader und Such-/Vereinsfilter
+- Spieler können direkt aus dem Live-Kader gekauft werden
+- Kaufmaske wird mit Name, Verein und Position vorausgefüllt
+- Startelf wird auf einem echten Spielfeld angezeigt
+- Bank direkt unter dem Spielfeld
+- Spielerbilder werden automatisch genutzt, sofern photo_url verfügbar ist
+- Neue Supabase-Migration bundesliga_players

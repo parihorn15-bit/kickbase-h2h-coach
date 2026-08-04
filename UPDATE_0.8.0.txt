@@ -1,0 +1,21 @@
+VERSION 0.8.0 – LIGA-INTELLIGENZ
+
+NEU
+- Interaktiver Menüpunkt Regelwerk
+- Kompakte Bereiche: Übersicht, Spieltag, Transfers und Jury
+- Liga-Assistent auf dem Dashboard
+- Tagesbonus, MVP-Eintrag und Pflichtverkauf als aktuelle Hinweise
+- Fristberechnung bis Dienstag vor Marktwertupdate
+- Verkaufsziel bei Bundesliga-MVP automatisch Transfermarkt/Kickbase
+- Verkäufe unter dem eingetragenen Marktwert werden blockiert
+- Marktwert beim Verkauf wird in der Transferhistorie gespeichert
+- Kadergröße und Maximalzahl je Verein werden bewusst nicht doppelt geprüft
+
+REGELWERK
+- H2H-Wertung
+- Transfers und Transparenz
+- Verkauf nicht unter Marktwert
+- Leihen
+- Tauschen
+- MVP- und Top-3-Regel
+- Jury, Anfechtungen und Sanktionen

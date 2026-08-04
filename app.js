@@ -60,6 +60,129 @@ function editingInProgress(){
 }
 window.h2hEditingInProgress=editingInProgress;
 
+const LEAGUE_RULES=[
+  {id:'mode',group:'Liga',title:'H2H-Modus',summary:'Sieg 3 Punkte, Unentschieden 1 Punkt, Niederlage 0 Punkte.',detail:'Tabellenreihenfolge: Punkte, Siege, direkter Vergleich, gesamte Kickbase-Punkte, anschließend Losentscheid.'},
+  {id:'transfers',group:'Transfers',title:'Allgemeine Transfers',summary:'Höchstgebotsprinzip; kein Sofortkauf zwischen Manager und Kickbase.',detail:'Bei Managertransfers muss der wirtschaftlich beste zulässige Zuschlag beachtet werden. Auf Verlangen sind Preis, Gebote, Absprachen und Screenshots offenzulegen.'},
+  {id:'marketvalue',group:'Transfers',title:'Nicht unter Marktwert verkaufen',summary:'Spieler dürfen nie unter ihrem unmittelbar vor Abschluss angezeigten Marktwert verkauft werden.',detail:'Ein vereinbarter Verkauf unter Marktwert muss vor dem nächsten Marktwertupdate durch einen Rückverkauf an Kickbase korrigiert werden.'},
+  {id:'loans',group:'Transfers',title:'Leihgeschäfte',summary:'Mindestens ein Spieltag; Leihgebühr 20 % des Marktwerts bei Leihbeginn.',detail:'Nach Ablauf muss der Spieler unverzüglich zum ursprünglichen Eigentümer zurück. Die Gebühr ist unabhängig von Einsatz und Punkten geschuldet.'},
+  {id:'swaps',group:'Transfers',title:'Spielertausch',summary:'Mit oder ohne Ausgleichszahlung möglich.',detail:'Tauschgeschäfte müssen fair sein und können bei einem nachweislich wirtschaftlich besseren, übergangenen Angebot angefochten werden.'},
+  {id:'mvp',group:'Spieltag',title:'Bundesliga-MVP-Regel',summary:'Der Bundesliga-MVP eines Spieltags muss bis Dienstag vor dem Marktwertupdate an Kickbase verkauft werden.',detail:'Besitzt du den Bundesliga-MVP, erfüllt genau dieser Verkauf gleichzeitig die Top-3-Pflicht; es ist nur ein Pflichtverkauf nötig.'},
+  {id:'top3',group:'Spieltag',title:'Top-3-Regel',summary:'Nach jedem Spieltag muss einer deiner drei punktbesten Spieler dauerhaft abgegeben werden.',detail:'Frist ist Dienstag vor dem Marktwertupdate. Bei Verstoß muss der folgende Spieltag mit nur zehn Spielern bestritten werden.'},
+  {id:'jury',group:'Jury',title:'Transferanfechtung',summary:'Jeder Manager kann Vorgänge begründet bei der Ligajury anfechten.',detail:'Als Nachweise zählen unter anderem Screenshots, Chatverläufe und Gebotshistorien. Offensichtlich missbräuchliche Anfechtungen können ab dem zweiten Fall 1 Mio. € Ausgleich auslösen.'},
+  {id:'sanctions',group:'Jury',title:'Sanktionen',summary:'Verwarnung, Geldstrafe, Punktabzug oder freier Kaderplatz sind möglich.',detail:'Besondere Sanktionen des Regelwerks gehen vor. Geldstrafen sind grundsätzlich innerhalb von sieben Tagen zu begleichen.'}
+];
+function ruleById(id){return LEAGUE_RULES.find(x=>x.id===id)}
+function nextTuesdayDeadline(md=data.settings.currentMd){
+  const games=FIXTURES.filter(x=>+x.md===+md&&x.date);
+  const dates=games.map(x=>new Date(x.date)).filter(x=>!Number.isNaN(x.getTime()));
+  if(!dates.length)return null;
+  const latest=new Date(Math.max(...dates.map(x=>x.getTime())));
+  const deadline=new Date(latest);
+  while(deadline.getDay()!==2)deadline.setDate(deadline.getDate()+1);
+  deadline.setHours(19,30,0,0);
+  return deadline;
+}
+function deadlineText(md=data.settings.currentMd){
+  const d=nextTuesdayDeadline(md);
+  return d?d.toLocaleString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'Dienstag vor Marktwertupdate';
+}
+function dailyBonusBooked(){
+  const today=localDateISO();
+  return data.finances.some(x=>x.date===today&&String(x.type||'').toLowerCase().includes('bonus'));
+}
+function leagueAssistant(){
+  const md=+data.settings.currentMd||1;
+  const record=mdRecord(md);
+  const mandatory=mandatoryStatus(md);
+  const notes=[];
+
+  if(!dailyBonusBooked())notes.push({
+    level:'warn',icon:'🎁',title:'Tagesbonus offen',
+    text:`Für ${localDateISO()} ist noch kein Bonus verbucht.`,
+    action:'finances',label:'Bonus eintragen'
+  });
+
+  if(mandatory.state==='waiting')notes.push({
+    level:'warn',icon:'🏅',title:'Bundesliga-MVP fehlt',
+    text:'Nach Spieltagsende den Bundesliga-MVP eintragen, damit der Pflichtverkauf korrekt bestimmt wird.',
+    action:'matchday',label:'Zum Spieltag'
+  });
+
+  if(mandatory.state==='open')notes.push({
+    level:'bad',icon:'⏰',title:'Pflichtverkauf offen',
+    text:`${mandatory.text}. Frist: ${deadlineText(md)}. Verkauf an Kickbase.`,
+    action:'matchday',label:'Pflichtverkauf prüfen'
+  });
+
+  const invalidSales=data.players.filter(p=>{
+    if(!p.soldDate)return false;
+    const marketAtSale=Number(p.marketValueAtSale||0);
+    return marketAtSale>0&&Number(p.salePrice||0)<marketAtSale;
+  });
+  if(invalidSales.length)notes.push({
+    level:'bad',icon:'⚖️',title:'Verkauf unter Marktwert',
+    text:`${invalidSales.map(p=>p.name).join(', ')} prüfen. Laut Regelwerk ist ein Verkauf unter dem aktuellen Marktwert unzulässig.`,
+    action:'transfers',label:'Transfers öffnen'
+  });
+
+  const wrongMvpDestination=data.players.find(p=>
+    p.soldDate&&record.mvp&&p.name.trim().toLowerCase()===record.mvp.trim().toLowerCase()&&p.saleSource!=='Transfermarkt'
+  );
+  if(wrongMvpDestination)notes.push({
+    level:'bad',icon:'🚨',title:'MVP-Verkaufsziel prüfen',
+    text:`${wrongMvpDestination.name} muss laut Regelwerk an Kickbase/Transfermarkt verkauft werden.`,
+    action:'transfers',label:'Transfer korrigieren'
+  });
+
+  if(!notes.length)notes.push({
+    level:'good',icon:'✅',title:'Alles erledigt',
+    text:'Aktuell erkennt der Liga-Assistent keine offenen regelbedingten Aufgaben.',
+    action:'rules',label:'Regelwerk öffnen'
+  });
+  return notes.slice(0,3);
+}
+
+
+window.BUNDESLIGA_CLUBS=window.BUNDESLIGA_CLUBS||[];
+window.BUNDESLIGA_PLAYERS=window.BUNDESLIGA_PLAYERS||[];
+function mapLivePosition(position){
+  const p=String(position||'').toLowerCase();
+  if(p.includes('goalkeeper'))return 'Tor';
+  if(p.includes('defence')||p.includes('defender'))return 'Abwehr';
+  if(p.includes('midfield'))return 'Mittelfeld';
+  if(p.includes('offence')||p.includes('forward')||p.includes('striker'))return 'Sturm';
+  return 'Mittelfeld';
+}
+function playerVisual(player,className='player-photo'){
+  if(player.photoUrl)return `<img class="${className}" src="${esc(player.photoUrl)}" alt="${esc(player.name)}">`;
+  const initials=String(player.name||'?').split(/\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase();
+  return `<span class="${className} photo-fallback">${esc(initials)}</span>`;
+}
+function buyLivePlayer(externalId){
+  const p=window.BUNDESLIGA_PLAYERS.find(x=>+x.external_id===+externalId);
+  if(!p)return toast('Spieler nicht gefunden');
+  sessionStorage.setItem(TRANSFER_DRAFT_KEY,JSON.stringify({
+    pfName:p.name||'',
+    pfTeam:p.team||'',
+    pfPos:mapLivePosition(p.position),
+    pfDate:localDateISO(),
+    pfBuy:'',
+    pfMwb:'',
+    pfMw:'',
+    pfAvg:'',
+    pfBuySource:'Transfermarkt',
+    pfBuyCounterparty:'',
+    pfBuyReason:'Gutes Programm',
+    pfNote:'',
+    externalPlayerId:p.external_id,
+    photoUrl:p.photo_url||''
+  }));
+  page='transfers';
+  render();
+  setTimeout(()=>$('#buyPlayer')?.click(),0);
+}
+
+
 const H2H_ROUNDS=[
 [['fabi','fabio'],['elias','marci'],['me','manu']],
 [['marci','fabi'],['me','fabio'],['manu','elias']],
@@ -83,7 +206,7 @@ const H2H_SCHEDULE=buildH2HSchedule();
 function managerById(id){return (data.leagueManagers||LEAGUE_MANAGERS).find(x=>x.id===id)||LEAGUE_MANAGERS.find(x=>x.id===id)}
 function managerLabel(id){const m=managerById(id);return m?`${m.team} (${m.manager})`:id}
 function otherManagerOptions(selected=''){return MANAGER_OPTIONS.map(m=>`<option value="${esc(m.team)}" ${selected===m.team?'selected':''}>${esc(m.team)} (${esc(m.manager)})</option>`).join('')}const DAILY_BONUSES=Array.from({length:10},(_,i)=>({label:`Tag ${i+1}`,amount:(i+1)*10000}));const ACHIEVEMENT_BONUSES=[{label:'Spieltagssieger',amount:1000000},{label:'Spieltagspunkte Silber (≥ 1.000)',amount:250000},{label:'Spieltagspunkte Gold (≥ 1.500)',amount:500000},{label:'Jahrhundertspiel (≥ 2.000)',amount:1000000},{label:'Topscorer (200 Punkte)',amount:100000},{label:'Matchwinner (300 Punkte)',amount:500000},{label:'Weltklasse (400 Punkte)',amount:1000000},{label:'Fußballgott (500 Punkte)',amount:2000000},{label:'MVP',amount:1000000},{label:'Tormaschine',amount:250000},{label:'Bronzenes Händchen (3 Mio. Gewinn)',amount:250000},{label:'Silbernes Händchen (5 Mio. Gewinn)',amount:500000},{label:'Goldenes Händchen (10 Mio. Gewinn)',amount:1000000},{label:'Königstransfer (25 Mio. Gewinn)',amount:2000000},{label:'Glückliches Händchen',amount:1000000},{label:'Meister',amount:2000000},{label:'Vizemeister',amount:1000000}];const SEEDED_DATA={"version":3,"settings":{"currentMd":1,"mode":"quick","startCapital":200000000,"homeBonus":1,"lineupSize":11},"players":[{"id":"4eb80f64-293c-4b3a-a93b-3989361b1027","name":"Axel Tape","team":"Bayer 04 Leverkusen","position":"Abwehr","buyDate":"2026-08-02","buyPrice":5071935,"marketAtBuy":0,"marketValue":4655501,"avgPoints":0,"note":""},{"id":"41172e46-cd74-405a-bf78-fa8884a27cac","name":"Robin Gosens","team":"FC Schalke 04","position":"Abwehr","buyDate":"2026-08-03","buyPrice":11445599,"marketAtBuy":0,"marketValue":11407285,"avgPoints":0,"note":"","soldDate":"2026-08-03","salePrice":11407285,"saleReason":"Sinkender Marktwert"},{"id":"016bc246-b164-4a17-a686-cd4a2e90c0d3","name":"Dominik Kohr","team":"1. FSV Mainz 05","position":"Abwehr","buyDate":"2026-08-03","buyPrice":6543210,"marketAtBuy":0,"marketValue":6627684,"avgPoints":0,"note":""},{"id":"6629cde9-bacc-4a2c-8cf1-d2bd98c55480","name":"Jovan Milosevic","team":"VfB Stuttgart","position":"Sturm","buyDate":"2026-08-03","buyPrice":4141414,"marketAtBuy":0,"marketValue":3539303,"avgPoints":0,"note":""}],"finances":[{"id":"start","date":"2026-08-01","type":"Startkapital","description":"Start ohne Kader","amount":200000000},{"id":"ac5941c7-600d-4b97-b27e-1af756a30baf","date":"2026-08-02","type":"Spielerkauf","description":"Kauf Axel Tape","amount":-5071935},{"id":"158bd348-1fc2-4dcd-85fe-0541c4901cfc","date":"2026-08-02","type":"Erfolgsbonus","description":"Kreisliga","amount":1000000},{"id":"466b9c05-c952-4ffa-802b-0861146ef671","date":"2026-08-02","type":"Erfolgsbonus","description":"Regionalliga","amount":1000000},{"id":"80b55a26-862c-4308-930c-2a0b0bac48af","date":"2026-08-02","type":"Erfolgsbonus","description":"Erster Deal","amount":100000},{"id":"ddee6a22-5c27-4387-baa0-caf7cdec2f05","date":"2026-08-03","type":"Tagesanmeldebonus","description":"Tag 1","amount":10000},{"id":"23eb8316-babe-4af3-bf4b-0921645d3098","date":"2026-08-04","type":"Tagesanmeldebonus","description":"Tag 2","amount":20000},{"id":"618181e0-a4f3-46a0-98af-eea7ba7d8d04","date":"2026-08-03","type":"Spielerkauf","description":"Kauf Robin Gosens","amount":-11445599},{"id":"4c3c279c-c039-4ecc-9b56-e105e858bbc1","date":"2026-08-03","type":"Spielerkauf","description":"Kauf Dominik Kohr","amount":-6543210},{"id":"b9c2a384-9ece-4b1f-a87b-4b00ae137cc4","date":"2026-08-03","type":"Spielerkauf","description":"Kauf Jovan Milosevic","amount":-4141414},{"id":"a511955c-44d8-46db-9b75-8fd010f78f26","date":"2026-08-03","type":"Spielerverkauf","description":"Verkauf Robin Gosens","amount":11407285}],"matchdays":[{"id":"6abff25d-b7c8-4738-80c1-fda4f34ebf2b","md":1,"mvp":"","points":{},"lineup":[],"soldPlayer":"","soldDate":"","soldPrice":0}],"opponents":[],"h2h":[],"teamStrength":{"1. FC Köln":5,"1. FC Union Berlin":5,"1. FSV Mainz 05":5,"Bayer 04 Leverkusen":5,"Borussia Dortmund":5,"Borussia Mönchengladbach":5,"Eintracht Frankfurt":5,"FC Augsburg":5,"FC Bayern München":5,"FC Schalke 04":5,"Hamburger SV":5,"RB Leipzig":5,"SC Paderborn 07":5,"SV Elversberg":5,"SV Werder Bremen":5,"Sport-Club Freiburg":5,"TSG Hoffenheim":5,"VfB Stuttgart":5}};const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));const id=()=>crypto.randomUUID?.()||Math.random().toString(36).slice(2);const FALLBACK_TEAMS=['1. FC Köln','1. FC Union Berlin','1. FSV Mainz 05','Bayer 04 Leverkusen','Borussia Dortmund','Borussia Mönchengladbach','Eintracht Frankfurt','FC Augsburg','FC Bayern München','FC Schalke 04','Hamburger SV','RB Leipzig','SC Paderborn 07','SV Elversberg','SV Werder Bremen','Sport-Club Freiburg','TSG Hoffenheim','VfB Stuttgart'];const TEAMS=[...new Set([...(Array.isArray(FIXTURES)?FIXTURES.flatMap(x=>[x.home,x.away]).filter(Boolean):[]),...FALLBACK_TEAMS])].sort((a,b)=>a.localeCompare(b,'de'));
-const defaults={version:8,teamStrengthDetails:{},teamStrengthCloudUpdatedAt:'',ui:{transferFilter:'all',transferSearch:'',leagueTab:'current'},settings:{currentMd:1,mode:'quick',startCapital:200000000,homeBonus:1,lineupSize:11},players:[],finances:[{id:'start',date:'2026-08-01',type:'Startkapital',description:'Start ohne Kader',amount:200000000}],matchdays:[],opponents:[],h2h:[],leagueManagers:LEAGUE_MANAGERS,lineupIntel:{pending:[],lastImport:''},teamStrength:{...TEAM_STRENGTH_BASELINE}};
+const defaults={version:10,ui:{bundesligaTab:'matchups',bundesligaTeam:'Alle',bundesligaSearch:'',...(undefined)},teamStrengthDetails:{},teamStrengthCloudUpdatedAt:'',ui:{transferFilter:'all',transferSearch:'',leagueTab:'current',bundesligaTab:'matchups',bundesligaTeam:'Alle',bundesligaSearch:'',rulesSection:'overview'},settings:{currentMd:1,mode:'quick',startCapital:200000000,homeBonus:1,lineupSize:11},players:[],finances:[{id:'start',date:'2026-08-01',type:'Startkapital',description:'Start ohne Kader',amount:200000000}],matchdays:[],opponents:[],h2h:[],leagueManagers:LEAGUE_MANAGERS,lineupIntel:{pending:[],lastImport:''},teamStrength:{...TEAM_STRENGTH_BASELINE}};
 let data=load(),page='dashboard';function mergeData(x){
   const source=x&&typeof x==='object'?x:{};
   const incomingStrengths=source.teamStrength&&typeof source.teamStrength==='object'
@@ -189,9 +312,9 @@ function mandatoryStatus(md){
 function load(){try{const raw=localStorage.getItem('kickbaseCoachV07')||localStorage.getItem('kickbaseCoachV06')||localStorage.getItem('kickbaseCoachV05')||localStorage.getItem('kickbaseCoachV04')||localStorage.getItem('kickbaseCoachV03')||localStorage.getItem('kickbaseCoachV2');return raw?mergeData(JSON.parse(raw)):mergeData(SEEDED_DATA)}catch{return mergeData(SEEDED_DATA)}}function save(){localStorage.setItem('kickbaseCoachV07',JSON.stringify(data));if(window.cloudQueueSave)window.cloudQueueSave();toast('Gespeichert')}function touch(){save();render()}function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1300)}
 const activePlayers=()=>data.players.filter(p=>!p.soldDate);const soldPlayers=()=>data.players.filter(p=>p.soldDate);const financeTotal=()=>data.finances.reduce((a,x)=>a+(+x.amount||0),0);const squadValue=()=>activePlayers().reduce((a,p)=>a+(+p.marketValue||0),0);const wealth=()=>financeTotal()+squadValue();const realized=()=>soldPlayers().reduce((a,p)=>a+(+p.salePrice||0)-(+p.buyPrice||0),0);const unrealized=()=>activePlayers().reduce((a,p)=>a+(+p.marketValue||0)-(+p.buyPrice||0),0);
 function fixture(team,md=data.settings.currentMd){const f=FIXTURES.find(x=>x.md===md&&(x.home===team||x.away===team));if(!f)return null;return{opp:f.home===team?f.away:f.home,ha:f.home===team?'H':'A',date:f.date}}function strength(t){return +data.teamStrength[t]||5}function matchup(p,md=data.settings.currentMd){const f=fixture(p.team,md);if(!f)return 5;return Math.max(1,Math.min(10,5+strength(p.team)-strength(f.opp)+(f.ha==='H'?+data.settings.homeBonus:0)))}function score(p){return (+p.avgPoints||0)+matchup(p)*10+(LI_SCORE[p.liStatus||'Unbekannt']||0)}function rankPlayers(){return [...activePlayers()].sort((a,b)=>score(b)-score(a))}function mdRecord(md){let x=data.matchdays.find(x=>x.md===md);if(!x){x={id:id(),md,mvp:'',points:{},lineup:[],soldPlayer:'',soldDate:'',soldPrice:0};data.matchdays.push(x)}return x}function top3(md){const r=mdRecord(md);return activePlayers().map(p=>({p,pts:+r.points[p.id]||0})).sort((a,b)=>b.pts-a.pts).slice(0,3)}function mandatoryStatus(md){const r=mdRecord(md),mvpOwned=activePlayers().find(p=>p.name.trim().toLowerCase()===r.mvp.trim().toLowerCase());const top=top3(md);let valid=false,required='';if(!r.mvp)return{state:'waiting',text:'Bundesliga-MVP fehlt'};if(mvpOwned){required=mvpOwned.name;valid=r.soldPlayer===required}else{required='Wahl aus: '+top.map(x=>x.p.name).filter(Boolean).join(', ');valid=top.some(x=>x.p.name===r.soldPlayer)}return{state:valid?'done':'open',text:valid?'Erledigt':required,mvpOwned:!!mvpOwned}}
-const nav=[['dashboard','🏠 Dashboard'],['squad','👥 Kader'],['matchday','⚽ Spieltag'],['bundesliga','🇩🇪 Bundesliga'],['transfers','💸 Transfers'],['finances','💰 Finanzen'],['analysis','📊 Analyse'],['lineupintel','🩺 LigaInsider'],['competition','🏆 Liga'],['settings','⚙️ Einstellungen']];function init(){const n=$('#nav');n.innerHTML=nav.map(([k,l])=>`<button class="nav-btn" data-page="${k}">${l}</button>`).join('');$$('[data-page]').forEach(b=>b.onclick=()=>{page=b.dataset.page;render();$('#sidebar').classList.remove('open')});$('#menuBtn').onclick=()=>$('#sidebar').classList.toggle('open');$('#currentMd').innerHTML=Array.from({length:34},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('');$('#currentMd').value=data.settings.currentMd;$('#currentMd').onchange=e=>{data.settings.currentMd=+e.target.value;touch()};$$('[data-mode]').forEach(b=>b.onclick=()=>{data.settings.mode=b.dataset.mode;touch()});$('#exportBtn').onclick=exportData;$('#importFile').onchange=importData;$('#resetBtn').onclick=()=>{if(confirm('Wirklich alle Daten löschen?')){localStorage.removeItem('kickbaseCoachV05');localStorage.removeItem('kickbaseCoachV04');localStorage.removeItem('kickbaseCoachV03');localStorage.removeItem('kickbaseCoachV2');data=mergeData(SEEDED_DATA);touch()}};render()}
-function render(){document.body.classList.toggle('analysis',data.settings.mode==='analysis');$$('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===data.settings.mode));$$('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===page));const titles={dashboard:['Dashboard','Schnelle Entscheidungen und offene Aufgaben.'],squad:['Kader','Wen stelle ich auf? Startelf und Bank für jeden Spieltag.'],matchday:['Spieltag','Punkte, Bundesliga-MVP und Pflichtverkauf.'],bundesliga:['Bundesliga','Alle 34 Spieltage und die Matchups deines Kaders.'],transfers:['Transfers','Hier kaufst und verkaufst du Spieler. Der Kader aktualisiert sich automatisch.'],finances:['Finanzen','Startkapital, Boni und sämtliche Geldbewegungen.'],analysis:['Analyse','Tiefe Auswertungen, wenn du mehr Zeit hast.'],lineupintel:['LigaInsider-Abgleich','Voraussichtliche Aufstellungen halbautomatisch prüfen und übernehmen.'],competition:['Konkurrenz','Optional: Manager, Kader und H2H-Ergebnisse.'],settings:['Einstellungen','Teamstärken, Matchups und Grundwerte.']};$('#pageTitle').textContent=titles[page][0];$('#pageSub').textContent=titles[page][1];try{
-  const renderer=({dashboard,squad,matchday,bundesliga,transfers,finances,analysis,lineupintel,competition,settings}[page]);
+const nav=[['dashboard','🏠 Dashboard'],['squad','👥 Kader'],['matchday','⚽ Spieltag'],['bundesliga','🇩🇪 Bundesliga'],['transfers','💸 Transfers'],['finances','💰 Finanzen'],['analysis','📊 Analyse'],['lineupintel','🩺 LigaInsider'],['competition','🏆 Liga'],['rules','📖 Regelwerk'],['settings','⚙️ Einstellungen']];function init(){const n=$('#nav');n.innerHTML=nav.map(([k,l])=>`<button class="nav-btn" data-page="${k}">${l}</button>`).join('');$$('[data-page]').forEach(b=>b.onclick=()=>{page=b.dataset.page;render();$('#sidebar').classList.remove('open')});$('#menuBtn').onclick=()=>$('#sidebar').classList.toggle('open');$('#currentMd').innerHTML=Array.from({length:34},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('');$('#currentMd').value=data.settings.currentMd;$('#currentMd').onchange=e=>{data.settings.currentMd=+e.target.value;touch()};$$('[data-mode]').forEach(b=>b.onclick=()=>{data.settings.mode=b.dataset.mode;touch()});$('#exportBtn').onclick=exportData;$('#importFile').onchange=importData;$('#resetBtn').onclick=()=>{if(confirm('Wirklich alle Daten löschen?')){localStorage.removeItem('kickbaseCoachV05');localStorage.removeItem('kickbaseCoachV04');localStorage.removeItem('kickbaseCoachV03');localStorage.removeItem('kickbaseCoachV2');data=mergeData(SEEDED_DATA);touch()}};render()}
+function render(){document.body.classList.toggle('analysis',data.settings.mode==='analysis');$$('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===data.settings.mode));$$('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===page));const titles={dashboard:['Dashboard','Schnelle Entscheidungen und offene Aufgaben.'],squad:['Kader','Wen stelle ich auf? Startelf und Bank für jeden Spieltag.'],matchday:['Spieltag','Punkte, Bundesliga-MVP und Pflichtverkauf.'],bundesliga:['Bundesliga','Alle 34 Spieltage und die Matchups deines Kaders.'],transfers:['Transfers','Hier kaufst und verkaufst du Spieler. Der Kader aktualisiert sich automatisch.'],finances:['Finanzen','Startkapital, Boni und sämtliche Geldbewegungen.'],analysis:['Analyse','Tiefe Auswertungen, wenn du mehr Zeit hast.'],lineupintel:['LigaInsider-Abgleich','Voraussichtliche Aufstellungen halbautomatisch prüfen und übernehmen.'],competition:['Liga','Dein aktuelles Duell, Spielplan und Tabelle.'],rules:['Regelwerk','Interaktive Regeln und dein aktueller Status.'],settings:['Einstellungen','Teamstärken, Matchups und Grundwerte.']};$('#pageTitle').textContent=titles[page][0];$('#pageSub').textContent=titles[page][1];try{
+  const renderer=({dashboard,squad,matchday,bundesliga,transfers,finances,analysis,lineupintel,competition,rules,settings}[page]);
   if(typeof renderer!=='function')throw new Error(`Seite ${page} ist nicht verfügbar.`);
   $('#content').innerHTML=renderer();
   bind();
@@ -199,65 +322,116 @@ function render(){document.body.classList.toggle('analysis',data.settings.mode==
   console.error('Seitenfehler:',error);
   $('#content').innerHTML=`<div class="card error-card"><h2>Bereich konnte nicht geladen werden</h2><p>${esc(error?.message||'Unbekannter Fehler')}</p><button class="btn" onclick="location.reload()">App neu laden</button></div>`;
 }}
-function dashboard(){const md=data.settings.currentMd,rank=rankPlayers(),m=mandatoryStatus(md),fx=FIXTURES.filter(x=>x.md===md);const decisions=[];if(activePlayers().length<11)decisions.push(['bad',`Nur ${activePlayers().length} Spieler im Kader – Startelf noch unvollständig.`]);if(m.state==='open')decisions.push(['bad',`Pflichtverkauf offen: ${m.text}`]);if(m.state==='waiting')decisions.push(['warn','Bundesliga-MVP nach dem Spieltag noch eintragen.']);rank.slice(0,3).forEach(p=>decisions.push(['good',`${p.name}: Matchup ${matchup(p).toFixed(1)}/10 gegen ${fixture(p.team)?.opp||'–'}.`]));return `<div class="grid kpis"><div class="card kpi"><span>Kontostand</span><strong>${euro(financeTotal())}</strong><small>Start: ${euro(data.settings.startCapital)}</small></div><div class="card kpi"><span>Teamwert</span><strong>${euro(squadValue())}</strong><small>${activePlayers().length}/14 Spieler</small></div><div class="card kpi"><span>Gesamtvermögen</span><strong>${euro(wealth())}</strong><small>Budget + Teamwert</small></div><div class="card kpi"><span>Pflichtverkauf</span><strong>${m.state==='done'?'✅':m.state==='open'?'🚨':'⏳'}</strong><small>${esc(m.text)}</small></div></div><div class="grid two" style="margin-top:17px"><div class="card"><div class="section-head"><div><h2>Entscheidungs-Center</h2><p>Was jetzt besonders wichtig ist.</p></div></div>${decisions.length?decisions.map(x=>`<div class="decision ${x[0]}">${esc(x[1])}</div>`).join(''):'<div class="empty">Kader anlegen, dann erscheinen Empfehlungen.</div>'}</div><div class="card"><div class="section-head"><div><h2>Empfohlene Startelf</h2><p>Ø Punkte plus Matchup-Score.</p></div></div>${rank.length?rank.slice(0,data.settings.lineupSize).map((p,i)=>`<div class="bar-row"><span>${i+1}. ${esc(p.name)}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.min(100,score(p)/2.5)}%"></div></div><b>${score(p).toFixed(0)}</b></div>`).join(''):'<div class="empty">Noch kein Kader vorhanden.</div>'}</div></div><div class="grid two analysis-only" style="margin-top:17px"><div class="card"><h2>Partien – Spieltag ${md}</h2><div class="fixtures" style="margin-top:13px">${fx.map(f=>`<div class="fixture"><span class="home">${esc(f.home)}</span><small>${esc(f.date)}</small><span>${esc(f.away)}</span></div>`).join('')}</div></div><div class="card"><h2>Finanzlage</h2><div class="decision good" style="margin-top:13px">Realisierter Transfergewinn: ${euro(realized())}</div><div class="decision">Unrealisierte Marktwertentwicklung: ${euro(unrealized())}</div><div class="decision ${financeTotal()<0?'bad':''}">Verfügbares Budget: ${euro(financeTotal())}</div></div></div>`}
-function squad(){const r=mdRecord(data.settings.currentMd);const active=activePlayers();if(!Array.isArray(r.lineup))r.lineup=[];r.lineup=r.lineup.filter(pid=>active.some(p=>p.id===pid)).slice(0,data.settings.lineupSize);const recommended=rankPlayers().slice(0,data.settings.lineupSize).map(p=>p.id);const displayLineup=r.lineup.length?r.lineup:recommended;const starters=displayLineup.map(pid=>active.find(p=>p.id===pid)).filter(Boolean);const bench=active.filter(p=>!displayLineup.includes(p.id));const card=(p,isStarter)=>{const f=fixture(p.team),gain=(+p.marketValue||0)-(+p.buyPrice||0);return `<article class="player-card clickable ${isStarter?'lineup-card':'bench-card'}" data-toggle-lineup="${p.id}"><span class="pill ${isStarter?'good':'warn'} slot-badge">${isStarter?'STARTELF':'BANK'}</span><div class="name">${esc(p.name)}</div><div class="club">${esc(p.team)} · ${esc(p.position||'')}</div><div style="margin-top:8px"><span class="pill ${liStatusClass(p.liStatus)}">${esc(p.liStatus||'Unbekannt')}</span></div><div class="metrics"><div class="metric"><span>Gegner</span><b>${f?`${esc(f.opp)} (${f.ha})`:'–'}</b></div><div class="metric"><span>Matchup</span><b>${matchup(p).toFixed(1)}/10</b></div><div class="metric"><span>Ø Punkte</span><b>${(+p.avgPoints||0).toFixed(1)}</b></div><div class="metric"><span>Marktwerttrend</span><b class="${gain>=0?'money-pos':'money-neg'}">${euro(gain)}</b></div></div><div class="actions"><button class="btn small secondary" data-edit-player="${p.id}">Details</button><span class="muted" style="font-size:11px">Antippen: ${isStarter?'auf Bank':'in Startelf'}</span></div></article>`};return `<div class="status-strip"><div class="progress-ring" style="--pct:${Math.min(100,starters.length/data.settings.lineupSize*100)}%"><b>${starters.length}/${data.settings.lineupSize}</b></div><div><b>Aufstellung für Spieltag ${data.settings.currentMd}</b><div class="muted" style="font-size:12px">${r.lineup.length?'Manuell gespeichert':'Aktuell wird die Empfehlung angezeigt. Speichern übernimmt sie.'}</div></div><div class="toolbar" style="margin-left:auto"><button class="btn secondary" id="useRecommendation">Empfehlung übernehmen</button><button class="btn" id="saveLineup">Startelf speichern</button></div></div><div class="squad-tabs" style="margin-top:17px"><button class="squad-tab active" data-squad-view="lineup">⭐ Startelf (${starters.length})</button><button class="squad-tab" data-squad-view="bench">🪑 Bank (${bench.length})</button><button class="squad-tab" data-squad-view="all">📋 Gesamtkader (${active.length})</button><button class="squad-tab" data-squad-view="stats">📊 Details</button></div><div id="squadView"><div class="player-grid">${starters.map(p=>card(p,true)).join('')||'<div class="empty-soft">Noch keine Startelf. Nutze die Empfehlung oder tippe Bankspieler an.</div>'}</div></div><template id="viewLineup"><div class="player-grid">${starters.map(p=>card(p,true)).join('')||'<div class="empty-soft">Noch keine Startelf gewählt.</div>'}</div></template><template id="viewBench"><div class="player-grid">${bench.map(p=>card(p,false)).join('')||'<div class="empty-soft">Keine Bankspieler.</div>'}</div></template><template id="viewAll"><div class="player-grid">${active.map(p=>card(p,displayLineup.includes(p.id))).join('')||'<div class="empty-soft">Noch kein Spieler im Kader. Käufe erfasst du unter Transfers.</div>'}</div></template><template id="viewStats"><div class="card"><div class="table-wrap"><table><thead><tr><th>Spieler</th><th>Kaufpreis</th><th>Marktwert</th><th>Unrealisiert</th><th>Ø Punkte</th><th>LigaInsider</th><th>Gegner</th></tr></thead><tbody>${active.map(p=>{const f=fixture(p.team);return `<tr><td><b>${esc(p.name)}</b><br><span class="muted">${esc(p.team)}</span></td><td>${euro(p.buyPrice)}</td><td>${euro(p.marketValue)}</td><td class="${(+p.marketValue-+p.buyPrice)>=0?'money-pos':'money-neg'}">${euro(+p.marketValue-+p.buyPrice)}</td><td>${(+p.avgPoints||0).toFixed(1)}</td><td><span class="pill ${liStatusClass(p.liStatus)}">${esc(p.liStatus||'Unbekannt')}</span></td><td>${f?`${esc(f.opp)} (${f.ha})`:'–'}</td></tr>`}).join('')}</tbody></table></div></div></template><div id="modalArea"></div>`}
+function dashboard(){const md=data.settings.currentMd,rank=rankPlayers(),m=mandatoryStatus(md),fx=FIXTURES.filter(x=>x.md===md);const decisions=[];if(activePlayers().length<11)decisions.push(['bad',`Nur ${activePlayers().length} Spieler im Kader – Startelf noch unvollständig.`]);if(m.state==='open')decisions.push(['bad',`Pflichtverkauf offen: ${m.text}`]);if(m.state==='waiting')decisions.push(['warn','Bundesliga-MVP nach dem Spieltag noch eintragen.']);rank.slice(0,3).forEach(p=>decisions.push(['good',`${p.name}: Matchup ${matchup(p).toFixed(1)}/10 gegen ${fixture(p.team)?.opp||'–'}.`]));
+const assistant=leagueAssistant();
+return `<div class="card league-assistant-card">
+  <div class="section-head"><div><h2>🧠 Liga-Assistent</h2><p>Nur Regeln und Aufgaben, die Kickbase nicht selbst erzwingt.</p></div><button class="btn secondary small" data-go-page="rules">Regelwerk</button></div>
+  <div class="assistant-list">${assistant.map(n=>`<article class="assistant-note ${n.level}">
+    <div class="assistant-icon">${n.icon}</div><div><b>${esc(n.title)}</b><p>${esc(n.text)}</p></div>
+    <button class="btn secondary small" data-go-page="${n.action}">${esc(n.label)}</button>
+  </article>`).join('')}</div>
+</div>
+<div style="height:17px"></div><div class="grid kpis"><div class="card kpi"><span>Kontostand</span><strong>${euro(financeTotal())}</strong><small>Start: ${euro(data.settings.startCapital)}</small></div><div class="card kpi"><span>Teamwert</span><strong>${euro(squadValue())}</strong><small>${activePlayers().length}/14 Spieler</small></div><div class="card kpi"><span>Gesamtvermögen</span><strong>${euro(wealth())}</strong><small>Budget + Teamwert</small></div><div class="card kpi"><span>Pflichtverkauf</span><strong>${m.state==='done'?'✅':m.state==='open'?'🚨':'⏳'}</strong><small>${esc(m.text)}</small></div></div><div class="grid two" style="margin-top:17px"><div class="card"><div class="section-head"><div><h2>Entscheidungs-Center</h2><p>Was jetzt besonders wichtig ist.</p></div></div>${decisions.length?decisions.map(x=>`<div class="decision ${x[0]}">${esc(x[1])}</div>`).join(''):'<div class="empty">Kader anlegen, dann erscheinen Empfehlungen.</div>'}</div><div class="card"><div class="section-head"><div><h2>Empfohlene Startelf</h2><p>Ø Punkte plus Matchup-Score.</p></div></div>${rank.length?rank.slice(0,data.settings.lineupSize).map((p,i)=>`<div class="bar-row"><span>${i+1}. ${esc(p.name)}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.min(100,score(p)/2.5)}%"></div></div><b>${score(p).toFixed(0)}</b></div>`).join(''):'<div class="empty">Noch kein Kader vorhanden.</div>'}</div></div><div class="grid two analysis-only" style="margin-top:17px"><div class="card"><h2>Partien – Spieltag ${md}</h2><div class="fixtures" style="margin-top:13px">${fx.map(f=>`<div class="fixture"><span class="home">${esc(f.home)}</span><small>${esc(f.date)}</small><span>${esc(f.away)}</span></div>`).join('')}</div></div><div class="card"><h2>Finanzlage</h2><div class="decision good" style="margin-top:13px">Realisierter Transfergewinn: ${euro(realized())}</div><div class="decision">Unrealisierte Marktwertentwicklung: ${euro(unrealized())}</div><div class="decision ${financeTotal()<0?'bad':''}">Verfügbares Budget: ${euro(financeTotal())}</div></div></div>`}
+function squad(){
+  const r=mdRecord(data.settings.currentMd);
+  const active=activePlayers();
+  if(!Array.isArray(r.lineup))r.lineup=[];
+  r.lineup=r.lineup.filter(pid=>active.some(p=>p.id===pid)).slice(0,data.settings.lineupSize);
+  const recommended=rankPlayers().slice(0,data.settings.lineupSize).map(p=>p.id);
+  const displayLineup=r.lineup.length?r.lineup:recommended;
+  const starters=displayLineup.map(pid=>active.find(p=>p.id===pid)).filter(Boolean);
+  const bench=active.filter(p=>!displayLineup.includes(p.id));
 
+  const fieldPlayer=p=>{
+    const f=fixture(p.team);
+    return `<button class="field-player" data-toggle-lineup="${p.id}">
+      ${playerVisual(p,'field-photo')}
+      <b>${esc(p.name.split(' ').pop())}</b>
+      <small>${f?`${esc(f.opp)} · ${f.ha}`:'Kein Gegner'}</small>
+      <span class="field-score ${matchup(p)>=7?'good':matchup(p)<=4?'bad':'warn'}">${matchup(p).toFixed(1)}</span>
+    </button>`;
+  };
+  const row=position=>{
+    const list=starters.filter(p=>p.position===position);
+    return `<div class="pitch-row pitch-${position.toLowerCase()}">${list.map(fieldPlayer).join('')||`<span class="empty-position">${position}</span>`}</div>`;
+  };
+  const benchCard=p=>`<button class="bench-player" data-toggle-lineup="${p.id}">
+    ${playerVisual(p,'bench-photo')}<span><b>${esc(p.name)}</b><small>${esc(p.position||'')} · Matchup ${matchup(p).toFixed(1)}</small></span>
+  </button>`;
+
+  const allCard=p=>{const f=fixture(p.team);return `<article class="player-card clickable" data-toggle-lineup="${p.id}">
+    ${playerVisual(p,'squad-photo')}<div class="name">${esc(p.name)}</div><div class="club">${esc(p.team)} · ${esc(p.position||'')}</div>
+    <div class="metrics"><div class="metric"><span>Gegner</span><b>${f?`${esc(f.opp)} (${f.ha})`:'–'}</b></div><div class="metric"><span>Matchup</span><b>${matchup(p).toFixed(1)}</b></div></div>
+  </article>`};
+
+  return `<div class="status-strip">
+    <div class="progress-ring" style="--pct:${Math.min(100,starters.length/data.settings.lineupSize*100)}%"><b>${starters.length}/${data.settings.lineupSize}</b></div>
+    <div><b>Aufstellung für Spieltag ${data.settings.currentMd}</b><div class="muted" style="font-size:12px">${r.lineup.length?'Manuell gespeichert':'Empfohlene Startelf wird angezeigt.'}</div></div>
+    <div class="toolbar" style="margin-left:auto"><button class="btn secondary" id="useRecommendation">Empfehlung</button><button class="btn" id="saveLineup">Speichern</button></div>
+  </div>
+  <div class="squad-tabs" style="margin-top:17px">
+    <button class="squad-tab active" data-squad-view="lineup">⚽ Spielfeld</button>
+    <button class="squad-tab" data-squad-view="bench">🪑 Bank (${bench.length})</button>
+    <button class="squad-tab" data-squad-view="all">📋 Gesamtkader (${active.length})</button>
+    <button class="squad-tab" data-squad-view="stats">📊 Details</button>
+  </div>
+  <div id="squadView">
+    <div class="football-pitch">${row('Sturm')}${row('Mittelfeld')}${row('Abwehr')}${row('Tor')}</div>
+    <div class="pitch-bench"><h3>Bank</h3>${bench.map(benchCard).join('')||'<div class="empty-soft">Keine Bankspieler.</div>'}</div>
+  </div>
+  <template id="viewLineup"><div class="football-pitch">${row('Sturm')}${row('Mittelfeld')}${row('Abwehr')}${row('Tor')}</div><div class="pitch-bench"><h3>Bank</h3>${bench.map(benchCard).join('')||'<div class="empty-soft">Keine Bankspieler.</div>'}</div></template>
+  <template id="viewBench"><div class="bench-list">${bench.map(benchCard).join('')||'<div class="empty-soft">Keine Bankspieler.</div>'}</div></template>
+  <template id="viewAll"><div class="player-grid">${active.map(allCard).join('')||'<div class="empty-soft">Noch kein Spieler im Kader.</div>'}</div></template>
+  <template id="viewStats"><div class="card"><div class="table-wrap"><table><thead><tr><th>Spieler</th><th>Kaufpreis</th><th>Marktwert</th><th>Ø Punkte</th><th>Gegner</th></tr></thead><tbody>${active.map(p=>{const f=fixture(p.team);return `<tr><td><b>${esc(p.name)}</b><small>${esc(p.team)}</small></td><td>${euro(p.buyPrice)}</td><td>${euro(p.marketValue)}</td><td>${(+p.avgPoints||0).toFixed(1)}</td><td>${f?`${esc(f.opp)} (${f.ha})`:'–'}</td></tr>`}).join('')}</tbody></table></div></div></template>
+  <div id="modalArea"></div>`;
+}
 function bundesliga(){
   const md=+data.settings.currentMd||1;
-  const games=FIXTURES.filter(x=>+x.md===md);
-  const active=activePlayers();
-  const playerRows=active.map(p=>{
-    const f=fixture(p.team,md);
-    return {p,f,score:matchup(p,md),opponentStrength:f?strength(f.opp):null,ownStrength:strength(p.team)};
-  }).sort((a,b)=>b.score-a.score);
-  const fixtureCards=games.map(g=>{
-    const homePlayers=active.filter(p=>p.team===g.home);
-    const awayPlayers=active.filter(p=>p.team===g.away);
-    const hasPlayers=homePlayers.length||awayPlayers.length;
-    return `<article class="bl-fixture-card ${hasPlayers?'has-squad-player':''}">
-      <div class="bl-date">${esc(g.date||'Termin offen')}</div>
-      <div class="bl-match-row">
-        <div class="bl-team home"><b>${esc(g.home)}</b>${homePlayers.length?`<small>${homePlayers.map(p=>esc(p.name)).join(', ')}</small>`:''}</div>
-        <div class="bl-score">${g.hg??'–'} : ${g.ag??'–'}</div>
-        <div class="bl-team away"><b>${esc(g.away)}</b>${awayPlayers.length?`<small>${awayPlayers.map(p=>esc(p.name)).join(', ')}</small>`:''}</div>
-      </div>
-    </article>`;
-  }).join('');
-  const matchupRows=playerRows.map(({p,f,score,opponentStrength,ownStrength})=>`
-    <tr>
-      <td><b>${esc(p.name)}</b><small>${esc(p.team)} · ${esc(p.position||'')}</small></td>
-      <td>${f?esc(f.opp):'Kein Spiel gefunden'}</td>
-      <td>${f?`<span class="pill ${f.ha==='H'?'good':'neutral'}">${f.ha==='H'?'Heim':'Auswärts'}</span>`:'–'}</td>
-      <td>${ownStrength.toFixed(1)}</td>
-      <td>${opponentStrength!==null?opponentStrength.toFixed(1):'–'}</td>
-      <td><span class="matchup-number ${score>=7?'good':score<=4?'bad':'warn'}">${score.toFixed(1)}</span></td>
-    </tr>`).join('');
+  const tab=data.ui?.bundesligaTab||'matchups';
+  const clubs=window.BUNDESLIGA_CLUBS||[];
+  const players=window.BUNDESLIGA_PLAYERS||[];
+  const teamFilter=data.ui?.bundesligaTeam||'Alle';
+  const search=String(data.ui?.bundesligaSearch||'').toLocaleLowerCase('de-DE');
+
+  const matchupView=()=>{
+    const games=FIXTURES.filter(x=>+x.md===md),active=activePlayers();
+    return `<div class="grid two bl-main-grid">
+      <section class="card"><div class="section-head"><div><h2>Alle Partien</h2><p>Deine Spieler sind grün markiert.</p></div></div><div class="bl-fixture-list">${games.map(g=>{
+        const hp=active.filter(p=>p.team===g.home),ap=active.filter(p=>p.team===g.away);
+        return `<article class="bl-fixture-card ${hp.length||ap.length?'has-squad-player':''}"><div class="bl-date">${esc(g.date||'')}</div><div class="bl-match-row"><div class="bl-team home"><b>${esc(g.home)}</b>${hp.length?`<small>${hp.map(p=>esc(p.name)).join(', ')}</small>`:''}</div><div class="bl-score">${g.hg??'–'} : ${g.ag??'–'}</div><div class="bl-team away"><b>${esc(g.away)}</b>${ap.length?`<small>${ap.map(p=>esc(p.name)).join(', ')}</small>`:''}</div></div></article>`;
+      }).join('')}</div></section>
+      <section class="card"><div class="section-head"><div><h2>Deine Matchups</h2><p>Gegner, Ort und Teamstärken.</p></div></div><div class="table-wrap"><table class="bl-matchup-table"><thead><tr><th>Spieler</th><th>Gegner</th><th>Ort</th><th>Score</th></tr></thead><tbody>${active.map(p=>{const f=fixture(p.team,md);return `<tr><td><b>${esc(p.name)}</b><small>${esc(p.team)}</small></td><td>${f?esc(f.opp):'–'}</td><td>${f?(f.ha==='H'?'Heim':'Auswärts'):'–'}</td><td><span class="matchup-number">${matchup(p,md).toFixed(1)}</span></td></tr>`}).join('')}</tbody></table></div></section>
+    </div>`;
+  };
+  const clubsView=()=>clubs.length?`<div class="club-live-grid">${clubs.map(c=>`
+    <article class="club-live-card">
+      ${c.crest_url?`<img src="${esc(c.crest_url)}" alt="${esc(c.team)}">`:'<div class="club-logo-fallback">⚽</div>'}
+      <div><h3>${esc(c.team)}</h3><p>${c.position?`${c.position}. Platz · ${c.points||0} Punkte`:'Saison noch nicht gestartet'}</p></div>
+      <div class="club-live-stats"><span>Trainer<b>${esc(c.coach||'–')}</b></span><span>Stadion<b>${esc(c.venue||'–')}</b></span><span>Form<b>${esc(c.form||'–')}</b></span></div>
+      <button class="btn secondary" data-club-squad="${esc(c.team)}">Kader anzeigen</button>
+    </article>`).join('')}</div>`:'<div class="empty">Noch keine Live-Vereinsdaten. Führe Migration und GitHub-Workflow aus.</div>';
+
+  const filteredPlayers=players.filter(p=>(teamFilter==='Alle'||p.team===teamFilter)&&(!search||`${p.name} ${p.team} ${p.position}`.toLocaleLowerCase('de-DE').includes(search)));
+  const playersView=()=>`<div class="live-player-toolbar">
+    <select id="liveTeamFilter"><option>Alle</option>${clubs.map(c=>`<option ${teamFilter===c.team?'selected':''}>${esc(c.team)}</option>`).join('')}</select>
+    <input id="livePlayerSearch" type="search" value="${esc(data.ui?.bundesligaSearch||'')}" placeholder="Spieler suchen">
+  </div>
+  <div class="live-player-grid">${filteredPlayers.map(p=>`
+    <article class="live-player-card">
+      ${p.photo_url?`<img src="${esc(p.photo_url)}" alt="${esc(p.name)}">`:`<div class="live-player-initials">${esc(p.name.split(/\s+/).map(x=>x[0]).join('').slice(0,2))}</div>`}
+      <div><b>${esc(p.name)}</b><small>${esc(p.team)} · ${esc(mapLivePosition(p.position))}</small></div>
+      <button class="btn small" data-buy-live-player="${p.external_id}">Kaufen</button>
+    </article>`).join('')||'<div class="empty">Keine passenden Spieler gefunden.</div>'}</div>`;
+
+  const content=tab==='clubs'?clubsView():tab==='players'?playersView():matchupView();
   return `<div class="bl-page">
-    <div class="bl-page-head">
-      <div><span>Bundesliga 2026/27</span><h2>Spieltag ${md}</h2><p>Die Paarungen steuern Gegner, Heim/Auswärts und Matchup-Wertung automatisch.</p></div>
-      <div class="bl-md-nav">
-        <button data-bl-md="${Math.max(1,md-1)}" ${md<=1?'disabled':''}>‹</button>
-        <select id="blMdSelect">${Array.from({length:34},(_,i)=>`<option value="${i+1}" ${i+1===md?'selected':''}>Spieltag ${i+1}</option>`).join('')}</select>
-        <button data-bl-md="${Math.min(34,md+1)}" ${md>=34?'disabled':''}>›</button>
-      </div>
+    <div class="bl-page-head"><div><span>Bundesliga 2026/27</span><h2>Live-Zentrale</h2><p>Spielplan, Vereine und aktuelle Kader.</p></div>
+      <div class="bl-md-nav"><button data-bl-md="${Math.max(1,md-1)}" ${md<=1?'disabled':''}>‹</button><select id="blMdSelect">${Array.from({length:34},(_,i)=>`<option value="${i+1}" ${i+1===md?'selected':''}>Spieltag ${i+1}</option>`).join('')}</select><button data-bl-md="${Math.min(34,md+1)}" ${md>=34?'disabled':''}>›</button></div>
     </div>
-    <div class="grid two bl-main-grid">
-      <section class="card">
-        <div class="section-head"><div><h2>Alle Partien</h2><p>Kaderspieler werden bei ihrer Partie hervorgehoben.</p></div></div>
-        <div class="bl-fixture-list">${fixtureCards}</div>
-      </section>
-      <section class="card">
-        <div class="section-head"><div><h2>Deine Matchups</h2><p>Teamstärken plus Heimvorteil ergeben den Matchup-Score.</p></div></div>
-        ${active.length?`<div class="table-wrap"><table class="bl-matchup-table">
-          <thead><tr><th>Spieler</th><th>Gegner</th><th>Ort</th><th>Team</th><th>Gegner</th><th>Score</th></tr></thead>
-          <tbody>${matchupRows}</tbody>
-        </table></div>`:'<div class="empty">Noch keine aktiven Spieler im Kader.</div>'}
-        <div class="bl-legend"><span><i class="legend-dot good"></i>7–10 gut</span><span><i class="legend-dot warn"></i>4,1–6,9 ausgeglichen</span><span><i class="legend-dot bad"></i>1–4 schwer</span></div>
-      </section>
-    </div>
+    <div class="bundesliga-tabs"><button data-bl-tab="matchups" class="${tab==='matchups'?'active':''}">Matchups</button><button data-bl-tab="clubs" class="${tab==='clubs'?'active':''}">Vereine</button><button data-bl-tab="players" class="${tab==='players'?'active':''}">Spieler</button></div>
+    ${content}
   </div>`;
 }
-
 function matchday(){
   const md=data.settings.currentMd;
   const r=mdRecord(md);
@@ -541,6 +715,42 @@ function editH2H(md,homeId,awayId){
   };
   if($('#deleteH2H'))$('#deleteH2H').onclick=()=>{data.h2h=data.h2h.filter(x=>x.id!==row.id);$('#competitionModal').innerHTML='';touch();toast('H2H-Ergebnis gelöscht')};
 }
+
+function rules(){
+  const selected=data.ui?.rulesSection||'overview';
+  const md=+data.settings.currentMd||1;
+  const mandatory=mandatoryStatus(md);
+  const assistant=leagueAssistant();
+  const groups=['overview','Spieltag','Transfers','Jury'];
+  const overview=`<div class="rules-overview">
+    <div class="grid kpis">
+      <div class="card kpi"><span>Spieltag</span><strong>${md}</strong><small>Frist: ${esc(deadlineText(md))}</small></div>
+      <div class="card kpi"><span>Pflichtverkauf</span><strong>${mandatory.state==='done'?'✅':mandatory.state==='open'?'🚨':'⏳'}</strong><small>${esc(mandatory.text)}</small></div>
+      <div class="card kpi"><span>Tagesbonus</span><strong>${dailyBonusBooked()?'✅':'○'}</strong><small>${localDateISO()}</small></div>
+      <div class="card kpi"><span>Regeln</span><strong>${LEAGUE_RULES.length}</strong><small>Interaktiv zusammengefasst</small></div>
+    </div>
+    <div class="card" style="margin-top:15px"><h2>Aktueller Regelstatus</h2><div class="assistant-list" style="margin-top:12px">${assistant.map(n=>`<article class="assistant-note ${n.level}"><div class="assistant-icon">${n.icon}</div><div><b>${esc(n.title)}</b><p>${esc(n.text)}</p></div></article>`).join('')}</div></div>
+    <div class="notice" style="margin-top:15px">Kickbase erzwingt bereits maximal 14 Spieler und höchstens zwei Spieler je Bundesligaverein. Diese beiden Regeln werden hier bewusst nicht doppelt geprüft.</div>
+  </div>`;
+
+  const list=LEAGUE_RULES.filter(r=>selected==='overview'||r.group===selected);
+  const ruleCards=selected==='overview'?overview:`<div class="rule-card-list">${list.map(r=>`
+    <article class="rule-card">
+      <div class="rule-card-head"><span>${r.group}</span><h3>${esc(r.title)}</h3></div>
+      <p class="rule-summary">${esc(r.summary)}</p>
+      <details><summary>Details anzeigen</summary><p>${esc(r.detail)}</p></details>
+      ${r.id==='mvp'||r.id==='top3'?`<div class="rule-live-status ${mandatory.state}">
+        <b>Dein Status · Spieltag ${md}</b><span>${esc(mandatory.text)}</span><small>Frist: ${esc(deadlineText(md))}</small>
+      </div>`:''}
+    </article>`).join('')}</div>`;
+
+  return `<div class="rules-page">
+    <div class="rules-hero"><div><span>6MINI · DIKS</span><h2>Offizielles Ligaregelwerk</h2><p>Saison 2026/27 · kompakt, interaktiv und mit deinem Status verknüpft.</p></div><div class="rules-seal">⚖️</div></div>
+    <div class="rules-tabs">${groups.map(g=>`<button data-rules-section="${g}" class="${selected===g?'active':''}">${g==='overview'?'Übersicht':g}</button>`).join('')}</div>
+    ${ruleCards}
+  </div>`;
+}
+
 function settings(){return `<div class="grid two">
   <div class="card"><h2>Grundlagen</h2><div class="form-grid" style="margin-top:14px">
     <label>Startkapital (€)<input id="setCapital" class="money-field" inputmode="numeric" value="${moneyInput(data.settings.startCapital)}"></label>
@@ -705,9 +915,17 @@ function playerForm(p={}){
   const val=(key,fallback='')=>d[key]!==undefined?d[key]:fallback;
   return `<div class="card" style="margin-top:16px"><h3>${p.id?'Spielerdetails bearbeiten':'Spieler kaufen'}</h3><div class="form-grid" style="margin-top:12px"><label>Name<input id="pfName" value="${esc(val('pfName',p.name||''))}"></label><label>Verein<select id="pfTeam">${TEAMS.map(t=>`<option ${val('pfTeam',p.team)===t?'selected':''}>${esc(t)}</option>`).join('')}</select></label><label>Position<select id="pfPos">${['Tor','Abwehr','Mittelfeld','Sturm'].map(x=>`<option ${val('pfPos',p.position)===x?'selected':''}>${x}</option>`).join('')}</select></label><label>Kaufdatum<input id="pfDate" type="date" value="${esc(val('pfDate',p.buyDate||localDateISO()))}"></label><label>Kaufpreis (€)<input id="pfBuy" class="money-field" inputmode="numeric" value="${p.buyPrice?moneyInput(p.buyPrice):''}" placeholder="z. B. 5.071.935 €"></label><label>Marktwert beim Kauf (€) – optional<input id="pfMwb" class="money-field" inputmode="numeric" value="${p.marketAtBuy?moneyInput(p.marketAtBuy):''}"></label><label>Aktueller Marktwert (€)<input id="pfMw" class="money-field" inputmode="numeric" value="${p.marketValue?moneyInput(p.marketValue):''}"></label><label>Ø Punkte<input id="pfAvg" type="number" step="0.1" value="${p.avgPoints||''}"></label><label>Gekauft von<select id="pfBuySource">${TRANSFER_SOURCES.map(x=>`<option ${p.buySource===x?'selected':''}>${esc(x)}</option>`).join('')}</select></label><label>Mitspieler<select id="pfBuyCounterparty"><option value="">Bitte auswählen</option>${otherManagerOptions(p.buyCounterparty||'')}</select></label><label class="wide">Kaufgrund<select id="pfBuyReason">${BUY_REASONS.map(x=>`<option ${p.buyReason===x?'selected':''}>${esc(x)}</option>`).join('')}</select></label><label class="wide">Notiz<input id="pfNote" value="${esc(p.note||'')}"></label><div class="full"><button class="btn" id="savePlayer">Speichern</button></div></div></div>`}
 function bind(){bindMoneyFields();
+$$('[data-go-page]').forEach(b=>b.onclick=()=>{page=b.dataset.goPage;render();window.scrollTo({top:0,behavior:'smooth'})});
+$$('[data-rules-section]').forEach(b=>b.onclick=()=>{data.ui.rulesSection=b.dataset.rulesSection;save();render()});
+
 $$('form').forEach(form=>form.addEventListener('submit',event=>event.preventDefault()));
 $$('input').forEach(input=>input.addEventListener('keydown',event=>{if(event.key==='Enter'&&input.type!=='textarea')event.preventDefault()}));
 
+$$('[data-bl-tab]').forEach(b=>b.onclick=()=>{data.ui.bundesligaTab=b.dataset.blTab;save();render()});
+if($('#liveTeamFilter'))$('#liveTeamFilter').onchange=e=>{data.ui.bundesligaTeam=e.target.value;save();render()};
+if($('#livePlayerSearch'))$('#livePlayerSearch').oninput=e=>{data.ui.bundesligaSearch=e.target.value;save();render()};
+$$('[data-buy-live-player]').forEach(b=>b.onclick=()=>buyLivePlayer(b.dataset.buyLivePlayer));
+$$('[data-club-squad]').forEach(b=>b.onclick=()=>{data.ui.bundesligaTeam=b.dataset.clubSquad;data.ui.bundesligaTab='players';save();render()});
 $$('[data-bl-md]').forEach(b=>b.onclick=()=>{data.settings.currentMd=+b.dataset.blMd;touch()});
 if($('#blMdSelect'))$('#blMdSelect').onchange=e=>{data.settings.currentMd=+e.target.value;touch()};
 $$('[data-transfer-filter]').forEach(b=>b.onclick=()=>{data.ui.transferFilter=b.dataset.transferFilter;save();render()});
@@ -723,8 +941,8 @@ $$('[data-li-remove]').forEach(b=>b.onclick=()=>{data.lineupIntel.pending=(data.
 $$('[data-li-status]').forEach(s=>s.onchange=()=>{const p=data.players.find(x=>x.id===s.dataset.liStatus);if(p){p.liStatus=s.value;p.liUpdatedAt=new Date().toISOString();touch()}});
 $$('[data-quick-bonus]').forEach(b=>b.onclick=()=>addQuickBonus(b.dataset.quickBonus,b.dataset.label,+b.dataset.amount));if($('#buyPlayer'))$('#buyPlayer').onclick=()=>{$('#transferForm').innerHTML=playerForm();bindPlayerForm()};if($('#sellPlayerOpen'))$('#sellPlayerOpen').onclick=()=>{const active=activePlayers();if(!active.length)return toast('Kein aktiver Spieler vorhanden');$('#transferForm').innerHTML=`<div class="card" style="margin-top:16px"><h3>Spieler verkaufen</h3><div class="form-grid" style="margin-top:12px"><label class="wide">Spieler<select id="sellSelect">${active.map(p=>`<option value="${p.id}">${esc(p.name)} · Kaufpreis ${euro(p.buyPrice)}</option>`).join('')}</select></label><div class="full"><button class="btn danger" id="continueSell">Verkauf erfassen</button></div></div></div>`;$('#continueSell').onclick=()=>sellPlayer($('#sellSelect').value)};if($('#saveLineup'))$('#saveLineup').onclick=()=>{const r=mdRecord(data.settings.currentMd);if(!r.lineup.length)r.lineup=rankPlayers().slice(0,data.settings.lineupSize).map(p=>p.id);save();render();toast('Startelf gespeichert')};if($('#useRecommendation'))$('#useRecommendation').onclick=()=>{mdRecord(data.settings.currentMd).lineup=rankPlayers().slice(0,data.settings.lineupSize).map(p=>p.id);touch()};$$('[data-squad-view]').forEach(b=>b.onclick=()=>{$$('[data-squad-view]').forEach(x=>x.classList.remove('active'));b.classList.add('active');const key=b.dataset.squadView[0].toUpperCase()+b.dataset.squadView.slice(1);$('#squadView').innerHTML=$(`#view${key}`).innerHTML;bindSquadCards()});bindSquadCards();$$('[data-sell-player]').forEach(b=>b.onclick=()=>sellPlayer(b.dataset.sellPlayer));$$('[data-edit-transfer]').forEach(b=>b.onclick=()=>editTransfer(b.dataset.editTransfer));$$('[data-delete-transfer]').forEach(b=>b.onclick=()=>deleteTransfer(b.dataset.deleteTransfer));$$('[data-points]').forEach(e=>e.onchange=()=>{mdRecord(data.settings.currentMd).points[e.dataset.points]=e.value===''?null:+e.value;save();render()});if($('#saveMd'))$('#saveMd').onclick=()=>{const r=mdRecord(data.settings.currentMd);Object.assign(r,{mvp:$('#mdMvp').value.trim(),soldPlayer:$('#mdSold').value,soldDate:$('#mdSoldDate').value,soldPrice:+$('#mdSoldPrice').value||0});save();render()};if($('#addFinance'))$('#addFinance').onclick=showFinanceForm;$$('[data-del-fin]').forEach(b=>b.onclick=()=>{data.finances=data.finances.filter(x=>x.id!==b.dataset.delFin);touch()});if($('#addOpponent'))$('#addOpponent').onclick=()=>{const name=prompt('Name des Managers:');if(!name)return;data.opponents.push({id:id(),name,teamName:prompt('Teamname (optional):')||'',squadValue:+prompt('Bekannter Kaderwert (optional):')||0,note:prompt('Notiz (optional):')||''});touch()};$$('[data-del-opp]').forEach(b=>b.onclick=()=>{data.opponents=data.opponents.filter(x=>x.id!==b.dataset.delOpp);touch()});if($('#addH2H'))$('#addH2H').onclick=()=>{const opponent=prompt('Gegner:');if(!opponent)return;data.h2h.push({id:id(),md:data.settings.currentMd,opponent,myPoints:+prompt('Deine Punkte:')||0,oppPoints:+prompt('Gegnerpunkte:')||0});touch()};if($('#resetStrengths'))$('#resetStrengths').onclick=()=>{data.teamStrength={...TEAM_STRENGTH_BASELINE};data.teamStrengthDetails={};data.teamStrengthCloudUpdatedAt='';touch();toast('Basiswerte geladen')};if($('#saveSettings'))$('#saveSettings').onclick=()=>{data.settings.startCapital=parseMoney($('#setCapital').value);data.settings.lineupSize=+$('#setLineup').value;data.settings.homeBonus=+$('#setHome').value;$$('[data-strength]').forEach(x=>data.teamStrength[x.dataset.strength]=+x.value);data.finances.find(x=>x.id==='start').amount=data.settings.startCapital;touch()};$$('[data-strength]').forEach(x=>x.onchange=()=>{data.teamStrength[x.dataset.strength]=+x.value;save()})}
 function bindSquadCards(){$$('[data-toggle-lineup]').forEach(c=>c.onclick=e=>{if(e.target.closest('button'))return;const r=mdRecord(data.settings.currentMd),pid=c.dataset.toggleLineup;if(!Array.isArray(r.lineup)||!r.lineup.length)r.lineup=rankPlayers().slice(0,data.settings.lineupSize).map(p=>p.id);if(r.lineup.includes(pid))r.lineup=r.lineup.filter(x=>x!==pid);else{if(r.lineup.length>=data.settings.lineupSize)return toast(`Maximal ${data.settings.lineupSize} Spieler in der Startelf`);r.lineup.push(pid)}touch()});$$('[data-edit-player]').forEach(b=>b.onclick=e=>{e.stopPropagation();$('#modalArea').innerHTML=playerForm(data.players.find(p=>p.id===b.dataset.editPlayer));bindPlayerForm(b.dataset.editPlayer)})}
-function bindPlayerForm(editId){$('#savePlayer').onclick=()=>{if(!editId&&activePlayers().length>=14)return toast('Maximal 14 aktive Spieler');const p=editId?data.players.find(x=>x.id===editId):{id:id()};const wasNew=!editId;if($('#pfBuySource').value==='Mitspieler'&&!$('#pfBuyCounterparty').value)return toast('Bitte den Mitspieler auswählen');Object.assign(p,{name:$('#pfName').value.trim(),team:$('#pfTeam').value,position:$('#pfPos').value,buyDate:$('#pfDate').value,buyPrice:parseMoney($('#pfBuy').value),marketAtBuy:parseMoney($('#pfMwb').value),marketValue:parseMoney($('#pfMw').value),avgPoints:+$('#pfAvg').value||0,buySource:$('#pfBuySource').value,buyCounterparty:$('#pfBuySource').value==='Mitspieler'?$('#pfBuyCounterparty').value.trim():'',buyReason:$('#pfBuyReason').value,note:$('#pfNote').value,liStatus:p.liStatus||'Unbekannt'});if(wasNew){clearTransferDraft();data.players.push(p);const finance={id:id(),date:p.buyDate,type:'Spielerkauf',description:`Kauf ${p.name} von ${p.buySource||'Transfermarkt'}${p.buyCounterparty?' ('+p.buyCounterparty+')':''}`,amount:-p.buyPrice};data.finances.push(finance);p.buyFinanceId=finance.id}else syncTransferFinance(p);touch()}}
-function sellPlayer(pid){const p=data.players.find(x=>x.id===pid);$('#modalArea').innerHTML=`<div class="modal-backdrop"><div class="card modal-card"><div class="section-head"><div><h2>${esc(p.name)} verkaufen</h2><p>Ursprünglicher Kaufpreis: ${euro(p.buyPrice)}</p></div><button class="btn secondary" id="closeSell">Schließen</button></div><div class="form-grid" style="margin-top:14px"><label>Verkaufsdatum<input id="sellDate" type="date" value="${localDateISO()}"></label><label>Verkaufspreis (€)<input id="sellPrice" class="money-field" inputmode="numeric" placeholder="z. B. 11.407.285 €"></label><label>Verkauft an<select id="sellSource">${TRANSFER_SOURCES.map(x=>`<option>${esc(x)}</option>`).join('')}</select></label><label>Mitspieler<select id="sellCounterparty"><option value="">Bitte auswählen</option>${otherManagerOptions('')}</select></label><label class="wide">Verkaufsgrund<select id="sellReason">${SELL_REASONS.map(x=>`<option>${esc(x)}</option>`).join('')}</select></label><div class="full"><button class="btn danger" id="confirmSell">Verkauf speichern</button></div></div></div></div>`;bindMoneyFields();$('#closeSell').onclick=()=>{$('#modalArea').innerHTML=''};$('#confirmSell').onclick=()=>{const date=$('#sellDate').value,price=parseMoney($('#sellPrice').value),reason=$('#sellReason').value,source=$('#sellSource').value,counterparty=source==='Mitspieler'?$('#sellCounterparty').value.trim():'';if(!date||!price)return toast('Datum und Verkaufspreis eintragen');if(source==='Mitspieler'&&!counterparty)return toast('Bitte den Mitspieler auswählen');Object.assign(p,{soldDate:date,salePrice:price,saleReason:reason,saleSource:source,saleCounterparty:counterparty});const finance={id:id(),date,type:'Spielerverkauf',description:`Verkauf ${p.name} an ${source}${counterparty?' ('+counterparty+')':''}`,amount:price};data.finances.push(finance);p.saleFinanceId=finance.id;$('#modalArea').innerHTML='';touch()}}
+function bindPlayerForm(editId){$('#savePlayer').onclick=()=>{if(!editId&&activePlayers().length>=14)return toast('Maximal 14 aktive Spieler');const p=editId?data.players.find(x=>x.id===editId):{id:id()};const wasNew=!editId;if($('#pfBuySource').value==='Mitspieler'&&!$('#pfBuyCounterparty').value)return toast('Bitte den Mitspieler auswählen');Object.assign(p,{name:$('#pfName').value.trim(),team:$('#pfTeam').value,position:$('#pfPos').value,buyDate:$('#pfDate').value,buyPrice:parseMoney($('#pfBuy').value),marketAtBuy:parseMoney($('#pfMwb').value),marketValue:parseMoney($('#pfMw').value),avgPoints:+$('#pfAvg').value||0,buySource:$('#pfBuySource').value,buyCounterparty:$('#pfBuySource').value==='Mitspieler'?$('#pfBuyCounterparty').value.trim():'',buyReason:$('#pfBuyReason').value,note:$('#pfNote').value,liStatus:p.liStatus||'Unbekannt',externalPlayerId:p.externalPlayerId||d.externalPlayerId||null,photoUrl:p.photoUrl||d.photoUrl||''});if(wasNew){clearTransferDraft();data.players.push(p);const finance={id:id(),date:p.buyDate,type:'Spielerkauf',description:`Kauf ${p.name} von ${p.buySource||'Transfermarkt'}${p.buyCounterparty?' ('+p.buyCounterparty+')':''}`,amount:-p.buyPrice};data.finances.push(finance);p.buyFinanceId=finance.id}else syncTransferFinance(p);touch()}}
+function sellPlayer(pid){const p=data.players.find(x=>x.id===pid);$('#modalArea').innerHTML=`<div class="modal-backdrop"><div class="card modal-card"><div class="section-head"><div><h2>${esc(p.name)} verkaufen</h2><p>Ursprünglicher Kaufpreis: ${euro(p.buyPrice)}</p></div><button class="btn secondary" id="closeSell">Schließen</button></div><div class="form-grid" style="margin-top:14px"><label>Verkaufsdatum<input id="sellDate" type="date" value="${localDateISO()}"></label><label>Verkaufspreis (€)<input id="sellPrice" class="money-field" inputmode="numeric" placeholder="z. B. 11.407.285 €"></label><label>Verkauft an<select id="sellSource">${TRANSFER_SOURCES.map(x=>`<option>${esc(x)}</option>`).join('')}</select></label><label>Mitspieler<select id="sellCounterparty"><option value="">Bitte auswählen</option>${otherManagerOptions('')}</select></label><label class="wide">Verkaufsgrund<select id="sellReason">${SELL_REASONS.map(x=>`<option>${esc(x)}</option>`).join('')}</select></label><div class="full"><button class="btn danger" id="confirmSell">Verkauf speichern</button></div></div></div></div>`;bindMoneyFields();$('#closeSell').onclick=()=>{$('#modalArea').innerHTML=''};$('#confirmSell').onclick=()=>{const date=$('#sellDate').value,price=parseMoney($('#sellPrice').value),marketValueAtSale=parseMoney($('#sellMarketValue').value),reason=$('#sellReason').value,source=$('#sellSource').value,counterparty=source==='Mitspieler'?$('#sellCounterparty').value.trim():'';if(!date||!price)return toast('Datum und Verkaufspreis eintragen');if(marketValueAtSale&&price<marketValueAtSale)return toast('Regelverstoß: Verkauf unter aktuellem Marktwert ist nicht erlaubt');if(source==='Mitspieler'&&!counterparty)return toast('Bitte den Mitspieler auswählen');Object.assign(p,{soldDate:date,salePrice:price,marketValueAtSale,saleReason:reason,saleSource:source,saleCounterparty:counterparty});const finance={id:id(),date,type:'Spielerverkauf',description:`Verkauf ${p.name} an ${source}${counterparty?' ('+counterparty+')':''}`,amount:price};data.finances.push(finance);p.saleFinanceId=finance.id;$('#modalArea').innerHTML='';touch()}}
 function bindMoneyFields(){$$('.money-field').forEach(el=>{const format=()=>{const n=parseMoney(el.value);el.value=n?`${moneyInput(n)} €`:''};el.addEventListener('focus',()=>{const n=parseMoney(el.value);el.value=n?moneyInput(n):''});el.addEventListener('blur',format);if(el.value)format()})}
 function addQuickBonus(kind,label,amount){const date=localDateISO(),type=kind==='daily'?'Tagesanmeldebonus':'Erfolgsbonus';if(kind==='daily'&&data.finances.some(x=>x.date===date&&x.type==='Tagesanmeldebonus')){if(!confirm('Für heute ist bereits ein Tagesanmeldebonus vorhanden. Trotzdem noch einmal buchen?'))return}data.finances.push({id:id(),date,type,description:label,amount});touch();toast(`${label}: ${euro(amount)} gebucht`)}
 function showFinanceForm(){$('#financeForm').innerHTML=`<div class="notice" style="margin-top:14px"><div class="form-grid"><label>Datum<input id="ffDate" type="date" value="${localDateISO()}"></label><label>Typ<select id="ffType">${['Tagesanmeldebonus','Erfolgsbonus','Punktebonus','Admin-Gutschrift','Admin-Strafe','Korrektur','Sonstiges'].map(x=>`<option>${x}</option>`).join('')}</select></label><label class="wide">Beschreibung<input id="ffDesc"></label><label>Betrag (+/−) (€)<input id="ffAmount" class="money-field" inputmode="numeric" placeholder="z. B. 1.000.000 €"></label><div><button class="btn" id="saveFinance">Speichern</button></div></div></div>`;bindMoneyFields();$('#saveFinance').onclick=()=>{data.finances.push({id:id(),date:$('#ffDate').value,type:$('#ffType').value,description:$('#ffDesc').value,amount:parseMoney($('#ffAmount').value)});touch()}}

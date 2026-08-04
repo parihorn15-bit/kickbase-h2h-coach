@@ -327,3 +327,69 @@
   .league-other-row{grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr)}
   .other-team span{font-size:10px}
 }
+
+/* 0.7.9 – Live-Kader, Spielfeld und korrigierte Wappen */
+.team-crest,.main-crest,.mini-crest,.table-crest{object-position:center;display:block}
+.football-pitch{position:relative;min-height:650px;border-radius:22px;padding:30px 14px;display:flex;flex-direction:column;justify-content:space-around;gap:16px;background:
+linear-gradient(90deg,transparent 49.6%,rgba(255,255,255,.25) 49.6%,rgba(255,255,255,.25) 50.4%,transparent 50.4%),
+linear-gradient(rgba(255,255,255,.11) 2px,transparent 2px),
+repeating-linear-gradient(90deg,#176b3a 0,#176b3a 12.5%,#197744 12.5%,#197744 25%);
+border:3px solid rgba(255,255,255,.42);overflow:hidden}
+.football-pitch:after{content:"";position:absolute;inset:42% 37%;border:2px solid rgba(255,255,255,.35);border-radius:50%;pointer-events:none}
+.pitch-row{display:flex;justify-content:space-evenly;align-items:center;gap:8px;position:relative;z-index:1}
+.field-player{width:92px;background:rgba(7,18,28,.88);border:1px solid rgba(255,255,255,.28);border-radius:14px;padding:7px;color:#fff;text-align:center;position:relative}
+.field-photo,.bench-photo,.squad-photo{object-fit:cover;border-radius:50%;background:#24344f}
+.field-photo{width:48px;height:48px;margin:auto}.bench-photo{width:42px;height:42px}.squad-photo{width:62px;height:62px;margin-bottom:8px}
+.photo-fallback{display:grid;place-items:center;font-weight:900}
+.field-player b,.field-player small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.field-player b{font-size:11px;margin-top:4px}.field-player small{font-size:8px;color:#cbd5e1}
+.field-score{position:absolute;right:-5px;top:-7px;border-radius:8px;padding:3px 5px;font-size:9px;font-weight:900}
+.field-score.good{background:#16a34a}.field-score.warn{background:#d97706}.field-score.bad{background:#dc2626}
+.empty-position{color:rgba(255,255,255,.45);font-size:11px;text-transform:uppercase;letter-spacing:.15em}
+.pitch-bench{margin-top:14px}.bench-list,.pitch-bench{display:grid;gap:8px}
+.bench-player{display:flex;align-items:center;gap:10px;background:#0b1729;border:1px solid var(--line);border-radius:12px;color:#fff;padding:9px;text-align:left}
+.bench-player span b,.bench-player span small{display:block}.bench-player small{color:var(--muted);font-size:10px}
+.bundesliga-tabs{display:grid;grid-template-columns:repeat(3,1fr);background:#0b1729;border:1px solid var(--line);border-radius:13px;padding:4px;gap:4px}
+.bundesliga-tabs button{border:0;background:transparent;color:var(--muted);padding:11px;border-radius:9px;font-weight:900}.bundesliga-tabs button.active{background:#2563eb;color:#fff}
+.club-live-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.club-live-card{background:#0b1729;border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:10px}
+.club-live-card>img,.club-logo-fallback{width:68px;height:68px;object-fit:contain;border-radius:50%;background:#fff;padding:5px}
+.club-live-card h3{font-size:14px}.club-live-card p{color:var(--muted);font-size:10px}
+.club-live-stats{display:grid;gap:6px}.club-live-stats span{font-size:9px;color:var(--muted)}.club-live-stats b{display:block;color:#fff;font-size:11px;margin-top:2px}
+.live-player-toolbar{display:flex;gap:10px;margin-bottom:12px}.live-player-toolbar input{flex:1}
+.live-player-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.live-player-card{display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:10px;background:#0b1729;border:1px solid var(--line);border-radius:13px;padding:10px}
+.live-player-card>img,.live-player-initials{width:48px;height:48px;border-radius:50%;object-fit:cover;background:#24344f;display:grid;place-items:center;font-weight:900}
+.live-player-card b,.live-player-card small{display:block}.live-player-card small{font-size:9px;color:var(--muted);margin-top:3px}
+@media(max-width:900px){.club-live-grid,.live-player-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){
+ .football-pitch{min-height:560px;padding:20px 5px}.field-player{width:71px}.field-photo{width:39px;height:39px}
+ .club-live-grid,.live-player-grid{grid-template-columns:1fr}.live-player-toolbar{flex-direction:column}
+ .live-player-card{grid-template-columns:44px 1fr auto}.live-player-card>img,.live-player-initials{width:44px;height:44px}
+}
+
+/* Version 0.8.0 – Regelwerk und Liga-Assistent */
+.league-assistant-card{border-color:#315070;background:linear-gradient(145deg,#10243a,#0c1727)}
+.assistant-list{display:grid;gap:9px}
+.assistant-note{display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;gap:11px;border:1px solid var(--line);border-radius:13px;padding:11px;background:#0b1729}
+.assistant-note.good{border-color:#166534;background:#102d23}.assistant-note.warn{border-color:#92400e;background:#322713}.assistant-note.bad{border-color:#991b1b;background:#32171d}
+.assistant-icon{width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,.07);display:grid;place-items:center;font-size:19px}
+.assistant-note b,.assistant-note p{display:block}.assistant-note p{color:#cbd5e1;font-size:11px;margin-top:3px;line-height:1.4}
+.rules-page{display:grid;gap:15px}
+.rules-hero{display:flex;justify-content:space-between;align-items:center;gap:15px;background:linear-gradient(135deg,#172c48,#0b1729);border:1px solid #315070;border-radius:20px;padding:22px}
+.rules-hero span{color:#7dd3fc;font-size:10px;font-weight:900;letter-spacing:.1em}.rules-hero h2{font-size:27px;margin:4px 0}.rules-hero p{color:var(--muted)}
+.rules-seal{width:68px;height:68px;border-radius:50%;display:grid;place-items:center;background:#1d3554;border:1px solid #567391;font-size:30px}
+.rules-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;background:#0b1729;border:1px solid var(--line);border-radius:13px;padding:5px}
+.rules-tabs button{border:0;background:transparent;color:var(--muted);border-radius:9px;padding:11px 6px;font-weight:900}.rules-tabs button.active{background:#2563eb;color:white}
+.rule-card-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.rule-card{background:#0b1729;border:1px solid var(--line);border-radius:16px;padding:15px}
+.rule-card-head span{color:#60a5fa;font-size:9px;text-transform:uppercase;letter-spacing:.1em;font-weight:900}.rule-card-head h3{font-size:16px;margin-top:4px}
+.rule-summary{margin:10px 0;color:#e2e8f0;line-height:1.5;font-size:12px}
+.rule-card details{border-top:1px solid var(--line);padding-top:9px}.rule-card summary{cursor:pointer;color:#93c5fd;font-size:11px;font-weight:800}.rule-card details p{margin-top:9px;color:var(--muted);font-size:11px;line-height:1.5}
+.rule-live-status{display:grid;gap:3px;margin-top:12px;padding:10px;border-radius:11px;background:#17243a}.rule-live-status.open{background:#3a171c}.rule-live-status.done{background:#113225}.rule-live-status.waiting{background:#342911}
+.rule-live-status span,.rule-live-status small{font-size:10px}.rule-live-status small{color:var(--muted)}
+@media(max-width:760px){
+ .assistant-note{grid-template-columns:36px 1fr}.assistant-note .btn{grid-column:1/-1;width:100%}
+ .rules-hero{padding:17px}.rules-hero h2{font-size:21px}.rules-seal{width:52px;height:52px;font-size:23px}
+ .rules-tabs button{font-size:10px}.rule-card-list{grid-template-columns:1fr}
+}

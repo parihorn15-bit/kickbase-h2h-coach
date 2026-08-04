@@ -100,6 +100,20 @@
     }
   }
 
+
+  async function fetchBundesligaLiveData(){
+    if(!client||!currentUser)return;
+    try{
+      const [{data:clubs,error:clubError},{data:players,error:playerError}]=await Promise.all([
+        client.from("bundesliga_clubs").select("*").order("position",{ascending:true,nullsFirst:false}),
+        client.from("bundesliga_players").select("*").order("team").order("name")
+      ]);
+      if(!clubError&&Array.isArray(clubs))window.BUNDESLIGA_CLUBS=clubs;
+      if(!playerError&&Array.isArray(players))window.BUNDESLIGA_PLAYERS=players;
+      if(!window.h2hEditingInProgress?.())render();
+    }catch(error){console.warn("Bundesliga-Livedaten nicht verfügbar:",error)}
+  }
+
   async function fetchCloudState({initial=false}={}) {
     if (!client || !currentUser || syncing) return;
     syncing = true;
@@ -137,6 +151,7 @@
       }
       cloudReady = true;
       await fetchTeamStrengths();
+      await fetchBundesligaLiveData();
     } catch (err) {
       console.error(err);
       setCloudState("Cloud-Fehler", "bad");
@@ -258,6 +273,7 @@
     byId("cloudUploadLocal")?.addEventListener("click", async () => {
       cloudReady = true;
       await fetchTeamStrengths();
+      await fetchBundesligaLiveData();
       await pushCloudState();
     });
 
@@ -269,10 +285,10 @@
     });
 
     document.addEventListener("visibilitychange", () => {
-      if (!document.hidden && currentUser) { fetchCloudState(); fetchTeamStrengths(); }
+      if (!document.hidden && currentUser) { fetchCloudState(); fetchTeamStrengths(); fetchBundesligaLiveData(); }
     });
     window.addEventListener("focus", () => {
-      if (currentUser) { fetchCloudState(); fetchTeamStrengths(); }
+      if (currentUser) { fetchCloudState(); fetchTeamStrengths(); fetchBundesligaLiveData(); }
     });
   }
 
