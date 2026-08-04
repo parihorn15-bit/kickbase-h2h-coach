@@ -363,7 +363,7 @@ function settings(){return `<div class="grid two">
     <div><button class="btn" id="saveSettings">Speichern</button></div>
   </div><div class="notice" style="margin-top:15px">Der Marktwert beim Kauf ist optional. Er ist für den echten Transfergewinn nicht nötig, aber hilfreich zur Bewertung deines Einkaufspreises.</div></div>
   <div class="card strength-card">
-    <div class="section-head"><div><h2>Bundesliga-Teamstärken</h2><p>${esc(strengthFreshness())}</p></div><button class="btn secondary small" id="resetStrengths">Basiswerte laden</button></div>
+    <div class="section-head"><div><h2>Bundesliga-Teamstärken</h2><p>${typeof strengthFreshness === "function" ? esc(strengthFreshness()) : ""}</p></div><button class="btn secondary small" id="resetStrengths">Basiswerte laden</button></div>
     <div class="strength-method">${esc(TEAM_STRENGTH_META.method)}</div>
     <div class="strength-list">${[...TEAMS].sort((a,b)=>strength(b)-strength(a)).map(t=>`
       <div class="strength-row strength-row-rich">
