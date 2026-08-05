@@ -1,0 +1,7 @@
+VERSION 1.3.3 – CLUB REGISTRY
+
+- Eine zentrale Namens- und Logoauflösung für alle App-Bereiche.
+- Elversberg, SV Elversberg, SV 07 Elversberg und SpVgg 07 Elversberg werden identisch erkannt.
+- Scout, Aufstellung, Bank, Transferhistorie, Formulare, Coach und Tabellen verwenden dieselbe Registry.
+- Abweichende gespeicherte Vereinsnamen müssen nicht manuell korrigiert werden.
+- Der flüssige Scout-Suchfix aus 1.3.2 bleibt enthalten.

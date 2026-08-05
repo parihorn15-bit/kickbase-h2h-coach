@@ -57,39 +57,69 @@ function crest(team,className='team-crest'){
 }
 
 const CLUB_NAME_ALIASES={
-  'FC Bayern München':['FC Bayern München','Bayern München','FC Bayern Munich'],
-  'Bayer 04 Leverkusen':['Bayer 04 Leverkusen','Bayer Leverkusen'],
-  'Sport-Club Freiburg':['Sport-Club Freiburg','SC Freiburg'],
-  'SV Werder Bremen':['SV Werder Bremen','Werder Bremen'],
-  'TSG Hoffenheim':['TSG Hoffenheim','TSG 1899 Hoffenheim','1899 Hoffenheim'],
-  '1. FC Union Berlin':['1. FC Union Berlin','Union Berlin']
+  'FC Bayern München':['FC Bayern München','Bayern München','FC Bayern Munich','Bayern'],
+  'Bayer 04 Leverkusen':['Bayer 04 Leverkusen','Bayer Leverkusen','Leverkusen'],
+  'Sport-Club Freiburg':['Sport-Club Freiburg','SC Freiburg','Freiburg'],
+  'SV Werder Bremen':['SV Werder Bremen','Werder Bremen','Werder'],
+  'TSG Hoffenheim':['TSG Hoffenheim','TSG 1899 Hoffenheim','1899 Hoffenheim','Hoffenheim'],
+  '1. FC Union Berlin':['1. FC Union Berlin','Union Berlin','Union'],
+  'SV Elversberg':['SV Elversberg','SV 07 Elversberg','SpVgg 07 Elversberg','SpVgg Elversberg','Elversberg']
 };
 
-function clubCompetition(team){
-  const club=liveClub(team);
-  return club?.competition_code||'BL1';
-}
-function clubLeagueLabel(team){
-  const club=liveClub(team);
-  return club?.competition_name||'Bundesliga';
-}
+const OFFICIAL_CLUB_CREST_FALLBACKS={
+  'SV Elversberg':'https://sv07elversberg.de/wp-content/uploads/2022/06/sve_badge_RGB.png'
+};
 
-function liveClub(team){
-  const clubs=window.BUNDESLIGA_CLUBS||[];
-  const candidates=CLUB_NAME_ALIASES[team]||[team];
-  return clubs.find(c=>candidates.includes(c.team)||candidates.includes(c.short_name))||null;
+function normalizeClubName(value){
+  return String(value||'').toLocaleLowerCase('de-DE')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/\b(fussballclub|football club|sportverein|spielvereinigung)\b/g,'')
+    .replace(/[^a-z0-9]/g,'');
 }
+function canonicalClubName(team){
+  const key=normalizeClubName(team);
+  for(const [canonical,aliases] of Object.entries(CLUB_NAME_ALIASES)){
+    if([canonical,...aliases].some(name=>normalizeClubName(name)===key))return canonical;
+  }
+  return String(team||'').trim();
+}
+function clubRegistryEntry(team){
+  const clubs=window.BUNDESLIGA_CLUBS||[];
+  const canonical=canonicalClubName(team);
+  const aliases=[canonical,...(CLUB_NAME_ALIASES[canonical]||[]),team].filter(Boolean);
+  const keys=[...new Set(aliases.map(normalizeClubName).filter(Boolean))];
+  const club=clubs.find(candidate=>{
+    const candidateKeys=[candidate.team,candidate.short_name,candidate.name]
+      .map(normalizeClubName).filter(Boolean);
+    return candidateKeys.some(candidateKey=>keys.some(key=>
+      candidateKey===key ||
+      (candidateKey.length>=7&&key.length>=7&&(candidateKey.includes(key)||key.includes(candidateKey)))
+    ));
+  })||null;
+  return{
+    canonical,
+    aliases,
+    club,
+    crest:club?.crest_url||OFFICIAL_CLUB_CREST_FALLBACKS[canonical]||null,
+    competitionCode:club?.competition_code||'BL1',
+    competitionName:club?.competition_name||'Bundesliga'
+  };
+}
+function liveClub(team){return clubRegistryEntry(team).club}
+function clubCompetition(team){return clubRegistryEntry(team).competitionCode}
+function clubLeagueLabel(team){return clubRegistryEntry(team).competitionName}
 function bundesligaCrest(team,className='bl-club-crest'){
-  const club=liveClub(team);
-  return club?.crest_url
-    ? `<img class="${className}" src="${esc(club.crest_url)}" alt="Vereinslogo ${esc(team)}" loading="lazy">`
-    : `<span class="${className} bl-club-fallback">${esc(String(team||'?').slice(0,2).toUpperCase())}</span>`;
+  const entry=clubRegistryEntry(team);
+  return entry.crest
+    ? `<img class="${className}" src="${esc(entry.crest)}" alt="Vereinslogo ${esc(entry.canonical||team)}" loading="lazy" referrerpolicy="no-referrer" data-club-key="${esc(normalizeClubName(entry.canonical))}">`
+    : `<span class="${className} bl-club-fallback" data-club-key="${esc(normalizeClubName(entry.canonical))}">${esc(String(entry.canonical||team||'?').split(/\s+/).filter(Boolean).map(x=>x[0]).join('').slice(0,2).toUpperCase())}</span>`;
 }
 
 function bundesligaIdentity(team,{logoClass='inline-club-crest',showName=true}={}){
-  return `<span class="bundesliga-identity">
+  const entry=clubRegistryEntry(team);
+  return `<span class="bundesliga-identity" data-club-key="${esc(normalizeClubName(entry.canonical))}">
     ${bundesligaCrest(team,logoClass)}
-    ${showName?`<span>${esc(team||'Unbekannter Verein')}</span>`:''}
+    ${showName?`<span>${esc(team||entry.canonical||'Unbekannter Verein')}</span>`:''}
   </span>`;
 }
 
@@ -112,7 +142,97 @@ function lineupStatusFresh(player){
   const t=new Date(raw).getTime();
   return Number.isFinite(t)&&Date.now()-t<4*24*60*60*1000;
 }
-function coachPlayerAssessment(player,md=data.settings.currentMd){
+
+const BASE_COACH_WEIGHTS={average:30,matchup:25,lineup:30,team:10,home:5,news:12};
+
+function pearsonCorrelation(xs,ys){
+  if(xs.length<3||xs.length!==ys.length)return 0;
+  const mx=xs.reduce((s,x)=>s+x,0)/xs.length;
+  const my=ys.reduce((s,x)=>s+x,0)/ys.length;
+  let num=0,dx=0,dy=0;
+  xs.forEach((x,i)=>{const a=x-mx,b=ys[i]-my;num+=a*b;dx+=a*a;dy+=b*b});
+  return dx&&dy?num/Math.sqrt(dx*dy):0;
+}
+function coachCalibrationSamples(){
+  const samples=[];
+  (data.matchdays||[]).forEach(record=>{
+    const snapshot=record.coachSnapshot;
+    if(!snapshot?.players?.length)return;
+    snapshot.players.forEach(item=>{
+      const actual=Number(record.points?.[item.playerId]);
+      if(!Number.isFinite(actual))return;
+      samples.push({...item,actual,md:record.md});
+    });
+  });
+  return samples;
+}
+function coachCalibration(){
+  const samples=coachCalibrationSamples();
+  const matchdays=new Set(samples.map(x=>x.md)).size;
+  const fields=['average','matchup','lineup','team','home','news'];
+  const correlations={};
+  fields.forEach(field=>{
+    correlations[field]=pearsonCorrelation(
+      samples.map(x=>Number(x.factors?.[field]||0)),
+      samples.map(x=>x.actual)
+    );
+  });
+
+  // Personalization starts only after four evaluated matchdays.
+  const active=matchdays>=4&&samples.length>=20;
+  const weights={...BASE_COACH_WEIGHTS};
+  if(active){
+    const positive=fields.map(field=>Math.max(.05,correlations[field]+.35));
+    const total=positive.reduce((s,x)=>s+x,0);
+    const targetTotal=100;
+    fields.forEach((field,index)=>{
+      const learned=positive[index]/total*targetTotal;
+      // Conservative blend: 75% base model, 25% personal data.
+      weights[field]=BASE_COACH_WEIGHTS[field]*.75+learned*.25;
+    });
+  }
+  return{samples,matchdays,correlations,weights,active};
+}
+function captureCoachSnapshot(md=data.settings.currentMd){
+  const record=mdRecord(md);
+  const ids=(record.lineup||[]).filter(Boolean);
+  if(!ids.length)return;
+  record.coachSnapshot={
+    capturedAt:new Date().toISOString(),
+    formation:exactFormation(ids)?.code||null,
+    players:ids.map(playerId=>{
+      const player=activePlayers().find(p=>p.id===playerId);
+      if(!player)return null;
+      const assessment=coachPlayerAssessment(player,md,{ignoreCalibration:true});
+      return{
+        playerId,
+        name:player.name,
+        position:player.position,
+        predictedScore:assessment.score,
+        confidence:assessment.confidence,
+        factors:{...assessment.factors}
+      };
+    }).filter(Boolean)
+  };
+}
+function calibrationSummary(){
+  const c=coachCalibration();
+  if(!c.active)return{
+    active:false,
+    title:'Basismodell aktiv',
+    text:`${c.matchdays}/4 ausgewertete Spieltage · ${c.samples.length} Spielerergebnisse`,
+    accuracy:null
+  };
+  const mae=c.samples.reduce((sum,s)=>sum+Math.abs((s.predictedScore||0)-Math.min(100,Math.max(0,s.actual/2))),0)/c.samples.length;
+  return{
+    active:true,
+    title:'Persönlich kalibriert',
+    text:`${c.matchdays} Spieltage · ${c.samples.length} Spielerergebnisse`,
+    accuracy:Math.max(0,100-mae)
+  };
+}
+
+function coachPlayerAssessment(player,md=data.settings.currentMd,{ignoreCalibration=false}={}){
   const fixtureData=fixture(player.team,md);
   const status=lineupStatusMeta(player);
   const avg=Math.max(0,Number(player.avgPoints||0));
@@ -120,15 +240,18 @@ function coachPlayerAssessment(player,md=data.settings.currentMd){
   const teamValue=Math.max(1,Math.min(10,strength(player.team)));
   const fresh=lineupStatusFresh(player);
 
+  const calibration=ignoreCalibration?{weights:{...BASE_COACH_WEIGHTS},active:false}:coachCalibration();
+  const weights=calibration.weights;
+  const lineupRatio=status.score/30;
   const factors={
-    average:Math.min(30,avg/150*30),
-    matchup:(match-1)/9*25,
-    lineup:status.score,
-    team:teamValue/10*10,
-    home:fixtureData?.ha==='H'?5:0
+    average:Math.min(weights.average,avg/150*weights.average),
+    matchup:(match-1)/9*weights.matchup,
+    lineup:lineupRatio*weights.lineup,
+    team:teamValue/10*weights.team,
+    home:fixtureData?.ha==='H'?weights.home:0
   };
   const news=newsImpactForPlayer(player);
-  const newsImpact=Math.max(-12,Math.min(12,Number(news?.impact_score||0)*.4));
+  const newsImpact=Math.max(-weights.news,Math.min(weights.news,Number(news?.impact_score||0)*.4));
   factors.news=newsImpact;
   let score=Object.values(factors).reduce((sum,value)=>sum+value,0);
   if(effectiveLineupStatus(player).status==='Fällt aus')score=0;
@@ -163,7 +286,7 @@ function coachPlayerAssessment(player,md=data.settings.currentMd){
 
   return{
     player,md,score,confidence,factors,positives,risks,
-    status,fixture:fixtureData,matchup:match,average:avg,teamStrength:teamValue,news,
+    status,fixture:fixtureData,matchup:match,average:avg,teamStrength:teamValue,news,calibrationActive:calibration.active,weights,
     label:score>=82?'Top-Empfehlung':score>=68?'Starke Option':score>=52?'Solide/Risikoabwägung':score>=35?'Riskante Option':'Nicht empfehlen'
   };
 }
@@ -185,36 +308,102 @@ function coachRankPlayers(md=data.settings.currentMd){
     return bb.score-aa.score||bb.confidence-aa.confidence;
   });
 }
-function coachOptimizedLineup(md=data.settings.currentMd){
-  const active=coachRankPlayers(md);
-  const selectable=active.filter(p=>effectiveLineupStatus(p).status!=='Fällt aus');
-  const size=Math.min(Number(data.settings.lineupSize||11),active.length);
-  const selected=[];
 
-  const keepers=selectable.filter(p=>p.position==='Tor');
-  if(keepers.length)selected.push(keepers[0]);
-
-  selectable.forEach(player=>{
-    if(selected.length>=size||selected.some(p=>p.id===player.id))return;
-    selected.push(player);
+const ALLOWED_FORMATIONS=[
+  {code:'3-4-3',Abwehr:3,Mittelfeld:4,Sturm:3},
+  {code:'4-4-2',Abwehr:4,Mittelfeld:4,Sturm:2},
+  {code:'4-5-1',Abwehr:4,Mittelfeld:5,Sturm:1},
+  {code:'5-3-2',Abwehr:5,Mittelfeld:3,Sturm:2},
+  {code:'5-4-1',Abwehr:5,Mittelfeld:4,Sturm:1},
+  {code:'4-2-4',Abwehr:4,Mittelfeld:2,Sturm:4},
+  {code:'3-5-2',Abwehr:3,Mittelfeld:5,Sturm:2},
+  {code:'5-2-3',Abwehr:5,Mittelfeld:2,Sturm:3},
+  {code:'4-3-3',Abwehr:4,Mittelfeld:3,Sturm:3},
+  {code:'3-6-1',Abwehr:3,Mittelfeld:6,Sturm:1}
+];
+function lineupPlayers(ids){
+  return (ids||[]).map(pid=>activePlayers().find(p=>p.id===pid)).filter(Boolean);
+}
+function lineupPositionCounts(ids){
+  const counts={Tor:0,Abwehr:0,Mittelfeld:0,Sturm:0,Andere:0};
+  lineupPlayers(ids).forEach(player=>{
+    if(Object.prototype.hasOwnProperty.call(counts,player.position))counts[player.position]++;
+    else counts.Andere++;
   });
-
-  if(selected.length<size){
-    active.forEach(player=>{
-      if(selected.length<size&&!selected.some(p=>p.id===player.id))selected.push(player);
-    });
+  return counts;
+}
+function exactFormation(ids){
+  const counts=lineupPositionCounts(ids);
+  if((ids||[]).length!==11||counts.Tor!==1||counts.Andere!==0)return null;
+  return ALLOWED_FORMATIONS.find(f=>
+    counts.Abwehr===f.Abwehr&&counts.Mittelfeld===f.Mittelfeld&&counts.Sturm===f.Sturm
+  )||null;
+}
+function feasibleFormations(ids){
+  const counts=lineupPositionCounts(ids);
+  if((ids||[]).length>11||counts.Tor>1||counts.Andere>0)return[];
+  return ALLOWED_FORMATIONS.filter(f=>
+    counts.Abwehr<=f.Abwehr&&
+    counts.Mittelfeld<=f.Mittelfeld&&
+    counts.Sturm<=f.Sturm&&
+    counts.Tor<=1
+  );
+}
+function lineupValidation(ids,{complete=false}={}){
+  const counts=lineupPositionCounts(ids);
+  if(counts.Andere>0)return{ok:false,message:'Alle aufgestellten Spieler benötigen eine gültige Position.'};
+  if(counts.Tor>1)return{ok:false,message:'Es darf nur ein Torwart aufgestellt werden.'};
+  if((ids||[]).length>11)return{ok:false,message:'Die Startelf besteht aus genau elf Spielern.'};
+  if(complete){
+    if((ids||[]).length!==11)return{ok:false,message:`Die Startelf ist noch unvollständig (${(ids||[]).length}/11).`};
+    if(counts.Tor!==1)return{ok:false,message:'Eine gültige Startelf benötigt genau einen Torwart.'};
+    const formation=exactFormation(ids);
+    if(!formation)return{ok:false,message:'Diese Positionsverteilung ist nicht erlaubt. Wähle eine der zehn gültigen Formationen.'};
+    return{ok:true,formation};
   }
-  return selected.slice(0,size);
+  const feasible=feasibleFormations(ids);
+  if(!feasible.length)return{
+    ok:false,
+    message:'Diese Positionsverteilung lässt sich zu keiner erlaubten Formation ergänzen.'
+  };
+  return{ok:true,feasible};
+}
+function bestPlayersForPosition(players,position,count,md){
+  return players.filter(p=>p.position===position)
+    .sort((a,b)=>coachPlayerScore(b,md)-coachPlayerScore(a,md))
+    .slice(0,count);
+}
+
+function coachOptimizedLineup(md=data.settings.currentMd){
+  const ranked=coachRankPlayers(md).filter(p=>effectiveLineupStatus(p).status!=='Fällt aus');
+  const keepers=ranked.filter(p=>p.position==='Tor');
+  if(!keepers.length)return[];
+
+  const candidates=[];
+  for(const formation of ALLOWED_FORMATIONS){
+    const selected=[
+      ...bestPlayersForPosition(ranked,'Tor',1,md),
+      ...bestPlayersForPosition(ranked,'Abwehr',formation.Abwehr,md),
+      ...bestPlayersForPosition(ranked,'Mittelfeld',formation.Mittelfeld,md),
+      ...bestPlayersForPosition(ranked,'Sturm',formation.Sturm,md)
+    ];
+    if(selected.length!==11)continue;
+    const score=selected.reduce((sum,p)=>sum+coachPlayerScore(p,md),0);
+    const confidence=selected.reduce((sum,p)=>sum+coachPlayerConfidence(p,md),0)/11;
+    candidates.push({formation,selected,score,confidence});
+  }
+  candidates.sort((a,b)=>b.score-a.score||b.confidence-a.confidence);
+  return candidates[0]?.selected||[];
 }
 function coachFactorRows(player,md=data.settings.currentMd){
   const a=coachPlayerAssessment(player,md);
   const rows=[
-    ['Ø Punkte',a.factors.average,30],
-    ['Matchup',a.factors.matchup,25],
-    ['Startelfstatus',a.factors.lineup,30],
-    ['Teamstärke',a.factors.team,10],
-    ['Heimvorteil',a.factors.home,5],
-    ['Offizielle News',Math.abs(a.factors.news||0),12]
+    ['Ø Punkte',a.factors.average,a.weights.average],
+    ['Matchup',a.factors.matchup,a.weights.matchup],
+    ['Startelfstatus',a.factors.lineup,a.weights.lineup],
+    ['Teamstärke',a.factors.team,a.weights.team],
+    ['Heimvorteil',a.factors.home,a.weights.home],
+    ['Offizielle News',Math.abs(a.factors.news||0),a.weights.news]
   ];
   return rows.map(([label,value,max])=>`<div class="coach-factor-row">
     <span>${label}</span><div><i style="width:${Math.max(0,Math.min(100,value/max*100))}%"></i></div><b>${value.toFixed(0)}/${max}</b>
@@ -345,7 +534,7 @@ function actualMatchdayChecklist(){
   const lineup=Array.isArray(record.lineup)?record.lineup.filter(id=>active.some(p=>p.id===id)):[];
   const mandatory=mandatoryStatus(md);
   if(c.phase==='pre')return[
-    {id:'lineup',done:lineup.length===data.settings.lineupSize,label:`Startelf für Spieltag ${md}`,detail:`${lineup.length}/${data.settings.lineupSize} gespeichert`,page:'squad'},
+    {id:'lineup',done:Boolean(exactFormation(lineup.map(p=>p.id||p))),label:`Startelf für Spieltag ${md}`,detail:`${lineup.length}/11 gespeichert`,page:'squad'},
     {id:'li',done:recentLineupCheck(),label:'Aufstellungsstatus geprüft',detail:recentLineupCheck()?'Innerhalb der letzten 4 Tage':'Noch nicht aktuell geprüft',page:'lineupintel'},
     {id:'coach',done:Boolean(sessionStorage.getItem(`coachReadMd${md}`)),label:'Coach AI gelesen',detail:'Hinweise für den tatsächlichen Spieltag',page:'dashboard'},
     {id:'bonus',done:dailyBonusBooked(),label:'Tagesbonus',detail:localDateISO(),page:'finances'}
@@ -387,7 +576,7 @@ function leagueAssistant(){
 
   if(c.phase==='pre'){
     const active=activePlayers(),lineup=(record.lineup||[]).filter(id=>active.some(p=>p.id===id));
-    if(lineup.length<data.settings.lineupSize)notes.push({level:'bad',icon:'🧩',title:`Startelf für Spieltag ${md} unvollständig`,text:`${lineup.length}/${data.settings.lineupSize} Plätze gespeichert. Erster Anpfiff: ${c.window.first.toLocaleString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}.`,action:'squad',label:'Startelf ergänzen'});
+    if(lineup.length<data.settings.lineupSize)notes.push({level:'bad',icon:'🧩',title:`Startelf für Spieltag ${md} unvollständig`,text:`${lineup.length}/11 Plätze gespeichert. Erster Anpfiff: ${c.window.first.toLocaleString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}.`,action:'squad',label:'Startelf ergänzen'});
     if(!recentLineupCheck())notes.push({level:'warn',icon:'🩺',title:'Aufstellungsstatus prüfen',text:`Vor Spieltag ${md} nur die Vereine deiner Kaderspieler kontrollieren.`,action:'lineupintel',label:'LigaInsider öffnen'});
   }else if(c.phase==='live'){
     notes.push({level:'info',icon:'⚽',title:`Spieltag ${md} läuft`,text:'Vorbereitungsaufgaben sind beendet. Jetzt stehen Punkte und das H2H-Duell im Mittelpunkt.',action:'matchday',label:'Spieltag öffnen'});
@@ -435,7 +624,7 @@ function matchdayReadiness(){
   const context=actualMatchdayContext?.()||{md:+data.settings.currentMd||1,phase:'unknown'};
   const md=context.md,active=activePlayers(),lineup=(mdRecord(md).lineup||[]).map(id=>active.find(p=>p.id===id)).filter(Boolean);
   const assessments=lineup.map(p=>coachPlayerAssessment(p,md));
-  const complete=lineup.length===data.settings.lineupSize;
+  const complete=Boolean(exactFormation(lineup.map(p=>p.id||p)));
   const avgConfidence=assessments.length?assessments.reduce((s,a)=>s+a.confidence,0)/assessments.length:0;
   const hardRisks=assessments.filter(a=>a.score===0||a.risks.some(r=>/fällt aus|Bank prognostiziert/i.test(r))).length;
   const score=Math.max(0,Math.min(100,(complete?35:lineup.length/data.settings.lineupSize*35)+avgConfidence*.45+(hardRisks?0:20)));
@@ -554,7 +743,7 @@ const H2H_SCHEDULE=buildH2HSchedule();
 function managerById(id){return (data.leagueManagers||LEAGUE_MANAGERS).find(x=>x.id===id)||LEAGUE_MANAGERS.find(x=>x.id===id)}
 function managerLabel(id){const m=managerById(id);return m?`${m.team} (${m.manager})`:id}
 function otherManagerOptions(selected=''){return MANAGER_OPTIONS.map(m=>`<option value="${esc(m.team)}" ${selected===m.team?'selected':''}>${esc(m.team)} (${esc(m.manager)})</option>`).join('')}const DAILY_BONUSES=Array.from({length:10},(_,i)=>({label:`Tag ${i+1}`,amount:(i+1)*10000}));const ACHIEVEMENT_BONUSES=[{label:'Spieltagssieger',amount:1000000},{label:'Spieltagspunkte Silber (≥ 1.000)',amount:250000},{label:'Spieltagspunkte Gold (≥ 1.500)',amount:500000},{label:'Jahrhundertspiel (≥ 2.000)',amount:1000000},{label:'Topscorer (200 Punkte)',amount:100000},{label:'Matchwinner (300 Punkte)',amount:500000},{label:'Weltklasse (400 Punkte)',amount:1000000},{label:'Fußballgott (500 Punkte)',amount:2000000},{label:'MVP',amount:1000000},{label:'Tormaschine',amount:250000},{label:'Bronzenes Händchen (3 Mio. Gewinn)',amount:250000},{label:'Silbernes Händchen (5 Mio. Gewinn)',amount:500000},{label:'Goldenes Händchen (10 Mio. Gewinn)',amount:1000000},{label:'Königstransfer (25 Mio. Gewinn)',amount:2000000},{label:'Glückliches Händchen',amount:1000000},{label:'Meister',amount:2000000},{label:'Vizemeister',amount:1000000}];const SEEDED_DATA={"version":3,"settings":{"currentMd":1,"mode":"quick","startCapital":200000000,"homeBonus":1,"lineupSize":11},"players":[{"id":"4eb80f64-293c-4b3a-a93b-3989361b1027","name":"Axel Tape","team":"Bayer 04 Leverkusen","position":"Abwehr","buyDate":"2026-08-02","buyPrice":5071935,"marketAtBuy":0,"marketValue":4655501,"avgPoints":0,"note":""},{"id":"41172e46-cd74-405a-bf78-fa8884a27cac","name":"Robin Gosens","team":"FC Schalke 04","position":"Abwehr","buyDate":"2026-08-03","buyPrice":11445599,"marketAtBuy":0,"marketValue":11407285,"avgPoints":0,"note":"","soldDate":"2026-08-03","salePrice":11407285,"saleReason":"Sinkender Marktwert"},{"id":"016bc246-b164-4a17-a686-cd4a2e90c0d3","name":"Dominik Kohr","team":"1. FSV Mainz 05","position":"Abwehr","buyDate":"2026-08-03","buyPrice":6543210,"marketAtBuy":0,"marketValue":6627684,"avgPoints":0,"note":""},{"id":"6629cde9-bacc-4a2c-8cf1-d2bd98c55480","name":"Jovan Milosevic","team":"VfB Stuttgart","position":"Sturm","buyDate":"2026-08-03","buyPrice":4141414,"marketAtBuy":0,"marketValue":3539303,"avgPoints":0,"note":""}],"finances":[{"id":"start","date":"2026-08-01","type":"Startkapital","description":"Start ohne Kader","amount":200000000},{"id":"ac5941c7-600d-4b97-b27e-1af756a30baf","date":"2026-08-02","type":"Spielerkauf","description":"Kauf Axel Tape","amount":-5071935},{"id":"158bd348-1fc2-4dcd-85fe-0541c4901cfc","date":"2026-08-02","type":"Erfolgsbonus","description":"Kreisliga","amount":1000000},{"id":"466b9c05-c952-4ffa-802b-0861146ef671","date":"2026-08-02","type":"Erfolgsbonus","description":"Regionalliga","amount":1000000},{"id":"80b55a26-862c-4308-930c-2a0b0bac48af","date":"2026-08-02","type":"Erfolgsbonus","description":"Erster Deal","amount":100000},{"id":"ddee6a22-5c27-4387-baa0-caf7cdec2f05","date":"2026-08-03","type":"Tagesanmeldebonus","description":"Tag 1","amount":10000},{"id":"23eb8316-babe-4af3-bf4b-0921645d3098","date":"2026-08-04","type":"Tagesanmeldebonus","description":"Tag 2","amount":20000},{"id":"618181e0-a4f3-46a0-98af-eea7ba7d8d04","date":"2026-08-03","type":"Spielerkauf","description":"Kauf Robin Gosens","amount":-11445599},{"id":"4c3c279c-c039-4ecc-9b56-e105e858bbc1","date":"2026-08-03","type":"Spielerkauf","description":"Kauf Dominik Kohr","amount":-6543210},{"id":"b9c2a384-9ece-4b1f-a87b-4b00ae137cc4","date":"2026-08-03","type":"Spielerkauf","description":"Kauf Jovan Milosevic","amount":-4141414},{"id":"a511955c-44d8-46db-9b75-8fd010f78f26","date":"2026-08-03","type":"Spielerverkauf","description":"Verkauf Robin Gosens","amount":11407285}],"matchdays":[{"id":"6abff25d-b7c8-4738-80c1-fda4f34ebf2b","md":1,"mvp":"","points":{},"lineup":[],"soldPlayer":"","soldDate":"","soldPrice":0}],"opponents":[],"h2h":[],"teamStrength":{"1. FC Köln":5,"1. FC Union Berlin":5,"1. FSV Mainz 05":5,"Bayer 04 Leverkusen":5,"Borussia Dortmund":5,"Borussia Mönchengladbach":5,"Eintracht Frankfurt":5,"FC Augsburg":5,"FC Bayern München":5,"FC Schalke 04":5,"Hamburger SV":5,"RB Leipzig":5,"SC Paderborn 07":5,"SV Elversberg":5,"SV Werder Bremen":5,"Sport-Club Freiburg":5,"TSG Hoffenheim":5,"VfB Stuttgart":5}};const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));const id=()=>crypto.randomUUID?.()||Math.random().toString(36).slice(2);const FALLBACK_TEAMS=['1. FC Köln','1. FC Union Berlin','1. FSV Mainz 05','Bayer 04 Leverkusen','Borussia Dortmund','Borussia Mönchengladbach','Eintracht Frankfurt','FC Augsburg','FC Bayern München','FC Schalke 04','Hamburger SV','RB Leipzig','SC Paderborn 07','SV Elversberg','SV Werder Bremen','Sport-Club Freiburg','TSG Hoffenheim','VfB Stuttgart'];const TEAMS=[...new Set([...(Array.isArray(FIXTURES)?FIXTURES.flatMap(x=>[x.home,x.away]).filter(Boolean):[]),...FALLBACK_TEAMS])].sort((a,b)=>a.localeCompare(b,'de'));
-const defaults={version:22,teamStrengthDetails:{},teamStrengthCloudUpdatedAt:'',ui:{transferFilter:'all',transferSearch:'',leagueTab:'current',bundesligaTab:'matchups',bundesligaTeam:'Alle',bundesligaSearch:'',rulesSection:'overview',scoutPosition:'Alle',scoutTeam:'Alle',scoutSearch:''},settings:{currentMd:1,mode:'quick',startCapital:200000000,homeBonus:1,lineupSize:11},players:[],finances:[{id:'start',date:'2026-08-01',type:'Startkapital',description:'Start ohne Kader',amount:200000000}],matchdays:[],opponents:[],h2h:[],leagueManagers:LEAGUE_MANAGERS,lineupIntel:{pending:[],lastImport:''},teamStrength:{...TEAM_STRENGTH_BASELINE}};
+const defaults={version:25,teamStrengthDetails:{},teamStrengthCloudUpdatedAt:'',ui:{transferFilter:'all',transferSearch:'',leagueTab:'current',bundesligaTab:'matchups',bundesligaTeam:'Alle',bundesligaSearch:'',rulesSection:'overview',scoutPosition:'Alle',scoutTeam:'Alle',scoutSearch:''},settings:{currentMd:1,mode:'quick',startCapital:200000000,homeBonus:1,lineupSize:11},players:[],finances:[{id:'start',date:'2026-08-01',type:'Startkapital',description:'Start ohne Kader',amount:200000000}],matchdays:[],opponents:[],h2h:[],leagueManagers:LEAGUE_MANAGERS,lineupIntel:{pending:[],lastImport:''},teamStrength:{...TEAM_STRENGTH_BASELINE}};
 let data=load(),page='dashboard';function mergeData(x){
   const source=x&&typeof x==='object'?x:{};
   const incomingStrengths=source.teamStrength&&typeof source.teamStrength==='object'
@@ -742,6 +931,28 @@ function render(){document.body.classList.toggle('analysis',data.settings.mode==
   console.error('Seitenfehler:',error);
   $('#content').innerHTML=`<div class="card error-card"><h2>Bereich konnte nicht geladen werden</h2><p>${esc(error?.message||'Unbekannter Fehler')}</p><button class="btn" onclick="location.reload()">App neu laden</button></div>`;
 }}
+
+function matchdayCountdownText(context=actualMatchdayContext()){
+  const target=context.phase==='pre'?context.window?.first:
+    context.phase==='live'?context.window?.end:
+    context.phase==='post'?context.deadline:null;
+  if(!target)return 'Kein Termin verfügbar';
+  const diff=target.getTime()-Date.now();
+  if(diff<=0)return context.phase==='live'?'läuft gerade':'Frist erreicht';
+  const hours=Math.floor(diff/3600000);
+  const minutes=Math.floor((diff%3600000)/60000);
+  const days=Math.floor(hours/24);
+  return days>0?`${days} T. ${hours%24} Std.`:`${hours} Std. ${minutes} Min.`;
+}
+function matchdayDecisionBriefing(){
+  const ready=matchdayReadiness();
+  const ranked=coachRankPlayers(ready.md);
+  const risks=ready.assessments.filter(a=>a.score===0||a.risks.length>=2).slice(0,3);
+  const top=ranked.filter(p=>effectiveLineupStatus(p).status!=='Fällt aus').slice(0,3);
+  const news=relevantOfficialNews({hours:168,limit:3});
+  return{ready,risks,top,news,calibration:calibrationSummary()};
+}
+
 function dashboard(){
   const md=+data.settings.currentMd||1;
   const rank=coachRankPlayers(actualMatchdayContext?.().md||md);
@@ -771,6 +982,20 @@ function dashboard(){
         <button data-go-page="news"><strong>${news.length}</strong><span>relevante Meldungen</span></button>
         <button data-go-page="analysis"><strong>${mem.count?mem.rate.toFixed(0)+' %':'–'}</strong><span>Coach hilfreich</span></button>
       </div>
+    </section>`})()}
+    ${(()=>{const brief=matchdayDecisionBriefing();return `
+    <section class="polished-assistant">
+      <div class="polished-assistant-head">
+        <div><span>NÄCHSTE ENTSCHEIDUNG</span><h2>${esc(matchdayPhaseLabel(brief.ready.context))}</h2><p>Start/Frist in <b>${esc(matchdayCountdownText(brief.ready.context))}</b></p></div>
+        <div class="assistant-ready-score"><strong>${brief.ready.score.toFixed(0)}</strong><span>Readiness</span></div>
+      </div>
+      <div class="assistant-action-grid">
+        <button data-go-page="squad"><strong>${brief.ready.lineup.length}/11</strong><span>Startelf</span><small>${brief.ready.complete?'gültig gespeichert':'noch prüfen'}</small></button>
+        <button data-go-page="lineupintel"><strong>${brief.risks.length}</strong><span>Risiken</span><small>${brief.risks[0]?.player?.name||'keine harten Warnungen'}</small></button>
+        <button data-go-page="news"><strong>${brief.news.length}</strong><span>News</span><small>relevant für deinen Kader</small></button>
+        <button data-go-page="analysis"><strong>${brief.calibration.active?'Aktiv':brief.calibration.text.split(' ')[0]+'/4'}</strong><span>Kalibrierung</span><small>${brief.calibration.title}</small></button>
+      </div>
+      ${brief.top.length?`<div class="assistant-top-picks"><span>Coach-Fokus</span>${brief.top.map(p=>{const a=coachPlayerAssessment(p,brief.ready.md);return `<b>${esc(p.name)} <i>${a.score.toFixed(0)}</i></b>`}).join('')}</div>`:''}
     </section>`})()}
     <section class="coach-hero">
       <div class="coach-club">
@@ -935,7 +1160,7 @@ function squad(){
   const r=mdRecord(data.settings.currentMd);
   const active=activePlayers();
   if(!Array.isArray(r.lineup))r.lineup=[];
-  r.lineup=r.lineup.filter(pid=>active.some(p=>p.id===pid)).slice(0,data.settings.lineupSize);
+  r.lineup=r.lineup.filter(pid=>active.some(p=>p.id===pid)).slice(0,11);
 
   const recommended=coachOptimizedLineup(data.settings.currentMd).map(p=>p.id);
   const displayLineup=r.lineup.length?r.lineup:recommended;
@@ -944,7 +1169,9 @@ function squad(){
 
   const positionOrder=['Sturm','Mittelfeld','Abwehr','Tor'];
   const counts=Object.fromEntries(positionOrder.map(pos=>[pos,starters.filter(p=>p.position===pos).length]));
-  const formation=[counts.Abwehr,counts.Mittelfeld,counts.Sturm].join('-');
+  const validFormation=exactFormation(displayLineup);
+  const possibleFormations=feasibleFormations(displayLineup);
+  const formation=validFormation?.code||[counts.Abwehr,counts.Mittelfeld,counts.Sturm].join('-');
 
   const fieldPlayer=p=>{
     const f=fixture(p.team);
@@ -979,8 +1206,8 @@ function squad(){
   </article>`};
 
   const fieldHtml=`<div class="pitch-head">
-      <div><span>Formation</span><b>${formation}</b></div>
-      <small>Ziehen oder antippen, um Spieler zwischen Feld und Bank zu verschieben.</small>
+      <div><span>Formation</span><b class="${validFormation?'formation-valid':'formation-open'}">${formation}</b></div>
+      <small>${validFormation?'Gültige Kickbase-Formation.':`${starters.length}/11 Spieler · möglich: ${possibleFormations.map(f=>f.code).join(', ')||'keine'}`}</small>
     </div>
     <div class="football-pitch drop-zone" data-drop-zone="lineup">
       ${row('Sturm')}${row('Mittelfeld')}${row('Abwehr')}${row('Tor')}
@@ -993,7 +1220,7 @@ function squad(){
     </div>`;
 
   return `<div class="status-strip">
-    <div class="progress-ring" style="--pct:${Math.min(100,starters.length/data.settings.lineupSize*100)}%"><b>${starters.length}/${data.settings.lineupSize}</b></div>
+    <div class="progress-ring" style="--pct:${Math.min(100,starters.length/11*100)}%"><b>${starters.length}/11</b></div>
     <div><b>Aufstellung für Spieltag ${data.settings.currentMd}</b><div class="muted" style="font-size:12px">${r.lineup.length?'Manuell gespeichert':'Empfohlene Startelf wird angezeigt.'}</div></div>
     <div class="toolbar" style="margin-left:auto"><button type="button" class="btn secondary" id="useRecommendation">Empfehlung</button><button type="button" class="btn" id="saveLineup">Speichern</button></div>
   </div>
@@ -1422,6 +1649,20 @@ function analysis(){
       <div class="season-summary-text">${t.length<3?'Die Transferanalyse wird nach mindestens drei Käufen belastbarer. ':''}${h.games.length===0?'Für die H2H-Entwicklung reichen deine und die gegnerischen Spieltagspunkte. ':''}${m.count===0?'Bewerte gelegentlich das Coach-Briefing, damit die App dessen Nutzen messen kann.':''}</div>`})()}
     </section>
 
+    <section class="premium-panel calibration-panel">
+      <div class="premium-panel-head"><div><span>COACH-KALIBRIERUNG</span><h3>Bewertungslogik lernt aus echten Spieltagen</h3></div></div>
+      ${(()=>{const c=coachCalibration(),s=calibrationSummary();const labels={average:'Ø Punkte',matchup:'Matchup',lineup:'Startelfstatus',team:'Teamstärke',home:'Heimvorteil',news:'Offizielle News'};return `
+        <div class="calibration-status ${c.active?'active':'learning'}">
+          <strong>${c.active?'✓ Persönliche Gewichtung aktiv':'◷ Lernphase'}</strong>
+          <span>${esc(s.text)}</span>
+          ${s.accuracy!==null?`<b>${s.accuracy.toFixed(0)} % Modellnähe</b>`:''}
+        </div>
+        <div class="calibration-weights">${Object.entries(c.weights).map(([key,value])=>`
+          <div><span>${labels[key]}</span><div><i style="width:${Math.min(100,value/35*100)}%"></i></div><b>${value.toFixed(1)}</b></div>`).join('')}</div>
+        <p>Die App speichert beim Sichern deiner Elf automatisch die damalige Prognose. Deine bereits vorhandene Spieltagspunkte-Eingabe liefert später das Ergebnis. Erst nach mindestens vier Spieltagen und 20 Spielerwerten werden die Basisgewichte vorsichtig zu 25 % personalisiert.</p>
+      `})()}
+    </section>
+
     <section class="premium-panel intelligence-explanation">
       <h3>Wie die Analyse gerechnet wird</h3>
       <p>Bei verkauften Spielern zählt der Verkaufspreis, bei aktiven Spielern der aktuell manuell gepflegte Marktwert. Mehrfach ausgewählte Kaufgründe werden jedem Grund vollständig zugerechnet; dadurch misst die Auswertung, welche Merkmale häufig mit erfolgreichen Käufen zusammen auftreten.</p>
@@ -1811,6 +2052,28 @@ function playerForm(p={}){
   const val=(key,fallback='')=>d[key]!==undefined?d[key]:fallback;
   const selectedTeam=val('pfTeam',p.team||TEAMS[0]);
   return `<div class="card" style="margin-top:16px"><div class="transfer-form-heading"><div><h3>${p.id?'Spielerdetails bearbeiten':'Spieler kaufen'}</h3><p>${bundesligaIdentity(selectedTeam,{logoClass:'form-club-crest'})}</p></div></div><div class="form-grid" style="margin-top:12px"><label>Name<input id="pfName" value="${esc(val('pfName',p.name||''))}"></label><label>Verein<select id="pfTeam">${TEAMS.map(t=>`<option ${val('pfTeam',p.team)===t?'selected':''}>${esc(t)}</option>`).join('')}</select></label><label>Position<select id="pfPos">${['Tor','Abwehr','Mittelfeld','Sturm'].map(x=>`<option ${val('pfPos',p.position)===x?'selected':''}>${x}</option>`).join('')}</select></label><label>Kaufdatum<input id="pfDate" type="date" value="${esc(val('pfDate',p.buyDate||localDateISO()))}"></label><label>Kaufpreis (€)<input id="pfBuy" class="money-field" inputmode="numeric" value="${p.buyPrice?moneyInput(p.buyPrice):''}" placeholder="z. B. 5.071.935 €"></label><label>Marktwert beim Kauf (€) – optional<input id="pfMwb" class="money-field" inputmode="numeric" value="${p.marketAtBuy?moneyInput(p.marketAtBuy):''}"></label><label>Aktueller Marktwert (€)<input id="pfMw" class="money-field" inputmode="numeric" value="${p.marketValue?moneyInput(p.marketValue):''}"></label><label>Ø Punkte<input id="pfAvg" type="number" step="0.1" value="${p.avgPoints||''}"></label><label>Gekauft von<select id="pfBuySource">${TRANSFER_SOURCES.map(x=>`<option ${p.buySource===x?'selected':''}>${esc(x)}</option>`).join('')}</select></label><label>Mitspieler<select id="pfBuyCounterparty"><option value="">Bitte auswählen</option>${otherManagerOptions(p.buyCounterparty||'')}</select></label><div class="wide"><span class="field-label">Kaufgründe · Mehrfachauswahl</span>${buyReasonPicker(d.pfBuyReasons||normalizeBuyReasons(p))}</div><label class="wide">Notiz<input id="pfNote" value="${esc(p.note||'')}"></label><div class="full"><button type="button" class="btn" id="savePlayer">Speichern</button></div></div></div>`}
+
+let deferredFilterTimer=null;
+function deferredFilterUpdate({key,value,inputId,delay=320}){
+  data.ui[key]=value;
+  save();
+  clearTimeout(deferredFilterTimer);
+  deferredFilterTimer=setTimeout(()=>{
+    const keepFocus=document.activeElement?.id===inputId;
+    const cursor=document.activeElement?.selectionStart??String(value).length;
+    render();
+    if(keepFocus){
+      requestAnimationFrame(()=>{
+        const input=document.getElementById(inputId);
+        if(!input)return;
+        input.focus({preventScroll:true});
+        const position=Math.min(cursor,input.value.length);
+        try{input.setSelectionRange(position,position)}catch{}
+      });
+    }
+  },delay);
+}
+
 function bind(){bindMoneyFields();
 $$('[data-coach-feedback]').forEach(button=>button.onclick=()=>{coachMemory().add(button.dataset.coachFeedback,actualMatchdayContext().md);toast('Feedback gespeichert – der Saisonrückblick wird damit genauer');render()});
 
@@ -1820,7 +2083,9 @@ $$('[data-check-page]').forEach(button=>button.onclick=()=>{
 });
 $$('.coach-ai-card').forEach(button=>button.addEventListener('click',()=>sessionStorage.setItem(`coachReadMd${actualMatchdayContext().md}`,'1')));
 
-if($('#scoutSearch'))$('#scoutSearch').oninput=e=>{data.ui.scoutSearch=e.target.value;save();render()};
+if($('#scoutSearch'))$('#scoutSearch').oninput=e=>deferredFilterUpdate({
+  key:'scoutSearch',value:e.target.value,inputId:'scoutSearch'
+});
 if($('#scoutPosition'))$('#scoutPosition').onchange=e=>{data.ui.scoutPosition=e.target.value;save();render()};
 if($('#scoutTeam'))$('#scoutTeam').onchange=e=>{data.ui.scoutTeam=e.target.value;save();render()};
 
@@ -1832,7 +2097,9 @@ $$('input').forEach(input=>input.addEventListener('keydown',event=>{if(event.key
 
 $$('[data-bl-tab]').forEach(b=>b.onclick=()=>{data.ui.bundesligaTab=b.dataset.blTab;save();render()});
 if($('#liveTeamFilter'))$('#liveTeamFilter').onchange=e=>{data.ui.bundesligaTeam=e.target.value;save();render()};
-if($('#livePlayerSearch'))$('#livePlayerSearch').oninput=e=>{data.ui.bundesligaSearch=e.target.value;save();render()};
+if($('#livePlayerSearch'))$('#livePlayerSearch').oninput=e=>deferredFilterUpdate({
+  key:'bundesligaSearch',value:e.target.value,inputId:'livePlayerSearch'
+});
 $$('[data-buy-live-player]').forEach(b=>b.onclick=()=>buyLivePlayer(b.dataset.buyLivePlayer));
 $$('[data-club-squad]').forEach(b=>b.onclick=()=>{data.ui.bundesligaTeam=b.dataset.clubSquad;data.ui.bundesligaTab='players';save();render()});
 $$('[data-bl-md]').forEach(b=>b.onclick=()=>{data.settings.currentMd=+b.dataset.blMd;touch()});
@@ -1848,33 +2115,99 @@ if($('#liClear'))$('#liClear').onclick=()=>{$('#liPaste').value=''};
 if($('#liApply'))$('#liApply').onclick=()=>{(data.lineupIntel.pending||[]).forEach(c=>{const p=data.players.find(x=>x.id===c.playerId);if(p){p.liStatus=c.newStatus;p.liUpdatedAt=new Date().toISOString()}});data.lineupIntel.lastImport=new Date().toISOString();data.lineupIntel.pending=[];touch();toast('LigaInsider-Status übernommen')};
 $$('[data-li-remove]').forEach(b=>b.onclick=()=>{data.lineupIntel.pending=(data.lineupIntel.pending||[]).filter(x=>x.playerId!==b.dataset.liRemove);touch()});
 $$('[data-li-status]').forEach(s=>s.onchange=()=>{const p=data.players.find(x=>x.id===s.dataset.liStatus);if(p){p.liStatus=s.value;p.liUpdatedAt=new Date().toISOString();data.lineupIntel.lastChecked=new Date().toISOString();touch()}});
-$$('[data-quick-bonus]').forEach(b=>b.onclick=()=>addQuickBonus(b.dataset.quickBonus,b.dataset.label,+b.dataset.amount));if($('#buyPlayer'))$('#buyPlayer').onclick=()=>{$('#transferForm').innerHTML=playerForm();bindPlayerForm()};if($('#sellPlayerOpen'))$('#sellPlayerOpen').onclick=()=>{const active=activePlayers();if(!active.length)return toast('Kein aktiver Spieler vorhanden');$('#transferForm').innerHTML=`<div class="card" style="margin-top:16px"><h3>Spieler verkaufen</h3><div class="form-grid" style="margin-top:12px"><label class="wide">Spieler<select id="sellSelect">${active.map(p=>`<option value="${p.id}">${esc(p.name)} · Kaufpreis ${euro(p.buyPrice)}</option>`).join('')}</select></label><div class="full"><button class="btn danger" id="continueSell">Verkauf erfassen</button></div></div></div>`;$('#continueSell').onclick=()=>sellPlayer($('#sellSelect').value)};if($('#saveLineup'))$('#saveLineup').onclick=()=>{const r=mdRecord(data.settings.currentMd);if(!r.lineup.length)r.lineup=coachOptimizedLineup(data.settings.currentMd).map(p=>p.id);save();render();toast('Startelf gespeichert')};if($('#useRecommendation'))$('#useRecommendation').onclick=()=>{mdRecord(data.settings.currentMd).lineup=coachOptimizedLineup(data.settings.currentMd).map(p=>p.id);touch();toast('Coach-optimierte Startelf übernommen')};$$('[data-squad-view]').forEach(b=>b.onclick=()=>{$$('[data-squad-view]').forEach(x=>x.classList.remove('active'));b.classList.add('active');const key=b.dataset.squadView[0].toUpperCase()+b.dataset.squadView.slice(1);$('#squadView').innerHTML=$(`#view${key}`).innerHTML;bindSquadCards()});bindSquadCards();$$('[data-sell-player]').forEach(b=>b.onclick=()=>sellPlayer(b.dataset.sellPlayer));$$('[data-edit-transfer]').forEach(b=>b.onclick=()=>editTransfer(b.dataset.editTransfer));$$('[data-delete-transfer]').forEach(b=>b.onclick=()=>deleteTransfer(b.dataset.deleteTransfer));$$('[data-points]').forEach(e=>e.onchange=()=>{mdRecord(data.settings.currentMd).points[e.dataset.points]=e.value===''?null:+e.value;save();render()});if($('#saveMd'))$('#saveMd').onclick=()=>{const r=mdRecord(data.settings.currentMd);Object.assign(r,{mvp:$('#mdMvp').value.trim(),soldPlayer:$('#mdSold').value,soldDate:$('#mdSoldDate').value,soldPrice:+$('#mdSoldPrice').value||0});save();render()};if($('#addFinance'))$('#addFinance').onclick=showFinanceForm;$$('[data-del-fin]').forEach(b=>b.onclick=()=>{data.finances=data.finances.filter(x=>x.id!==b.dataset.delFin);touch()});if($('#addOpponent'))$('#addOpponent').onclick=()=>{const name=prompt('Name des Managers:');if(!name)return;data.opponents.push({id:id(),name,teamName:prompt('Teamname (optional):')||'',squadValue:+prompt('Bekannter Kaderwert (optional):')||0,note:prompt('Notiz (optional):')||''});touch()};$$('[data-del-opp]').forEach(b=>b.onclick=()=>{data.opponents=data.opponents.filter(x=>x.id!==b.dataset.delOpp);touch()});if($('#addH2H'))$('#addH2H').onclick=()=>{const opponent=prompt('Gegner:');if(!opponent)return;data.h2h.push({id:id(),md:data.settings.currentMd,opponent,myPoints:+prompt('Deine Punkte:')||0,oppPoints:+prompt('Gegnerpunkte:')||0});touch()};if($('#resetStrengths'))$('#resetStrengths').onclick=()=>{data.teamStrength={...TEAM_STRENGTH_BASELINE};data.teamStrengthDetails={};data.teamStrengthCloudUpdatedAt='';touch();toast('Basiswerte geladen')};if($('#saveSettings'))$('#saveSettings').onclick=()=>{data.settings.startCapital=parseMoney($('#setCapital').value);data.settings.lineupSize=+$('#setLineup').value;data.settings.homeBonus=+$('#setHome').value;$$('[data-strength]').forEach(x=>data.teamStrength[x.dataset.strength]=+x.value);data.finances.find(x=>x.id==='start').amount=data.settings.startCapital;touch()};$$('[data-strength]').forEach(x=>x.onchange=()=>{data.teamStrength[x.dataset.strength]=+x.value;save()})}
+$$('[data-quick-bonus]').forEach(b=>b.onclick=()=>addQuickBonus(b.dataset.quickBonus,b.dataset.label,+b.dataset.amount));if($('#buyPlayer'))$('#buyPlayer').onclick=()=>{$('#transferForm').innerHTML=playerForm();bindPlayerForm()};if($('#sellPlayerOpen'))$('#sellPlayerOpen').onclick=()=>{const active=activePlayers();if(!active.length)return toast('Kein aktiver Spieler vorhanden');$('#transferForm').innerHTML=`<div class="card" style="margin-top:16px"><h3>Spieler verkaufen</h3><div class="form-grid" style="margin-top:12px"><label class="wide">Spieler<select id="sellSelect">${active.map(p=>`<option value="${p.id}">${esc(p.name)} · Kaufpreis ${euro(p.buyPrice)}</option>`).join('')}</select></label><div class="full"><button class="btn danger" id="continueSell">Verkauf erfassen</button></div></div></div>`;$('#continueSell').onclick=()=>sellPlayer($('#sellSelect').value)};if($('#saveLineup'))$('#saveLineup').onclick=()=>{
+  const r=mdRecord(data.settings.currentMd);
+  if(!r.lineup.length)r.lineup=coachOptimizedLineup(data.settings.currentMd).map(p=>p.id);
+  const validation=lineupValidation(r.lineup,{complete:true});
+  if(!validation.ok)return toast(validation.message);
+  data.settings.lineupSize=11;
+  captureCoachSnapshot(data.settings.currentMd);
+  save();render();toast(`Startelf im ${validation.formation.code} gespeichert`);
+};if($('#useRecommendation'))$('#useRecommendation').onclick=()=>{
+  const recommended=coachOptimizedLineup(data.settings.currentMd);
+  if(recommended.length!==11)return toast('Für keine gültige Formation sind aktuell genügend Spieler vorhanden');
+  mdRecord(data.settings.currentMd).lineup=recommended.map(p=>p.id);
+  data.settings.lineupSize=11;
+  captureCoachSnapshot(data.settings.currentMd);
+  touch();
+  const formation=exactFormation(mdRecord(data.settings.currentMd).lineup);
+  toast(`Coach-Empfehlung ${formation?.code||''} übernommen`);
+};$$('[data-squad-view]').forEach(b=>b.onclick=()=>{$$('[data-squad-view]').forEach(x=>x.classList.remove('active'));b.classList.add('active');const key=b.dataset.squadView[0].toUpperCase()+b.dataset.squadView.slice(1);$('#squadView').innerHTML=$(`#view${key}`).innerHTML;bindSquadCards()});bindSquadCards();$$('[data-sell-player]').forEach(b=>b.onclick=()=>sellPlayer(b.dataset.sellPlayer));$$('[data-edit-transfer]').forEach(b=>b.onclick=()=>editTransfer(b.dataset.editTransfer));$$('[data-delete-transfer]').forEach(b=>b.onclick=()=>deleteTransfer(b.dataset.deleteTransfer));$$('[data-points]').forEach(e=>e.onchange=()=>{mdRecord(data.settings.currentMd).points[e.dataset.points]=e.value===''?null:+e.value;save();render()});if($('#saveMd'))$('#saveMd').onclick=()=>{const r=mdRecord(data.settings.currentMd);Object.assign(r,{mvp:$('#mdMvp').value.trim(),soldPlayer:$('#mdSold').value,soldDate:$('#mdSoldDate').value,soldPrice:+$('#mdSoldPrice').value||0});save();render()};if($('#addFinance'))$('#addFinance').onclick=showFinanceForm;$$('[data-del-fin]').forEach(b=>b.onclick=()=>{data.finances=data.finances.filter(x=>x.id!==b.dataset.delFin);touch()});if($('#addOpponent'))$('#addOpponent').onclick=()=>{const name=prompt('Name des Managers:');if(!name)return;data.opponents.push({id:id(),name,teamName:prompt('Teamname (optional):')||'',squadValue:+prompt('Bekannter Kaderwert (optional):')||0,note:prompt('Notiz (optional):')||''});touch()};$$('[data-del-opp]').forEach(b=>b.onclick=()=>{data.opponents=data.opponents.filter(x=>x.id!==b.dataset.delOpp);touch()});if($('#addH2H'))$('#addH2H').onclick=()=>{const opponent=prompt('Gegner:');if(!opponent)return;data.h2h.push({id:id(),md:data.settings.currentMd,opponent,myPoints:+prompt('Deine Punkte:')||0,oppPoints:+prompt('Gegnerpunkte:')||0});touch()};if($('#resetStrengths'))$('#resetStrengths').onclick=()=>{data.teamStrength={...TEAM_STRENGTH_BASELINE};data.teamStrengthDetails={};data.teamStrengthCloudUpdatedAt='';touch();toast('Basiswerte geladen')};if($('#saveSettings'))$('#saveSettings').onclick=()=>{data.settings.startCapital=parseMoney($('#setCapital').value);data.settings.lineupSize=11;data.settings.homeBonus=+$('#setHome').value;$$('[data-strength]').forEach(x=>data.teamStrength[x.dataset.strength]=+x.value);data.finances.find(x=>x.id==='start').amount=data.settings.startCapital;touch()};$$('[data-strength]').forEach(x=>x.onchange=()=>{data.teamStrength[x.dataset.strength]=+x.value;save()})}
 function setLineupState(pid,toLineup){
   const r=mdRecord(data.settings.currentMd);
   if(!Array.isArray(r.lineup)||!r.lineup.length)
     r.lineup=coachOptimizedLineup(data.settings.currentMd).map(p=>p.id);
 
+  const player=activePlayers().find(p=>p.id===pid);
+  if(!player)return false;
   const isStarter=r.lineup.includes(pid);
+
   if(toLineup){
     if(isStarter)return false;
-    if(r.lineup.length>=data.settings.lineupSize){
-      toast(`Maximal ${data.settings.lineupSize} Spieler in der Startelf`);
+
+    if(r.lineup.length>=11){
+      // Smart swap: select the weakest removable starter that creates a valid formation.
+      const validSwaps=r.lineup.map(removeId=>{
+        const candidate=r.lineup.filter(id=>id!==removeId).concat(pid);
+        const formation=exactFormation(candidate);
+        const removed=activePlayers().find(p=>p.id===removeId);
+        return formation&&removed?{
+          candidate,formation,removed,
+          removedScore:coachPlayerScore(removed,data.settings.currentMd)
+        }:null;
+      }).filter(Boolean).sort((a,b)=>a.removedScore-b.removedScore);
+
+      const swap=validSwaps[0];
+      if(!swap){
+        toast('Mit diesem Spieler ist aus der aktuellen Elf keine gültige Formation möglich.');
+        return false;
+      }
+      r.lineup=swap.candidate;
+      r.lastSmartSwap={
+        incoming:player.name,
+        outgoing:swap.removed.name,
+        formation:swap.formation.code,
+        date:new Date().toISOString()
+      };
+      data.settings.lineupSize=11;
+      return true;
+    }
+
+    const candidate=[...r.lineup,pid];
+    const validation=lineupValidation(candidate);
+    if(!validation.ok){
+      toast(validation.message);
       return false;
     }
-    r.lineup.push(pid);
+    r.lineup=candidate;
   }else{
     if(!isStarter)return false;
-    r.lineup=r.lineup.filter(x=>x!==pid);
+    const candidate=r.lineup.filter(x=>x!==pid);
+    const validation=lineupValidation(candidate);
+    if(!validation.ok){
+      toast(validation.message);
+      return false;
+    }
+    r.lineup=candidate;
   }
+  data.settings.lineupSize=11;
   return true;
 }
 function finishLineupMove(pid,zone){
   if(!pid||!zone)return;
   const changed=setLineupState(pid,zone==='lineup');
   if(changed){
+    const record=mdRecord(data.settings.currentMd);
+    const swap=record.lastSmartSwap;
     save();
     render();
-    toast(zone==='lineup'?'Spieler aufgestellt':'Spieler auf die Bank gesetzt');
+    if(zone==='lineup'&&swap){
+      toast(`${swap.incoming} für ${swap.outgoing} · Formation jetzt ${swap.formation}`);
+      delete record.lastSmartSwap;
+      save();
+    }else{
+      toast(zone==='lineup'?'Spieler aufgestellt':'Spieler auf die Bank gesetzt');
+    }
   }
 }
 function bindSquadCards(){
@@ -1887,7 +2220,11 @@ function bindSquadCards(){
       if(!Array.isArray(r.lineup)||!r.lineup.length)
         r.lineup=coachOptimizedLineup(data.settings.currentMd).map(p=>p.id);
       const changed=setLineupState(pid,!r.lineup.includes(pid));
-      if(changed){save();render()}
+      if(changed){
+        const swap=r.lastSmartSwap;
+        save();render();
+        if(swap){toast(`${swap.incoming} für ${swap.outgoing} · Formation jetzt ${swap.formation}`);delete r.lastSmartSwap;save()}
+      }
     };
   });
 

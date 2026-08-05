@@ -1,0 +1,26 @@
+VERSION 1.4.0 – POLISHING & COACH CALIBRATION
+
+AUFSTELLUNG
+- Vollständige Startelf muss nicht mehr zuerst manuell geleert werden.
+- Wird ein Bankspieler in eine volle Elf gezogen oder angetippt, sucht die App automatisch einen gültigen Tausch.
+- Entfernt wird der schwächste Coach-Kandidat, dessen Austausch eine erlaubte Formation ergibt.
+- Die Formation wechselt automatisch, z. B. von 4-4-2 auf 3-5-2.
+- Die App nennt eingewechselten Spieler, ersetzten Spieler und neue Formation.
+
+MATCHDAY ASSISTANT
+- Countdown bis Anpfiff, Spieltagsende oder Pflichtverkaufsfrist.
+- kompakte Übersicht zu Startelf, Risiken, offiziellen Meldungen und Kalibrierung.
+- drei aktuell stärkste Coach-Optionen direkt im Briefing.
+- Readiness und bestehende Bereiche bleiben erhalten.
+
+COACH-KALIBRIERUNG
+- Beim Speichern oder Übernehmen einer Coach-Elf wird automatisch ein Prognose-Snapshot gespeichert.
+- Bereits eingetragene Spielerpunkte dienen nach dem Spieltag als Ergebnis.
+- Kein neues Pflichtfeld und keine zusätzliche Pflege.
+- Nach mindestens vier Spieltagen und 20 Spielerergebnissen wird die Gewichtung aktiviert.
+- Das persönliche Modell mischt 75 % Basismodell mit 25 % deinen realen Ergebnissen.
+- Gewichtungen und Datenmenge sind im Intelligence-Bereich sichtbar.
+- Ohne ausreichende Daten bleibt das bewährte Basismodell aktiv.
+
+TECHNIK
+- Club Registry aus 1.3.3, Formation Rules aus 1.3.4 und Data Engine bleiben vollständig enthalten.
