@@ -1,0 +1,27 @@
+VERSION 1.5.0 – FRIDAY READY UX
+
+DESKTOP
+- Die App passt sich ab 1180 px an die verfügbare Fensterbreite an.
+- Kein horizontales Verschieben der gesamten Seite mehr.
+- Tabellen werden auf dem Desktop innerhalb der Fensterbreite umgebrochen.
+- Dashboard, Scout, Intelligence, Aufstellung und News bleiben vollständig responsiv.
+- Smartphone-Layout bleibt unverändert.
+
+DRAG & DROP
+- Beim Ziehen nahe an den oberen oder unteren Bildschirmrand scrollt die Seite automatisch.
+- Scrollgeschwindigkeit steigt zum Bildschirmrand hin.
+- Funktioniert mit Laptop-Maus und Samsung-Long-Press-Drag.
+- Auto-Scroll endet zuverlässig bei Drop, Abbruch oder Fokusverlust.
+- Antippen bleibt als mobile Alternative erhalten.
+
+AUFSTELLUNG ÜBERNEHMEN
+- Beim erstmaligen Anlegen/Öffnen eines neuen Spieltags wird die letzte gespeicherte Elf kopiert.
+- Der vorherige Spieltag wird niemals verändert.
+- Verkaufte oder nicht mehr aktive Spieler werden beim Kopieren ausgelassen.
+- Die Übernahme ist als „provisorisch“ gekennzeichnet.
+- Erst das Speichern macht die Aufstellung für den neuen Spieltag verbindlich.
+- Coach-Empfehlung kann die provisorische Elf weiterhin vollständig ersetzen.
+
+ENTHALTEN
+- Formation Rules, Legacy Repair, Club Registry, Data Engine,
+  News Intelligence und Coach-Kalibrierung bleiben erhalten.

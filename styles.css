@@ -997,3 +997,104 @@ table thead th{background:#132238!important;color:#92a6be!important}
 .news-empty-state strong{font-size:13px}
 .news-empty-state>span{max-width:620px;margin:auto;color:#91a4ba;font-size:9px;line-height:1.5}
 .news-empty-state a{display:inline-block;margin-top:5px;color:#7dd3fc;font-size:9px;font-weight:800}
+
+/* Version 1.5.0 – Desktop Fit, Drag Auto-Scroll, Lineup Carry-Over */
+html,body{max-width:100%;overflow-x:hidden}
+.app,main,#content{min-width:0;max-width:100%}
+img,svg,canvas{max-width:100%}
+.grid>*,
+.intel-grid-two>*,
+.assistant-action-grid>*,
+.player-grid>*,
+.news-list>*{min-width:0}
+
+@media(min-width:1180px){
+  #content{
+    width:100%;
+    max-width:none;
+    margin:0;
+    padding:22px clamp(18px,2.1vw,34px);
+  }
+
+  .app{width:100%;grid-template-columns:240px minmax(0,1fr)}
+  aside{width:240px}
+  main{width:100%;overflow:hidden}
+
+  .table-wrap{
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden;
+  }
+  .table-wrap table{
+    width:100%;
+    min-width:0;
+    table-layout:fixed;
+  }
+  .table-wrap th,
+  .table-wrap td{
+    white-space:normal;
+    overflow-wrap:anywhere;
+    word-break:normal;
+    padding:9px 8px;
+    font-size:11px;
+    vertical-align:middle;
+  }
+  .table-wrap td input,
+  .table-wrap td select{
+    min-width:0;
+    width:100%;
+  }
+
+  .transfer-history-table th:nth-child(1),
+  .transfer-history-table td:nth-child(1){width:19%}
+  .transfer-history-table th:nth-child(2),
+  .transfer-history-table td:nth-child(2){width:10%}
+  .transfer-history-table th:nth-child(3),
+  .transfer-history-table td:nth-child(3){width:11%}
+  .transfer-history-table th:nth-child(4),
+  .transfer-history-table td:nth-child(4){width:11%}
+
+  .scout-page,
+  .intelligence-page,
+  .news-page{max-width:100%}
+
+  .football-pitch{
+    width:100%;
+    min-width:0;
+  }
+  .pitch-row{min-width:0}
+  .field-player{min-width:0}
+}
+
+@media(min-width:1500px){
+  .app{grid-template-columns:250px minmax(0,1fr)}
+  aside{width:250px}
+  #content{padding-inline:32px}
+}
+
+body.lineup-dragging{
+  cursor:grabbing;
+  user-select:none;
+}
+body.lineup-dragging::before,
+body.lineup-dragging::after{
+  content:"";
+  position:fixed;
+  left:260px;
+  right:0;
+  height:72px;
+  z-index:80;
+  pointer-events:none;
+}
+body.lineup-dragging::before{
+  top:0;
+  background:linear-gradient(180deg,rgba(59,130,246,.18),transparent);
+}
+body.lineup-dragging::after{
+  bottom:0;
+  background:linear-gradient(0deg,rgba(59,130,246,.18),transparent);
+}
+@media(max-width:760px){
+  body.lineup-dragging::before,
+  body.lineup-dragging::after{left:0}
+}
