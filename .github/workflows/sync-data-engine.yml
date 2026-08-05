@@ -23,4 +23,5 @@ jobs:
           FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
           SPORTMONKS_API_TOKEN: ${{ secrets.SPORTMONKS_API_TOKEN }}
           SPORTMONKS_BUNDESLIGA_SEASON_ID: ${{ secrets.SPORTMONKS_BUNDESLIGA_SEASON_ID }}
+          OFFICIAL_NEWS_SOURCES_JSON: ${{ secrets.OFFICIAL_NEWS_SOURCES_JSON }}
         run: node data-engine/sync.mjs

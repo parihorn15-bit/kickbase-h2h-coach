@@ -16,3 +16,7 @@ Für automatische voraussichtliche Aufstellungen und Ausfälle:
 Danach unter GitHub → Actions den Workflow **H2H Data Engine synchronisieren** manuell starten.
 
 Ohne Sportmonks-Schlüssel wird der Sportmonks-Provider als „Nicht eingerichtet“ markiert; die kostenlose football-data.org-Synchronisierung läuft trotzdem.
+
+
+## 1. und 2. Bundesliga
+Zusätzlich `SUPABASE_GERMAN_LEAGUES_MIGRATION.sql` ausführen. Die 2. Bundesliga läuft danach nur im Hintergrund.

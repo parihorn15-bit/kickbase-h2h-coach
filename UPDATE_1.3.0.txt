@@ -1,0 +1,25 @@
+VERSION 1.3.0 – PERSONAL ASSISTANT PREVIEW
+
+SPRINT 1 – DATA ENGINE
+- Offizieller News-Provider für konfigurierbare RSS-/Atom-Quellen
+- Normalisierte News-Tabelle und Provider-Status
+- Keine automatische Auslesung normaler Webseiten
+
+SPRINT 2 – MATCHDAY ASSISTANT
+- persönliches Briefing mit Readiness Score
+- Startelf-Vollständigkeit, Confidence, harte Risiken und relevante Meldungen
+
+SPRINT 3 – NEWS INTELLIGENCE
+- filtert offizielle Meldungen auf eigene Kaderspieler
+- erkennt Ausfall, Sperre, Fraglich, Rückkehr, Rotation und Startelfhinweise
+- News-Wirkung fließt begrenzt in den Coach Score ein
+
+SPRINT 4 – EXPLAINABLE COACH
+- bestehende Score-Faktoren plus offizielle News
+- Quelle und Confidence bleiben sichtbar
+- Feedback „hilfreich / nicht hilfreich“
+
+SPRINT 5 – MANAGER-DNA / SAISON-REVIEW
+- Coach-Feedbackquote
+- Transferentwicklung, H2H-Bilanz und bester Transfer im Zwischenfazit
+- keine erfundenen rückwirkenden Daten

@@ -1,0 +1,16 @@
+[
+  {
+    "team": "Eintracht Frankfurt",
+    "name": "Eintracht Frankfurt – Profis",
+    "url": "https://profis.eintracht.de/rss/feed.xml",
+    "verified": true,
+    "scope": "first_team"
+  },
+  {
+    "team": "VfB Stuttgart",
+    "name": "VfB Stuttgart – offizielle News",
+    "url": "https://www.vfb.de/templates/generated/1/raw/de.xml",
+    "verified": true,
+    "scope": "club_news"
+  }
+]

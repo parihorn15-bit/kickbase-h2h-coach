@@ -1,10 +1,12 @@
 
 import { syncFootballData } from "./provider-football-data.mjs";
 import { syncSportmonks } from "./provider-sportmonks.mjs";
+import { syncOfficialNews } from "./provider-official-news.mjs";
 
 const providers = [
   ["football-data.org", syncFootballData],
-  ["sportmonks", syncSportmonks]
+  ["sportmonks", syncSportmonks],
+  ["official-club-news", syncOfficialNews]
 ];
 
 const results = [];

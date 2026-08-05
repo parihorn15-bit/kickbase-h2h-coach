@@ -102,6 +102,18 @@
 
 
 
+
+  async function fetchOfficialNews(){
+    if(!client||!currentUser)return;
+    try{
+      const {data:news,error}=await client.from("official_club_news").select("*")
+        .gte("published_at",new Date(Date.now()-21*86400000).toISOString())
+        .order("published_at",{ascending:false}).limit(250);
+      if(!error&&Array.isArray(news))window.OFFICIAL_CLUB_NEWS=news;
+      if(!window.h2hEditingInProgress?.())render();
+    }catch(error){console.warn("Offizielle Meldungen konnten nicht geladen werden:",error)}
+  }
+
   async function fetchDataEngine(){
     if(!client||!currentUser)return;
     try{
@@ -121,7 +133,7 @@
     try{
       const [{data:clubs,error:clubError},{data:players,error:playerError}]=await Promise.all([
         client.from("bundesliga_clubs").select("*").order("position",{ascending:true,nullsFirst:false}),
-        client.from("bundesliga_players").select("*").order("team").order("name")
+        client.from("bundesliga_players").select("*").eq("competition_code","BL1").order("team").order("name")
       ]);
       if(!clubError&&Array.isArray(clubs))window.BUNDESLIGA_CLUBS=clubs;
       if(!playerError&&Array.isArray(players))window.BUNDESLIGA_PLAYERS=players;
@@ -168,6 +180,7 @@
       await fetchTeamStrengths();
       await fetchBundesligaLiveData();
       await fetchDataEngine();
+      await fetchOfficialNews();
     } catch (err) {
       console.error(err);
       setCloudState("Cloud-Fehler", "bad");
@@ -291,6 +304,7 @@
       await fetchTeamStrengths();
       await fetchBundesligaLiveData();
       await fetchDataEngine();
+      await fetchOfficialNews();
       await pushCloudState();
     });
 
@@ -302,10 +316,10 @@
     });
 
     document.addEventListener("visibilitychange", () => {
-      if (!document.hidden && currentUser) { fetchCloudState(); fetchTeamStrengths(); fetchBundesligaLiveData(); fetchDataEngine(); }
+      if (!document.hidden && currentUser) { fetchCloudState(); fetchTeamStrengths(); fetchBundesligaLiveData(); fetchDataEngine(); fetchOfficialNews(); }
     });
     window.addEventListener("focus", () => {
-      if (currentUser) { fetchCloudState(); fetchTeamStrengths(); fetchBundesligaLiveData(); fetchDataEngine(); }
+      if (currentUser) { fetchCloudState(); fetchTeamStrengths(); fetchBundesligaLiveData(); fetchDataEngine(); fetchOfficialNews(); }
     });
   }
 
