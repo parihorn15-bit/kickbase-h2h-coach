@@ -1,0 +1,27 @@
+VERSION 0.9.3 – MATCHDAY READY
+
+NAVIGATION
+- Schnell-/Analyse-Schalter vollständig entfernt.
+- Eine einheitliche Oberfläche für Samsung und Laptop.
+- Der Analysebereich bleibt als normaler Menüpunkt erhalten.
+
+LIGAINSiDER
+- Klarer Vier-Schritte-Ablauf.
+- Hinweis, dass nur Vereine deiner aktuellen Kaderspieler relevant sind.
+- URL-Erkennung: verständliche Meldung statt wirkungsloser Analyse.
+- Button zum Einfügen aus der Zwischenablage, soweit vom Browser erlaubt.
+- Manuelle Statuspflege bleibt vollständig möglich.
+- Coach AI verwendet die übernommenen oder manuell gesetzten Statuswerte.
+- Keine automatische Abfrage oder Speicherung fremder Webseiten.
+
+MATCHDAY-CHECKLISTE
+- Startelf vollständig gespeichert.
+- Tagesbonus verbucht.
+- Pflichtverkauf geprüft.
+- Aufstellungsstatus kontrolliert.
+- Coach-AI-Hinweise gelesen.
+- Anzeige bis zum ersten Bundesliga-Anpfiff des gewählten Spieltags.
+
+QUALITÄT
+- Samsung-Layout für LigaInsider und Checkliste optimiert.
+- Bestehende Kader-, Transfer-, Cloud-, Logo- und Drag-and-drop-Funktionen bleiben erhalten.

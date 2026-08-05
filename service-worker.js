@@ -1,4 +1,4 @@
-const CACHE='h2h-coach-cloud-v092';
+const CACHE='h2h-coach-cloud-v093';
 const ASSETS=['./','./index.html','./styles.css','./app.js','./cloud.js','./config.js','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./team-logos/horn-capital-fc.webp','./team-logos/faeps-ham-united.webp','./team-logos/al-elshani.webp','./team-logos/calcio-rom-fc.webp','./team-logos/cello-football-club.webp','./team-logos/fapse-fc.webp'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))));

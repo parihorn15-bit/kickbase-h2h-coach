@@ -729,3 +729,72 @@ table thead th{background:#132238!important;color:#92a6be!important}
     max-width:125px;
   }
 }
+
+/* Version 0.9.3 – Matchday Ready */
+
+/* Removed Schnell/Analyse switch */
+.header-actions{gap:10px}
+.header-actions>.mode{display:none!important}
+
+/* Matchday checklist */
+.matchday-checklist-panel{border-color:#3d5d43;background:linear-gradient(145deg,#10291d,#0d1928)}
+.matchday-checklist-panel .premium-panel-head>strong{
+  display:grid;place-items:center;min-width:48px;height:34px;border-radius:999px;
+  background:#153624;color:#86efac;border:1px solid #286542;font-size:12px
+}
+.matchday-checklist{display:grid;gap:7px}
+.checklist-row{
+  display:grid;grid-template-columns:32px 1fr 18px;align-items:center;gap:10px;
+  width:100%;text-align:left;border:1px solid #25384f;background:#091421;
+  color:#fff;border-radius:12px;padding:9px 10px
+}
+.checklist-row.done{border-color:#235b3c;background:#0d271c}
+.check-circle{
+  width:27px;height:27px;border-radius:50%;display:grid;place-items:center;
+  border:1px solid #496078;color:#86efac;font-weight:900
+}
+.checklist-row.done .check-circle{background:#166534;border-color:#22c55e;color:white}
+.checklist-row b,.checklist-row small{display:block}
+.checklist-row small{color:var(--muted);font-size:9px;margin-top:3px}
+.checklist-row i{font-style:normal;color:#64748b}
+.checklist-deadline{margin-top:9px;color:#7890aa;font-size:9px;text-align:right}
+
+/* LigaInsider simplified workflow */
+.li-modern-page{display:grid;gap:15px}
+.li-hero{
+  display:flex;justify-content:space-between;align-items:center;gap:16px;
+  padding:19px;background:linear-gradient(135deg,#152b43,#0c1828);
+  border:1px solid #315171;border-radius:20px
+}
+.li-hero span{color:#7dd3fc;font-size:9px;font-weight:950;letter-spacing:.12em}
+.li-hero h2{font-size:24px;margin:4px 0}.li-hero p{color:var(--muted);font-size:11px}
+.li-workflow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.li-workflow article{background:#0c1725;border:1px solid #22364e;border-radius:14px;padding:12px}
+.li-workflow article>b{
+  width:27px;height:27px;border-radius:50%;display:grid;place-items:center;
+  background:#2563eb;color:white;margin-bottom:8px
+}
+.li-workflow article>span,.li-workflow article>small{display:block}
+.li-workflow article>span{font-size:11px;font-weight:900}
+.li-workflow article>small{color:var(--muted);font-size:9px;line-height:1.35;margin-top:4px}
+.li-paste-area{min-height:230px;margin:12px 0;resize:vertical}
+.li-url-warning{
+  margin-top:12px;padding:11px 12px;border:1px solid #92400e;
+  background:#33250f;border-radius:12px;color:#fde68a
+}
+.li-url-warning b,.li-url-warning p{display:block}.li-url-warning p{font-size:10px;line-height:1.45;margin-top:4px}
+.li-actions{flex-wrap:wrap}
+.li-main-grid{align-items:start}
+.li-player small .bundesliga-identity{max-width:190px}
+
+@media(max-width:760px){
+  .li-hero{align-items:flex-start;flex-direction:column}
+  .li-hero .btn{width:100%}
+  .li-workflow{grid-template-columns:1fr 1fr}
+  .li-main-grid{grid-template-columns:1fr}
+  .li-actions .btn{flex:1;min-width:120px}
+}
+@media(max-width:430px){
+  .li-workflow{grid-template-columns:1fr}
+  .checklist-row{padding:9px}
+}
