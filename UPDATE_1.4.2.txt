@@ -1,0 +1,10 @@
+VERSION 1.4.2 – RESILIENT NEWS ENGINE
+
+- Ein einzelner 404-Fehler beendet nicht mehr den gesamten News-Workflow.
+- Defekte, nicht erreichbare oder ungültige Feeds werden übersprungen.
+- Alle übrigen Quellen werden normal verarbeitet.
+- Weiterleitungen und ein Zeitlimit pro Quelle werden unterstützt.
+- Provider-Status nennt erreichbare Quellen, Meldungsanzahl und Ausfälle.
+- Leere Newsansicht wird als normaler Datenzustand erklärt.
+- LINEUP_DATA_OPTIONS.md beschreibt die Grenzen von FotMob, kicker und
+  dem offiziellen Bundesliga Fantasy Manager.

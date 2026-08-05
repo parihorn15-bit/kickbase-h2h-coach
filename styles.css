@@ -988,3 +988,12 @@ table thead th{background:#132238!important;color:#92a6be!important}
   .lineup-repair-notice{align-items:flex-start;flex-direction:column}
   .lineup-repair-notice button{width:100%}
 }
+
+/* Version 1.4.2 – fehlertolerante News Intelligence */
+.news-empty-state{
+  grid-column:1/-1;display:grid;gap:7px;padding:18px;
+  border:1px solid #2a4059;border-radius:15px;background:#0b1624;text-align:center
+}
+.news-empty-state strong{font-size:13px}
+.news-empty-state>span{max-width:620px;margin:auto;color:#91a4ba;font-size:9px;line-height:1.5}
+.news-empty-state a{display:inline-block;margin-top:5px;color:#7dd3fc;font-size:9px;font-weight:800}
