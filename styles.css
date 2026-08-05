@@ -628,3 +628,104 @@ table thead th{background:#132238!important;color:#92a6be!important}
   .fixture-club-crest{width:26px;height:26px}
   .bl-team.home,.bl-team.away{gap:5px}
 }
+
+/* Version 0.9.2 – neue Ligawappen und dezente Bundesliga-Vereinslogos */
+
+/* The new source assets already contain the complete round badge. */
+.round-team-crest{
+  object-fit:cover!important;
+  object-position:50% 50%!important;
+  padding:0!important;
+  border-radius:50%!important;
+  background:transparent!important;
+}
+
+/* Reusable compact Bundesliga identity */
+.bundesliga-identity{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  min-width:0;
+  vertical-align:middle;
+}
+.bundesliga-identity>span{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.inline-club-crest,.table-club-crest,.bench-club-crest,.card-club-crest,
+.modal-club-crest,.form-club-crest,.premium-info-club-crest,.scout-row-club-crest,
+.pitch-club-crest{
+  object-fit:contain;
+  object-position:center;
+  flex:0 0 auto;
+}
+.inline-club-crest{width:18px;height:18px}
+.table-club-crest{width:17px;height:17px}
+.bench-club-crest{width:15px;height:15px}
+.card-club-crest{width:20px;height:20px}
+.modal-club-crest{width:25px;height:25px}
+.form-club-crest{width:30px;height:30px}
+.premium-info-club-crest{width:18px;height:18px}
+.scout-row-club-crest{width:16px;height:16px}
+.pitch-club-crest{width:20px;height:20px}
+
+.field-player{position:relative}
+.field-club-logo{
+  position:absolute;
+  left:5px;
+  top:5px;
+  width:25px;
+  height:25px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:rgba(4,11,18,.86);
+  border:1px solid rgba(255,255,255,.25);
+  box-shadow:0 4px 10px rgba(0,0,0,.25);
+}
+.player-card .club{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:4px;
+}
+.bench-player small,.transfer-history-table td small,.bl-matchup-table td small{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:3px;
+}
+.transfer-form-heading{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+}
+.transfer-form-heading p{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:11px;
+}
+.manage-transfer-modal .section-head p{
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+
+/* Avoid visual noise: logos stay small in dense lists. */
+.scout-list-row .bundesliga-identity,
+.transfer-history-table .bundesliga-identity,
+.bl-matchup-table .bundesliga-identity{
+  max-width:180px;
+}
+
+@media(max-width:600px){
+  .pitch-club-crest{width:17px;height:17px}
+  .field-club-logo{width:22px;height:22px;left:3px;top:3px}
+  .form-club-crest{width:25px;height:25px}
+  .scout-list-row .bundesliga-identity,
+  .transfer-history-table .bundesliga-identity{
+    max-width:125px;
+  }
+}

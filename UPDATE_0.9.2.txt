@@ -1,0 +1,19 @@
+VERSION 0.9.2
+
+KICKBASE-LIGAWAPPEN
+- Die neu hochgeladenen, großen Dateien wurden unverändert proportional verwendet.
+- Kein Zuschneiden, kein Zoomen und kein Strecken.
+- Nur die äußere Kreisform wird transparent maskiert.
+- Horn Capital bleibt aus der vorhandenen Original-PNG-Datei.
+
+BUNDESLIGA-VEREINSLOGOS
+- Kleine Logos auf den Spielerkarten im Spielfeld.
+- Logos auf der Bank und in der Gesamtkaderansicht.
+- Logos in Transferhistorie und Transferverwaltung.
+- Logo im Kauf-/Bearbeitungsformular; aktualisiert sich bei Vereinswechsel.
+- Logos in Scout Center und Bundesliga-Matchup-Tabelle.
+- Bewusst keine Bundesliga-Logos in der H2H-Liga, damit sie nicht mit euren eigenen Teamwappen konkurrieren.
+
+DESIGN
+- Logos bleiben in dichten Tabellen und Listen bewusst klein.
+- Das bestehende Spielfeld, Coach AI und die Navigation bleiben unverändert.

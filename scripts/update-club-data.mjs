@@ -8,32 +8,11 @@ if (!token || !supabaseUrl || !serviceKey) {
 }
 const wait = ms => new Promise(resolve=>setTimeout(resolve,ms));
 async function fd(path) {
-  for (let attempt = 1; attempt <= 5; attempt++) {
-    const response = await fetch(`${BASE}${path}`, {
-      headers: {"X-Auth-Token": token}
-    });
-
-    if (response.ok) {
-      return response.json();
-    }
-
-    const message = await response.text();
-
-    if (response.status === 429 && attempt < 5) {
-      const resetSeconds =
-        Number(response.headers.get("X-RequestCounter-Reset")) || 10;
-
-      console.log(
-        `Anfragelimit erreicht. Warte ${resetSeconds + 2} Sekunden …`
-      );
-
-      await wait((resetSeconds + 2) * 1000);
-      continue;
-    }
-
-    throw new Error(`${path}: ${response.status} ${message}`);
-  }
-}async function upsert(table, rows, conflict) {
+  const response = await fetch(`${BASE}${path}`, {headers:{"X-Auth-Token":token}});
+  if (!response.ok) throw new Error(`${path}: ${response.status} ${await response.text()}`);
+  return response.json();
+}
+async function upsert(table, rows, conflict) {
   if (!rows.length) return;
   const response = await fetch(`${supabaseUrl}/rest/v1/${table}?on_conflict=${conflict}`, {
     method:"POST",
