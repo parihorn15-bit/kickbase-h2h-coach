@@ -1,0 +1,15 @@
+VERSION 1.0.1 – LINEUP-AWARE COACH
+
+COACH AI
+- Bewertet nicht mehr nur das Matchup.
+- Berücksichtigt Durchschnittspunkte und LigaInsider-Status.
+- Voraussichtliche Startelf wird positiv gewichtet.
+- Alternative, Ersatzbank, Fraglich und Fällt aus werden abgestuft abgewertet.
+- Nicht aktuell geprüfte Statuswerte erhalten einen Vorsichtsabschlag.
+- Empfehlungen erklären die verwendeten Faktoren.
+- Wechselvorschläge entstehen nur, wenn eine Bankoption in der Gesamtbewertung klar besser ist.
+
+DASHBOARD UND AUFSTELLUNG
+- Beste Optionen werden nach der neuen Gesamtbewertung sortiert.
+- LigaInsider-Status wird direkt in der Rangliste angezeigt.
+- Wert auf der Spielfeldkarte zeigt nun den Coach-Gesamtscore statt nur das Matchup.

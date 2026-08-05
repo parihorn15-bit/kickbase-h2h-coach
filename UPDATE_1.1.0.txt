@@ -1,0 +1,28 @@
+VERSION 1.1.0 – COACH INTELLIGENCE ENGINE
+
+COACH SCORE 0–100
+- Ø Punkte: maximal 30 Punkte
+- Gegner-Matchup: maximal 25 Punkte
+- voraussichtlicher Startelfstatus: maximal 30 Punkte
+- Teamstärke: maximal 10 Punkte
+- Heimvorteil: maximal 5 Punkte
+- Ausfälle erhalten Score 0
+
+CONFIDENCE 20–100 %
+- steigt mit vorhandenen Ø-Punkten
+- steigt mit bekanntem Spielplan und Teamstärke
+- steigt mit gepflegtem Aufstellungsstatus
+- aktuelle Statusprüfung innerhalb von vier Tagen erhöht die Sicherheit
+- Coach Score und Confidence werden getrennt angezeigt
+
+ERKLÄRBARE EMPFEHLUNGEN
+- Pluspunkte und Risiken für jeden Spieler
+- Einzelne Score-Bestandteile als Balken
+- Coach-Tab in der Aufstellung
+- klare Begründung für Wechselvorschläge
+
+AUTOMATISCHE STARTELF
+- Coach-optimierte Rangfolge statt reinem Matchup
+- ein verfügbarer Torwart wird bevorzugt berücksichtigt
+- als „Fällt aus“ markierte Spieler werden vermieden
+- Empfehlung kann weiterhin per Drag-and-drop angepasst werden

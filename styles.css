@@ -854,3 +854,27 @@ table thead th{background:#132238!important;color:#92a6be!important}
   .dna-badge strong{font-size:26px}.intel-kpis{grid-template-columns:1fr 1fr}.intel-kpis article:last-child{grid-column:1/-1}
   .achievement-grid{grid-template-columns:1fr}.intel-ranking-row{grid-template-columns:25px minmax(0,1fr)}.intel-ranking-row>strong{grid-column:2;text-align:left;margin-top:3px}
 }
+
+/* Version 1.0.1 – Coach AI mit Startelfwahrscheinlichkeit */
+.coach-ai-card small{line-height:1.5}
+.top-player-row strong{min-width:36px;text-align:right}
+.field-score{min-width:28px;text-align:center}
+
+/* Version 1.1.0 – Coach Intelligence Engine */
+.coach-score-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.coach-score-card{padding:13px;background:#0a1523;border:1px solid #263b54;border-radius:16px}
+.coach-score-card.strong{border-color:#2d6847;background:linear-gradient(145deg,#10291d,#0a1623)}
+.coach-score-card.weak{border-color:#702b35;background:linear-gradient(145deg,#2d171c,#0a1523)}
+.coach-score-head{display:grid;grid-template-columns:48px minmax(0,1fr) 54px;align-items:center;gap:10px}
+.coach-score-photo{width:48px;height:48px;border-radius:50%;object-fit:cover;background:#20344d}
+.coach-score-head b,.coach-score-head small{display:block}.coach-score-head small{color:var(--muted);font-size:9px;margin-top:3px}
+.coach-score-number{text-align:center;padding:7px;border-radius:12px;background:#13243a}
+.coach-score-number strong,.coach-score-number span{display:block}.coach-score-number strong{font-size:22px}.coach-score-number span{color:var(--muted);font-size:8px}
+.confidence-line{display:grid;grid-template-columns:100px 1fr;align-items:center;gap:8px;margin:11px 0;color:#9fb0c4;font-size:9px}
+.confidence-line>div{height:6px;border-radius:999px;background:#17263a;overflow:hidden}.confidence-line i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#f59e0b,#22c55e)}
+.coach-factor-row{display:grid;grid-template-columns:84px 1fr 40px;align-items:center;gap:7px;margin-top:6px;font-size:8px;color:#9dafc2}
+.coach-factor-row>div{height:5px;border-radius:999px;background:#17263a;overflow:hidden}.coach-factor-row i{display:block;height:100%;border-radius:999px;background:#38bdf8}
+.coach-factor-row b{text-align:right;color:#dbe7f3}
+.coach-reasons{display:grid;gap:6px;margin-top:11px;padding-top:9px;border-top:1px solid #24364c}
+.coach-reasons>div{display:grid;grid-template-columns:48px 1fr;gap:6px;font-size:9px;line-height:1.4}.coach-reasons .positive b{color:#86efac}.coach-reasons .negative b{color:#fca5a5}.coach-reasons span{color:#b7c5d5}
+@media(max-width:760px){.coach-score-list{grid-template-columns:1fr}}
