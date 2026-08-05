@@ -1,0 +1,23 @@
+VERSION 1.0.0 – INTELLIGENCE CORE
+
+NEUER BEREICH H2H INTELLIGENCE
+- Saisonübersicht mit Wertzuwachs, realisiertem Gewinn, Gewinnquote und Haltedauer
+- Transfer-Highlights: bester Transfer und größtes Verbesserungspotenzial
+- Kaufgrundanalyse inklusive Mehrfachauswahl
+- Positionsanalyse
+- Bundesliga-Vereinsanalyse mit Vereinslogos
+- H2H-Bilanz und Gegnerauswertung nur aus eingetragenen Spieltagspunkten
+- Manager-DNA-Profil
+- erste Auszeichnungen und Saisonziele
+
+DATENAUFWAND
+- Keine Gegnertransfers erforderlich
+- Alle persönlichen Analysen entstehen aus der normalen Transferpflege
+- Für H2H-Analytics reichen die eingetragenen Duellpunkte
+- Unvollständige Daten werden offen als noch nicht ausreichend gekennzeichnet
+
+BERECHNUNG
+- Verkaufte Spieler: Verkaufspreis minus Kaufpreis
+- Aktive Spieler: aktueller gepflegter Marktwert minus Kaufpreis
+- Mehrere Kaufgründe werden jeweils als Merkmal des Transfers ausgewertet
+- Coach-AI-Trefferquote wird erst ergänzt, sobald Empfehlungen strukturiert protokolliert werden
