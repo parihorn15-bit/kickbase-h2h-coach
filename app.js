@@ -194,6 +194,65 @@ const LEAGUE_RULES=[
   {id:'sanctions',group:'Jury',title:'Sanktionen',summary:'Verwarnung, Geldstrafe, Punktabzug oder freier Kaderplatz sind möglich.',detail:'Besondere Sanktionen des Regelwerks gehen vor. Geldstrafen sind grundsätzlich innerhalb von sieben Tagen zu begleichen.'}
 ];
 function ruleById(id){return LEAGUE_RULES.find(x=>x.id===id)}
+
+function matchdayWindow(md){
+  const dates=FIXTURES.filter(x=>+x.md===+md&&x.date)
+    .map(x=>new Date(x.date)).filter(x=>!Number.isNaN(x.getTime()));
+  if(!dates.length)return null;
+  const first=new Date(Math.min(...dates.map(x=>x.getTime())));
+  const lastKickoff=new Date(Math.max(...dates.map(x=>x.getTime())));
+  return{md:+md,first,lastKickoff,end:new Date(lastKickoff.getTime()+3*60*60*1000)};
+}
+function actualMatchdayContext(now=new Date()){
+  const windows=Array.from({length:34},(_,i)=>matchdayWindow(i+1)).filter(Boolean);
+  if(!windows.length)return{md:+data.settings.currentMd||1,phase:'unknown',window:null};
+  const live=windows.find(w=>now>=w.first&&now<=w.end);
+  if(live)return{md:live.md,phase:'live',window:live};
+  const previous=[...windows].filter(w=>w.end<now).sort((a,b)=>b.end-a.end)[0];
+  const next=windows.find(w=>w.first>now);
+  if(previous){
+    const deadline=nextTuesdayDeadline(previous.md);
+    if(deadline&&now<=deadline)return{md:previous.md,phase:'post',window:previous,deadline};
+  }
+  if(next)return{md:next.md,phase:'pre',window:next};
+  if(previous)return{md:previous.md,phase:'finished',window:previous};
+  return{md:windows[0].md,phase:'pre',window:windows[0]};
+}
+function matchdayPhaseLabel(c=actualMatchdayContext()){
+  return c.phase==='pre'?`Vorbereitung auf Spieltag ${c.md}`:
+    c.phase==='live'?`Spieltag ${c.md} läuft`:
+    c.phase==='post'?`Nachbereitung Spieltag ${c.md}`:
+    c.phase==='finished'?'Saison beendet':`Spieltag ${c.md}`;
+}
+function recentLineupCheck(){
+  const raw=data.lineupIntel?.lastChecked||data.lineupIntel?.lastImport;
+  if(!raw)return false;
+  const t=new Date(raw).getTime();
+  return Number.isFinite(t)&&Date.now()-t<4*24*60*60*1000;
+}
+function actualMatchdayChecklist(){
+  const c=actualMatchdayContext(),md=c.md,record=mdRecord(md),active=activePlayers();
+  const lineup=Array.isArray(record.lineup)?record.lineup.filter(id=>active.some(p=>p.id===id)):[];
+  const mandatory=mandatoryStatus(md);
+  if(c.phase==='pre')return[
+    {id:'lineup',done:lineup.length===data.settings.lineupSize,label:`Startelf für Spieltag ${md}`,detail:`${lineup.length}/${data.settings.lineupSize} gespeichert`,page:'squad'},
+    {id:'li',done:recentLineupCheck(),label:'Aufstellungsstatus geprüft',detail:recentLineupCheck()?'Innerhalb der letzten 4 Tage':'Noch nicht aktuell geprüft',page:'lineupintel'},
+    {id:'coach',done:Boolean(sessionStorage.getItem(`coachReadMd${md}`)),label:'Coach AI gelesen',detail:'Hinweise für den tatsächlichen Spieltag',page:'dashboard'},
+    {id:'bonus',done:dailyBonusBooked(),label:'Tagesbonus',detail:localDateISO(),page:'finances'}
+  ];
+  if(c.phase==='live')return[
+    {id:'live',done:true,label:`Spieltag ${md} läuft`,detail:'Vorbereitungsphase abgeschlossen',page:'matchday'},
+    {id:'bonus',done:dailyBonusBooked(),label:'Tagesbonus',detail:localDateISO(),page:'finances'}
+  ];
+  if(c.phase==='post')return[
+    {id:'points',done:Object.values(record.points||{}).some(v=>v!==null&&v!==''),label:'Punkte eingetragen',detail:`Spieltag ${md}`,page:'matchday'},
+    {id:'mvp',done:Boolean(record.mvp),label:'Bundesliga-MVP eingetragen',detail:record.mvp||'Noch offen',page:'matchday'},
+    {id:'sale',done:mandatory.state==='done',label:'Pflichtverkauf erledigt',detail:mandatory.text,page:'matchday'},
+    {id:'bonus',done:dailyBonusBooked(),label:'Tagesbonus',detail:localDateISO(),page:'finances'}
+  ];
+  return[{id:'bonus',done:dailyBonusBooked(),label:'Tagesbonus',detail:localDateISO(),page:'finances'}];
+}
+
 function nextTuesdayDeadline(md=data.settings.currentMd){
   const games=FIXTURES.filter(x=>+x.md===+md&&x.date);
   const dates=games.map(x=>new Date(x.date)).filter(x=>!Number.isNaN(x.getTime()));
@@ -213,57 +272,28 @@ function dailyBonusBooked(){
   return data.finances.some(x=>x.date===today&&String(x.type||'').toLowerCase().includes('bonus'));
 }
 function leagueAssistant(){
-  const md=+data.settings.currentMd||1;
-  const record=mdRecord(md);
-  const mandatory=mandatoryStatus(md);
-  const notes=[];
+  const c=actualMatchdayContext(),md=c.md,record=mdRecord(md),mandatory=mandatoryStatus(md),notes=[];
+  if(!dailyBonusBooked())notes.push({level:'warn',icon:'🎁',title:'Tagesbonus offen',text:`Für ${localDateISO()} ist noch kein Bonus verbucht.`,action:'finances',label:'Bonus eintragen'});
 
-  if(!dailyBonusBooked())notes.push({
-    level:'warn',icon:'🎁',title:'Tagesbonus offen',
-    text:`Für ${localDateISO()} ist noch kein Bonus verbucht.`,
-    action:'finances',label:'Bonus eintragen'
-  });
+  if(c.phase==='pre'){
+    const active=activePlayers(),lineup=(record.lineup||[]).filter(id=>active.some(p=>p.id===id));
+    if(lineup.length<data.settings.lineupSize)notes.push({level:'bad',icon:'🧩',title:`Startelf für Spieltag ${md} unvollständig`,text:`${lineup.length}/${data.settings.lineupSize} Plätze gespeichert. Erster Anpfiff: ${c.window.first.toLocaleString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}.`,action:'squad',label:'Startelf ergänzen'});
+    if(!recentLineupCheck())notes.push({level:'warn',icon:'🩺',title:'Aufstellungsstatus prüfen',text:`Vor Spieltag ${md} nur die Vereine deiner Kaderspieler kontrollieren.`,action:'lineupintel',label:'LigaInsider öffnen'});
+  }else if(c.phase==='live'){
+    notes.push({level:'info',icon:'⚽',title:`Spieltag ${md} läuft`,text:'Vorbereitungsaufgaben sind beendet. Jetzt stehen Punkte und das H2H-Duell im Mittelpunkt.',action:'matchday',label:'Spieltag öffnen'});
+    const risks=(record.lineup||[]).map(id=>data.players.find(p=>p.id===id)).filter(p=>p&&['Fraglich','Ersatzbank','Fällt aus'].includes(p.liStatus));
+    if(risks.length)notes.push({level:'warn',icon:'🚑',title:'Auffälliger Startelfstatus',text:risks.map(p=>`${p.name} (${p.liStatus})`).join(', '),action:'lineupintel',label:'Status ansehen'});
+  }else if(c.phase==='post'){
+    if(mandatory.state==='waiting')notes.push({level:'warn',icon:'🏅',title:`Spieltag ${md} auswerten`,text:'Punkte und Bundesliga-MVP eintragen, damit der Pflichtverkauf korrekt bestimmt wird.',action:'matchday',label:'Auswertung öffnen'});
+    if(mandatory.state==='open')notes.push({level:'bad',icon:'⏰',title:'Pflichtverkauf offen',text:`${mandatory.text}. Frist: ${deadlineText(md)}.`,action:'matchday',label:'Verkauf prüfen'});
+  }
 
-  if(mandatory.state==='waiting')notes.push({
-    level:'warn',icon:'🏅',title:'Bundesliga-MVP fehlt',
-    text:'Nach Spieltagsende den Bundesliga-MVP eintragen, damit der Pflichtverkauf korrekt bestimmt wird.',
-    action:'matchday',label:'Zum Spieltag'
-  });
+  const invalid=data.players.filter(p=>p.soldDate&&+p.marketValueAtSale>0&&+p.salePrice<+p.marketValueAtSale);
+  if(invalid.length)notes.push({level:'bad',icon:'⚖️',title:'Verkauf unter Marktwert',text:`${invalid.map(p=>p.name).join(', ')} prüfen.`,action:'transfers',label:'Transfers öffnen'});
 
-  if(mandatory.state==='open')notes.push({
-    level:'bad',icon:'⏰',title:'Pflichtverkauf offen',
-    text:`${mandatory.text}. Frist: ${deadlineText(md)}. Verkauf an Kickbase.`,
-    action:'matchday',label:'Pflichtverkauf prüfen'
-  });
-
-  const invalidSales=data.players.filter(p=>{
-    if(!p.soldDate)return false;
-    const marketAtSale=Number(p.marketValueAtSale||0);
-    return marketAtSale>0&&Number(p.salePrice||0)<marketAtSale;
-  });
-  if(invalidSales.length)notes.push({
-    level:'bad',icon:'⚖️',title:'Verkauf unter Marktwert',
-    text:`${invalidSales.map(p=>p.name).join(', ')} prüfen. Laut Regelwerk ist ein Verkauf unter dem aktuellen Marktwert unzulässig.`,
-    action:'transfers',label:'Transfers öffnen'
-  });
-
-  const wrongMvpDestination=data.players.find(p=>
-    p.soldDate&&record.mvp&&p.name.trim().toLowerCase()===record.mvp.trim().toLowerCase()&&p.saleSource!=='Transfermarkt'
-  );
-  if(wrongMvpDestination)notes.push({
-    level:'bad',icon:'🚨',title:'MVP-Verkaufsziel prüfen',
-    text:`${wrongMvpDestination.name} muss laut Regelwerk an Kickbase/Transfermarkt verkauft werden.`,
-    action:'transfers',label:'Transfer korrigieren'
-  });
-
-  if(!notes.length)notes.push({
-    level:'good',icon:'✅',title:'Alles erledigt',
-    text:'Aktuell erkennt der Liga-Assistent keine offenen regelbedingten Aufgaben.',
-    action:'rules',label:'Regelwerk öffnen'
-  });
-  return notes.slice(0,3);
+  if(!notes.length)notes.push({level:'good',icon:'✅',title:matchdayPhaseLabel(c),text:'Aktuell sind alle erkannten Aufgaben erledigt.',action:c.phase==='pre'?'squad':'rules',label:c.phase==='pre'?'Startelf öffnen':'Regelwerk öffnen'});
+  return notes.slice(0,4);
 }
-
 
 window.BUNDESLIGA_CLUBS=window.BUNDESLIGA_CLUBS||[];
 window.BUNDESLIGA_PLAYERS=window.BUNDESLIGA_PLAYERS||[];
@@ -294,7 +324,7 @@ function buyLivePlayer(externalId){
     pfAvg:'',
     pfBuySource:'Transfermarkt',
     pfBuyCounterparty:'',
-    pfBuyReason:'Gutes Programm',
+    pfBuyReasons:['Gutes Programm'],
     pfNote:'',
     externalPlayerId:p.external_id,
     photoUrl:p.photo_url||''
@@ -584,6 +614,12 @@ function dashboard(){
       </section>
     </div>
 
+    ${['pre','live','post'].includes(actualMatchdayContext().phase)?`<section class="premium-panel matchday-checklist-panel">
+      <div class="premium-panel-head"><div><span>MATCHDAY ASSISTENT</span><h3>${esc(matchdayPhaseLabel(actualMatchdayContext()))}</h3></div><strong>${actualMatchdayChecklist().filter(x=>x.done).length}/${actualMatchdayChecklist().length}</strong></div>
+      <div class="matchday-checklist">${actualMatchdayChecklist().map(item=>`<button class="checklist-row ${item.done?'done':'open'}" data-check-page="${item.page}" data-check-id="${item.id}"><span class="check-circle">${item.done?'✓':''}</span><span><b>${esc(item.label)}</b><small>${esc(item.detail)}</small></span><i>›</i></button>`).join('')}</div>
+      <p class="checklist-deadline">${(()=>{const c=actualMatchdayContext();return c.phase==='pre'?`Erster Anpfiff: ${c.window.first.toLocaleString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}`:c.phase==='post'?`Verkaufsfrist: ${deadlineText(c.md)}`:'Automatisch an den realen Bundesliga-Spielplan angepasst.'})()}</p>
+    </section>`:''}
+
     <section class="premium-panel coach-ai-panel">
       <div class="premium-panel-head">
         <div><span>DATENBASIERTER COACH</span><h3>Coach AI</h3></div>
@@ -836,7 +872,7 @@ function transfers(){
   const all=[...data.players].sort((a,b)=>(b.buyDate||'').localeCompare(a.buyDate||''));
   const rows=all.filter(p=>{
     const statusOk=filter==='all'||(filter==='active'&&!p.soldDate)||(filter==='sold'&&p.soldDate);
-    const text=[p.name,p.team,p.position,p.buyReason,p.saleReason,p.buySource,p.saleSource,p.buyCounterparty,p.saleCounterparty].join(' ').toLocaleLowerCase('de-DE');
+    const text=[p.name,p.team,p.position,p.buyReason,...normalizeBuyReasons(p),p.saleReason,p.buySource,p.saleSource,p.buyCounterparty,p.saleCounterparty].join(' ').toLocaleLowerCase('de-DE');
     return statusOk&&(!search||text.includes(search));
   });
   const summary={
@@ -851,7 +887,7 @@ function transfers(){
       <td>${esc(p.buyDate||'–')}</td>
       <td>${esc(p.buySource||'Transfermarkt')}${p.buyCounterparty?`<small>${esc(p.buyCounterparty)}</small>`:''}</td>
       <td>${euro(p.buyPrice)}</td>
-      <td class="optional-col">${esc(p.buyReason||'–')}</td>
+      <td class="optional-col">${buyReasonChips(p)}</td>
       <td><span class="pill ${p.soldDate?'neutral':'good'}">${p.soldDate?'Verkauft':'Im Kader'}</span></td>
       <td>${p.soldDate?esc(p.soldDate):'–'}</td>
       <td class="optional-col">${p.soldDate?`${esc(p.saleSource||'Transfermarkt')}${p.saleCounterparty?`<small>${esc(p.saleCounterparty)}</small>`:''}`:'–'}</td>
@@ -1203,7 +1239,7 @@ function editTransfer(pid){
   <label>Kaufpreis (€)<input id="teBuyPrice" class="money-field" inputmode="numeric" value="${moneyInput(p.buyPrice||0)}"></label>
   <label>Gekauft von<select id="teBuySource">${TRANSFER_SOURCES.map(x=>`<option ${p.buySource===x?'selected':''}>${esc(x)}</option>`).join('')}</select></label>
   <label>Mitspieler beim Kauf<select id="teBuyCounterparty"><option value="">Bitte auswählen</option>${otherManagerOptions(p.buyCounterparty||'')}</select></label>
-  <label>Kaufgrund<select id="teBuyReason">${BUY_REASONS.map(x=>`<option ${p.buyReason===x?'selected':''}>${esc(x)}</option>`).join('')}</select></label>
+  <div class="wide"><span class="field-label">Kaufgründe · Mehrfachauswahl</span>${buyReasonPicker(normalizeBuyReasons(p))}</div>
   <label>Aktueller Marktwert (€)<input id="teMarketValue" class="money-field" inputmode="numeric" value="${moneyInput(p.marketValue||0)}"></label>
   <label>Verkaufsdatum<input id="teSoldDate" type="date" value="${esc(p.soldDate||'')}"></label>
   <label>Verkaufspreis (€)<input id="teSalePrice" class="money-field" inputmode="numeric" value="${p.soldDate?moneyInput(p.salePrice||0):''}" placeholder="Leer lassen, wenn noch im Kader"></label>
@@ -1219,13 +1255,13 @@ function editTransfer(pid){
   $('#saveTransferEdit').onclick=()=>{
     const soldDate=$('#teSoldDate').value;
     const salePrice=parseMoney($('#teSalePrice').value);
-    if(!$('#teName').value.trim()||!$('#teBuyDate').value||!parseMoney($('#teBuyPrice').value))return toast('Name, Kaufdatum und Kaufpreis sind erforderlich');
+    if(!$('#teName').value.trim()||!$('#teBuyDate').value||!parseMoney($('#teBuyPrice').value))return toast('Name, Kaufdatum und Kaufpreis sind erforderlich');if(!selectedBuyReasons($('#modalArea')).length)return toast('Bitte mindestens einen Kaufgrund auswählen');
     if((soldDate&&!salePrice)||(!soldDate&&salePrice))return toast('Für einen Verkauf Datum und Preis gemeinsam eintragen');if($('#teBuySource').value==='Mitspieler'&&!$('#teBuyCounterparty').value)return toast('Mitspieler beim Kauf auswählen');if(soldDate&&$('#teSaleSource').value==='Mitspieler'&&!$('#teSaleCounterparty').value)return toast('Mitspieler beim Verkauf auswählen');
     Object.assign(p,{
       name:$('#teName').value.trim(),team:$('#teTeam').value,position:$('#tePos').value,
       buyDate:$('#teBuyDate').value,buyPrice:parseMoney($('#teBuyPrice').value),
       buySource:$('#teBuySource').value,buyCounterparty:$('#teBuySource').value==='Mitspieler'?$('#teBuyCounterparty').value.trim():'',
-      buyReason:$('#teBuyReason').value,marketValue:parseMoney($('#teMarketValue').value),
+      buyReasons:selectedBuyReasons($('#modalArea')),buyReason:selectedBuyReasons($('#modalArea')).join(' · '),marketValue:parseMoney($('#teMarketValue').value),
       soldDate:soldDate,salePrice:soldDate?salePrice:0,
       saleSource:soldDate?$('#teSaleSource').value:'',saleCounterparty:soldDate&&$('#teSaleSource').value==='Mitspieler'?$('#teSaleCounterparty').value.trim():'',
       saleReason:soldDate?$('#teSaleReason').value:'',note:$('#teNote').value
@@ -1249,14 +1285,29 @@ function deleteTransfer(pid){
 }
 
 
+
+function normalizeBuyReasons(value){
+  if(Array.isArray(value))return[...new Set(value.filter(Boolean))];
+  if(value&&Array.isArray(value.buyReasons))return[...new Set(value.buyReasons.filter(Boolean))];
+  const legacy=typeof value==='object'?value?.buyReason:value;
+  return legacy?String(legacy).split(/\s*[·,;|]\s*/).map(x=>x.trim()).filter(Boolean):[];
+}
+function selectedBuyReasons(scope=document){return[...scope.querySelectorAll('[data-buy-reason]:checked')].map(x=>x.value)}
+function buyReasonPicker(selected=[]){
+  const set=new Set(normalizeBuyReasons(selected));
+  return `<div class="buy-reason-picker">${BUY_REASONS.map(r=>`<label class="reason-option"><input type="checkbox" data-buy-reason value="${esc(r)}" ${set.has(r)?'checked':''}><span>${esc(r)}</span></label>`).join('')}</div>`;
+}
+function buyReasonSummary(p){const r=normalizeBuyReasons(p);return r.length?r.join(' · '):'–'}
+function buyReasonChips(p){const r=normalizeBuyReasons(p);return r.length?`<span class="reason-chip-list">${r.map(x=>`<span class="reason-chip">${esc(x)}</span>`).join('')}</span>`:'–'}
+
 const TRANSFER_DRAFT_KEY='h2hTransferDraftV1';
 function readTransferDraft(){
   try{return JSON.parse(sessionStorage.getItem(TRANSFER_DRAFT_KEY)||'{}')}catch{return{}}
 }
 function writeTransferDraft(){
-  const fields=['pfName','pfTeam','pfPos','pfDate','pfBuy','pfMwb','pfMw','pfAvg','pfBuySource','pfBuyCounterparty','pfBuyReason','pfNote'];
+  const fields=['pfName','pfTeam','pfPos','pfDate','pfBuy','pfMwb','pfMw','pfAvg','pfBuySource','pfBuyCounterparty','pfNote'];
   const draft={};
-  fields.forEach(key=>{const el=$(`#${key}`);if(el)draft[key]=el.value});
+  fields.forEach(key=>{const el=$(`#${key}`);if(el)draft[key]=el.value});draft.pfBuyReasons=selectedBuyReasons($('#transferForm'));
   sessionStorage.setItem(TRANSFER_DRAFT_KEY,JSON.stringify(draft));
 }
 function clearTransferDraft(){sessionStorage.removeItem(TRANSFER_DRAFT_KEY)}
@@ -1271,8 +1322,14 @@ function playerForm(p={}){
   const d=p.id?{}:readTransferDraft();
   const val=(key,fallback='')=>d[key]!==undefined?d[key]:fallback;
   const selectedTeam=val('pfTeam',p.team||TEAMS[0]);
-  return `<div class="card" style="margin-top:16px"><div class="transfer-form-heading"><div><h3>${p.id?'Spielerdetails bearbeiten':'Spieler kaufen'}</h3><p>${bundesligaIdentity(selectedTeam,{logoClass:'form-club-crest'})}</p></div></div><div class="form-grid" style="margin-top:12px"><label>Name<input id="pfName" value="${esc(val('pfName',p.name||''))}"></label><label>Verein<select id="pfTeam">${TEAMS.map(t=>`<option ${val('pfTeam',p.team)===t?'selected':''}>${esc(t)}</option>`).join('')}</select></label><label>Position<select id="pfPos">${['Tor','Abwehr','Mittelfeld','Sturm'].map(x=>`<option ${val('pfPos',p.position)===x?'selected':''}>${x}</option>`).join('')}</select></label><label>Kaufdatum<input id="pfDate" type="date" value="${esc(val('pfDate',p.buyDate||localDateISO()))}"></label><label>Kaufpreis (€)<input id="pfBuy" class="money-field" inputmode="numeric" value="${p.buyPrice?moneyInput(p.buyPrice):''}" placeholder="z. B. 5.071.935 €"></label><label>Marktwert beim Kauf (€) – optional<input id="pfMwb" class="money-field" inputmode="numeric" value="${p.marketAtBuy?moneyInput(p.marketAtBuy):''}"></label><label>Aktueller Marktwert (€)<input id="pfMw" class="money-field" inputmode="numeric" value="${p.marketValue?moneyInput(p.marketValue):''}"></label><label>Ø Punkte<input id="pfAvg" type="number" step="0.1" value="${p.avgPoints||''}"></label><label>Gekauft von<select id="pfBuySource">${TRANSFER_SOURCES.map(x=>`<option ${p.buySource===x?'selected':''}>${esc(x)}</option>`).join('')}</select></label><label>Mitspieler<select id="pfBuyCounterparty"><option value="">Bitte auswählen</option>${otherManagerOptions(p.buyCounterparty||'')}</select></label><label class="wide">Kaufgrund<select id="pfBuyReason">${BUY_REASONS.map(x=>`<option ${p.buyReason===x?'selected':''}>${esc(x)}</option>`).join('')}</select></label><label class="wide">Notiz<input id="pfNote" value="${esc(p.note||'')}"></label><div class="full"><button type="button" class="btn" id="savePlayer">Speichern</button></div></div></div>`}
+  return `<div class="card" style="margin-top:16px"><div class="transfer-form-heading"><div><h3>${p.id?'Spielerdetails bearbeiten':'Spieler kaufen'}</h3><p>${bundesligaIdentity(selectedTeam,{logoClass:'form-club-crest'})}</p></div></div><div class="form-grid" style="margin-top:12px"><label>Name<input id="pfName" value="${esc(val('pfName',p.name||''))}"></label><label>Verein<select id="pfTeam">${TEAMS.map(t=>`<option ${val('pfTeam',p.team)===t?'selected':''}>${esc(t)}</option>`).join('')}</select></label><label>Position<select id="pfPos">${['Tor','Abwehr','Mittelfeld','Sturm'].map(x=>`<option ${val('pfPos',p.position)===x?'selected':''}>${x}</option>`).join('')}</select></label><label>Kaufdatum<input id="pfDate" type="date" value="${esc(val('pfDate',p.buyDate||localDateISO()))}"></label><label>Kaufpreis (€)<input id="pfBuy" class="money-field" inputmode="numeric" value="${p.buyPrice?moneyInput(p.buyPrice):''}" placeholder="z. B. 5.071.935 €"></label><label>Marktwert beim Kauf (€) – optional<input id="pfMwb" class="money-field" inputmode="numeric" value="${p.marketAtBuy?moneyInput(p.marketAtBuy):''}"></label><label>Aktueller Marktwert (€)<input id="pfMw" class="money-field" inputmode="numeric" value="${p.marketValue?moneyInput(p.marketValue):''}"></label><label>Ø Punkte<input id="pfAvg" type="number" step="0.1" value="${p.avgPoints||''}"></label><label>Gekauft von<select id="pfBuySource">${TRANSFER_SOURCES.map(x=>`<option ${p.buySource===x?'selected':''}>${esc(x)}</option>`).join('')}</select></label><label>Mitspieler<select id="pfBuyCounterparty"><option value="">Bitte auswählen</option>${otherManagerOptions(p.buyCounterparty||'')}</select></label><div class="wide"><span class="field-label">Kaufgründe · Mehrfachauswahl</span>${buyReasonPicker(d.pfBuyReasons||normalizeBuyReasons(p))}</div><label class="wide">Notiz<input id="pfNote" value="${esc(p.note||'')}"></label><div class="full"><button type="button" class="btn" id="savePlayer">Speichern</button></div></div></div>`}
 function bind(){bindMoneyFields();
+$$('[data-check-page]').forEach(button=>button.onclick=()=>{
+  if(button.dataset.checkId==='coach'){sessionStorage.setItem(`coachReadMd${actualMatchdayContext().md}`,'1');render();return}
+  goPage(button.dataset.checkPage);
+});
+$$('.coach-ai-card').forEach(button=>button.addEventListener('click',()=>sessionStorage.setItem(`coachReadMd${actualMatchdayContext().md}`,'1')));
+
 if($('#scoutSearch'))$('#scoutSearch').oninput=e=>{data.ui.scoutSearch=e.target.value;save();render()};
 if($('#scoutPosition'))$('#scoutPosition').onchange=e=>{data.ui.scoutPosition=e.target.value;save();render()};
 if($('#scoutTeam'))$('#scoutTeam').onchange=e=>{data.ui.scoutTeam=e.target.value;save();render()};
@@ -1300,7 +1357,7 @@ if($('#liAnalyze'))$('#liAnalyze').onclick=()=>{const changes=detectLiChanges($(
 if($('#liClear'))$('#liClear').onclick=()=>{$('#liPaste').value=''};
 if($('#liApply'))$('#liApply').onclick=()=>{(data.lineupIntel.pending||[]).forEach(c=>{const p=data.players.find(x=>x.id===c.playerId);if(p){p.liStatus=c.newStatus;p.liUpdatedAt=new Date().toISOString()}});data.lineupIntel.lastImport=new Date().toISOString();data.lineupIntel.pending=[];touch();toast('LigaInsider-Status übernommen')};
 $$('[data-li-remove]').forEach(b=>b.onclick=()=>{data.lineupIntel.pending=(data.lineupIntel.pending||[]).filter(x=>x.playerId!==b.dataset.liRemove);touch()});
-$$('[data-li-status]').forEach(s=>s.onchange=()=>{const p=data.players.find(x=>x.id===s.dataset.liStatus);if(p){p.liStatus=s.value;p.liUpdatedAt=new Date().toISOString();touch()}});
+$$('[data-li-status]').forEach(s=>s.onchange=()=>{const p=data.players.find(x=>x.id===s.dataset.liStatus);if(p){p.liStatus=s.value;p.liUpdatedAt=new Date().toISOString();data.lineupIntel.lastChecked=new Date().toISOString();touch()}});
 $$('[data-quick-bonus]').forEach(b=>b.onclick=()=>addQuickBonus(b.dataset.quickBonus,b.dataset.label,+b.dataset.amount));if($('#buyPlayer'))$('#buyPlayer').onclick=()=>{$('#transferForm').innerHTML=playerForm();bindPlayerForm()};if($('#sellPlayerOpen'))$('#sellPlayerOpen').onclick=()=>{const active=activePlayers();if(!active.length)return toast('Kein aktiver Spieler vorhanden');$('#transferForm').innerHTML=`<div class="card" style="margin-top:16px"><h3>Spieler verkaufen</h3><div class="form-grid" style="margin-top:12px"><label class="wide">Spieler<select id="sellSelect">${active.map(p=>`<option value="${p.id}">${esc(p.name)} · Kaufpreis ${euro(p.buyPrice)}</option>`).join('')}</select></label><div class="full"><button class="btn danger" id="continueSell">Verkauf erfassen</button></div></div></div>`;$('#continueSell').onclick=()=>sellPlayer($('#sellSelect').value)};if($('#saveLineup'))$('#saveLineup').onclick=()=>{const r=mdRecord(data.settings.currentMd);if(!r.lineup.length)r.lineup=rankPlayers().slice(0,data.settings.lineupSize).map(p=>p.id);save();render();toast('Startelf gespeichert')};if($('#useRecommendation'))$('#useRecommendation').onclick=()=>{mdRecord(data.settings.currentMd).lineup=rankPlayers().slice(0,data.settings.lineupSize).map(p=>p.id);touch()};$$('[data-squad-view]').forEach(b=>b.onclick=()=>{$$('[data-squad-view]').forEach(x=>x.classList.remove('active'));b.classList.add('active');const key=b.dataset.squadView[0].toUpperCase()+b.dataset.squadView.slice(1);$('#squadView').innerHTML=$(`#view${key}`).innerHTML;bindSquadCards()});bindSquadCards();$$('[data-sell-player]').forEach(b=>b.onclick=()=>sellPlayer(b.dataset.sellPlayer));$$('[data-edit-transfer]').forEach(b=>b.onclick=()=>editTransfer(b.dataset.editTransfer));$$('[data-delete-transfer]').forEach(b=>b.onclick=()=>deleteTransfer(b.dataset.deleteTransfer));$$('[data-points]').forEach(e=>e.onchange=()=>{mdRecord(data.settings.currentMd).points[e.dataset.points]=e.value===''?null:+e.value;save();render()});if($('#saveMd'))$('#saveMd').onclick=()=>{const r=mdRecord(data.settings.currentMd);Object.assign(r,{mvp:$('#mdMvp').value.trim(),soldPlayer:$('#mdSold').value,soldDate:$('#mdSoldDate').value,soldPrice:+$('#mdSoldPrice').value||0});save();render()};if($('#addFinance'))$('#addFinance').onclick=showFinanceForm;$$('[data-del-fin]').forEach(b=>b.onclick=()=>{data.finances=data.finances.filter(x=>x.id!==b.dataset.delFin);touch()});if($('#addOpponent'))$('#addOpponent').onclick=()=>{const name=prompt('Name des Managers:');if(!name)return;data.opponents.push({id:id(),name,teamName:prompt('Teamname (optional):')||'',squadValue:+prompt('Bekannter Kaderwert (optional):')||0,note:prompt('Notiz (optional):')||''});touch()};$$('[data-del-opp]').forEach(b=>b.onclick=()=>{data.opponents=data.opponents.filter(x=>x.id!==b.dataset.delOpp);touch()});if($('#addH2H'))$('#addH2H').onclick=()=>{const opponent=prompt('Gegner:');if(!opponent)return;data.h2h.push({id:id(),md:data.settings.currentMd,opponent,myPoints:+prompt('Deine Punkte:')||0,oppPoints:+prompt('Gegnerpunkte:')||0});touch()};if($('#resetStrengths'))$('#resetStrengths').onclick=()=>{data.teamStrength={...TEAM_STRENGTH_BASELINE};data.teamStrengthDetails={};data.teamStrengthCloudUpdatedAt='';touch();toast('Basiswerte geladen')};if($('#saveSettings'))$('#saveSettings').onclick=()=>{data.settings.startCapital=parseMoney($('#setCapital').value);data.settings.lineupSize=+$('#setLineup').value;data.settings.homeBonus=+$('#setHome').value;$$('[data-strength]').forEach(x=>data.teamStrength[x.dataset.strength]=+x.value);data.finances.find(x=>x.id==='start').amount=data.settings.startCapital;touch()};$$('[data-strength]').forEach(x=>x.onchange=()=>{data.teamStrength[x.dataset.strength]=+x.value;save()})}
 function setLineupState(pid,toLineup){
   const r=mdRecord(data.settings.currentMd);
@@ -1455,7 +1512,7 @@ function bindPlayerForm(editId){
     const buyPrice=parseMoney($('#pfBuy').value);
     if(!name)return toast('Bitte einen Spielernamen eintragen');
     if(!buyDate)return toast('Bitte das Kaufdatum eintragen');
-    if(!buyPrice)return toast('Bitte den Kaufpreis eintragen');
+    if(!buyPrice)return toast('Bitte den Kaufpreis eintragen');const buyReasons=selectedBuyReasons($('#transferForm'));if(!buyReasons.length)return toast('Bitte mindestens einen Kaufgrund auswählen');
     if($('#pfBuySource').value==='Mitspieler'&&!$('#pfBuyCounterparty').value)
       return toast('Bitte den Mitspieler auswählen');
 
@@ -1471,7 +1528,7 @@ function bindPlayerForm(editId){
       avgPoints:+$('#pfAvg').value||0,
       buySource:$('#pfBuySource').value,
       buyCounterparty:$('#pfBuySource').value==='Mitspieler'?$('#pfBuyCounterparty').value.trim():'',
-      buyReason:$('#pfBuyReason').value,
+      buyReasons,buyReason:buyReasons.join(' · '),
       note:$('#pfNote').value,
       liStatus:p.liStatus||'Unbekannt',
       externalPlayerId:p.externalPlayerId||d.externalPlayerId||null,

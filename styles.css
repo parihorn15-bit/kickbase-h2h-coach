@@ -798,3 +798,15 @@ table thead th{background:#132238!important;color:#92a6be!important}
   .li-workflow{grid-template-columns:1fr}
   .checklist-row{padding:9px}
 }
+
+/* Version 0.9.4 */
+.buy-reason-picker{display:flex;flex-wrap:wrap;gap:7px;margin-top:7px}
+.field-label{display:block;color:var(--muted);font-size:10px;font-weight:700}
+.reason-option{position:relative;display:inline-flex!important;width:auto!important;cursor:pointer}
+.reason-option input{position:absolute;opacity:0;pointer-events:none}
+.reason-option span{display:inline-flex;align-items:center;min-height:34px;padding:7px 10px;border:1px solid #30455f;border-radius:999px;background:#0a1523;color:#b6c4d5;font-size:10px;font-weight:800}
+.reason-option input:checked+span{background:#153d2a;border-color:#22c55e;color:#bbf7d0;box-shadow:0 0 0 2px rgba(34,197,94,.12)}
+.reason-chip-list{display:flex;flex-wrap:wrap;gap:4px}
+.reason-chip{display:inline-flex;padding:4px 7px;border-radius:999px;border:1px solid #334a66;background:#132238;color:#cbd5e1;font-size:8px;white-space:nowrap}
+.matchday-checklist-panel .premium-panel-head>strong{display:grid;place-items:center;min-width:48px;height:34px;border-radius:999px;background:#153624;color:#86efac;border:1px solid #286542;font-size:12px}
+@media(max-width:600px){.reason-option span{min-height:38px;padding:8px 11px}}

@@ -1,0 +1,14 @@
+VERSION 0.9.4
+
+COACH-AUFGABEN
+- Automatisch am tatsächlich stattfindenden Bundesliga-Spieltag ausgerichtet.
+- Vor Anpfiff: Startelf, Aufstellungsstatus, Coach AI und Tagesbonus.
+- Während des Spieltags: laufender Spieltag und Statusrisiken.
+- Nach Spieltagsende bis Dienstag: Punkte, MVP und Pflichtverkauf.
+- Manuell ausgewählter Spieltag bleibt für Planung und Rückblick erhalten.
+
+KAUFGRÜNDE
+- Mehrfachauswahl bei neuen Käufen und beim Bearbeiten.
+- Alte Einzelgründe bleiben kompatibel.
+- Anzeige als kompakte Chips in der Transferhistorie.
+- Suche berücksichtigt alle gewählten Gründe.
