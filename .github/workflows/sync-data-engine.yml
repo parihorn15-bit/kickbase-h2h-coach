@@ -1,0 +1,26 @@
+name: H2H Data Engine synchronisieren
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "15 5 * * 1-4"
+    - cron: "15 8,16,18 * * 5"
+    - cron: "15 8 * * 6,0"
+permissions:
+  contents: read
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Datenprovider synchronisieren
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
+          SPORTMONKS_API_TOKEN: ${{ secrets.SPORTMONKS_API_TOKEN }}
+          SPORTMONKS_BUNDESLIGA_SEASON_ID: ${{ secrets.SPORTMONKS_BUNDESLIGA_SEASON_ID }}
+        run: node data-engine/sync.mjs

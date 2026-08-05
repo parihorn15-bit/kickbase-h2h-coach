@@ -1,0 +1,10 @@
+VERSION 1.2.0 – DATA ENGINE FOUNDATION
+
+- Austauschbare Provider-Architektur
+- football-data.org als kostenlose Basis
+- Sportmonks-Adapter für Expected Lineups, bestätigte Aufstellungen und Ausfälle
+- Normalisierte Tabelle player_availability
+- Synchronisationsstatus pro Anbieter
+- Coach verwendet externe Daten automatisch, wenn vorhanden
+- Manuelle LigaInsider-Werte bleiben als Fallback bestehen
+- GitHub Workflow mit häufigeren Läufen am Freitag

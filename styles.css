@@ -878,3 +878,15 @@ table thead th{background:#132238!important;color:#92a6be!important}
 .coach-reasons{display:grid;gap:6px;margin-top:11px;padding-top:9px;border-top:1px solid #24364c}
 .coach-reasons>div{display:grid;grid-template-columns:48px 1fr;gap:6px;font-size:9px;line-height:1.4}.coach-reasons .positive b{color:#86efac}.coach-reasons .negative b{color:#fca5a5}.coach-reasons span{color:#b7c5d5}
 @media(max-width:760px){.coach-score-list{grid-template-columns:1fr}}
+
+/* Version 1.2.0 – Data Engine */
+.data-engine-card{border-color:#315271}
+.provider-status-list{display:grid;gap:8px;margin:12px 0}
+.provider-status{display:grid;grid-template-columns:minmax(0,1fr) auto 130px;align-items:center;gap:10px;padding:11px;border:1px solid #2a3d55;background:#0a1523;border-radius:12px}
+.provider-status b,.provider-status small{display:block}.provider-status small{color:var(--muted);font-size:9px;margin-top:3px}
+.provider-status>span{padding:5px 8px;border-radius:999px;font-size:8px;font-weight:900;background:#26384e;color:#cbd5e1}
+.provider-status time{color:#8ea1b8;font-size:9px;text-align:right}
+.provider-status.success{border-color:#296344}.provider-status.success>span{background:#14532d;color:#bbf7d0}
+.provider-status.error{border-color:#7f2934}.provider-status.error>span{background:#4c1820;color:#fecaca}
+.provider-status.disabled>span{background:#44300d;color:#fde68a}
+@media(max-width:650px){.provider-status{grid-template-columns:1fr auto}.provider-status time{grid-column:1/-1;text-align:left}}
