@@ -1,0 +1,9 @@
+VERSION 1.4.1 – LEGACY LINEUP REPAIR
+
+- Alte Aufstellungen mit mehreren Torhütern werden beim Öffnen automatisch repariert.
+- Der Torwart mit dem höchsten Coach Score bleibt aufgestellt.
+- Weitere Torhüter werden auf die Bank gesetzt.
+- Ein Hinweis nennt die automatisch entfernten Spieler.
+- Aus bereits ungültigen Alt-Aufstellungen dürfen Spieler immer entfernt werden.
+- Vollständige, weiterhin ungültige Alt-Aufstellungen werden auf eine gültige Coach-Elf zurückgesetzt.
+- Neue Aufstellungen unterliegen weiterhin exakt den Regeln aus Version 1.3.4.

@@ -970,3 +970,21 @@ table thead th{background:#132238!important;color:#92a6be!important}
   .polished-assistant{padding:14px}.assistant-ready-score{width:64px;height:64px}
   .calibration-weights>div{grid-template-columns:86px 1fr 36px}
 }
+
+/* Version 1.4.1 – Reparatur alter Aufstellungen */
+.lineup-repair-notice{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  margin-bottom:10px;padding:11px 12px;border:1px solid #8a5b16;
+  border-radius:13px;background:#30240f;color:#fde68a
+}
+.lineup-repair-notice b,.lineup-repair-notice span{display:block}
+.lineup-repair-notice b{font-size:11px}
+.lineup-repair-notice span{font-size:9px;line-height:1.4;margin-top:3px}
+.lineup-repair-notice button{
+  flex:0 0 auto;border:1px solid #a97620;background:#4a3510;color:#fff;
+  border-radius:9px;padding:7px 10px;font-size:9px;font-weight:800
+}
+@media(max-width:560px){
+  .lineup-repair-notice{align-items:flex-start;flex-direction:column}
+  .lineup-repair-notice button{width:100%}
+}
