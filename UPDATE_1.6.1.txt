@@ -1,0 +1,9 @@
+VERSION 1.6.1 – OPPONENT TRANSFER FIX
+
+- Gegner-Transferdialog wird vom Cloud-Eingabeschutz erkannt.
+- Cloud- und Live-Datenaktualisierungen schließen den Dialog beim Tippen nicht mehr.
+- Gegnerpunkte-, Aufstellungs- und Transferformulare sind während der Eingabe geschützt.
+- Alle Dialogbuttons besitzen explizit type="button".
+- Gegnertransfer-Eingaben werden während der Sitzung als Entwurf gespeichert.
+- Wird der Dialog unerwartet geschlossen, erscheinen die Eingaben beim erneuten Öffnen wieder.
+- Der Entwurf wird erst nach erfolgreichem Speichern gelöscht.
