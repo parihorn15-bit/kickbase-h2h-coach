@@ -8,3 +8,4 @@ VERSION 1.6.3 – PLAYER AUTOCOMPLETE
 - Vereinsauswahl bleibt anschließend manuell änderbar.
 - Freie Namenseingabe bleibt für noch nicht synchronisierte Spieler möglich.
 - Keine neue Supabase-Migration erforderlich.
+
