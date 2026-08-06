@@ -1098,3 +1098,64 @@ body.lineup-dragging::after{
   body.lineup-dragging::before,
   body.lineup-dragging::after{left:0}
 }
+
+/* Version 1.6.0 – League Intelligence */
+.league-nav-wide{grid-template-columns:repeat(5,1fr)}
+.league-completion-card{
+  display:grid;gap:10px;padding:15px;margin-bottom:12px;border:1px solid #315471;
+  background:linear-gradient(135deg,#10253a,#0b1726);border-radius:16px
+}
+.league-completion-card span{color:#8fa4bb;font-size:8px}.league-completion-card h3{font-size:18px;margin-top:3px}
+.league-completion-bar{height:8px;background:#18283b;border-radius:999px;overflow:hidden}
+.league-completion-bar i{display:block;height:100%;background:linear-gradient(90deg,#38bdf8,#22c55e);border-radius:999px}
+.league-completion-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.league-completion-stats span{padding:8px;border:1px solid #263b53;background:#0a1523;border-radius:10px}
+.league-completion-stats b{display:block;color:#fff;font-size:13px;margin-bottom:2px}
+.league-soft-reminder{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;
+  padding:10px 12px;border:1px solid #70571e;background:#2d250f;color:#fde68a;border-radius:12px;font-size:9px
+}
+.league-soft-reminder button{border:0;background:transparent;color:#fcd34d;font-size:8px;font-weight:900;cursor:pointer}
+.league-intel-layout{display:grid;grid-template-columns:300px minmax(0,1fr);gap:12px}
+.manager-intel-list{display:grid;gap:7px;align-content:start}
+.manager-intel-card{
+  display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:9px;
+  padding:9px;border:1px solid #273c54;background:#0b1624;color:#fff;border-radius:13px;text-align:left
+}
+.manager-intel-card.active{border-color:#38bdf8;background:#10243a}
+.manager-intel-card b,.manager-intel-card small{display:block}.manager-intel-card small{color:#8fa2b8;font-size:8px;margin-top:3px}
+.manager-intel-card i{font-style:normal;color:#9fb2c8;font-size:8px}
+.manager-intel-crest{width:42px;height:42px}
+.manager-profile-panel{padding:15px;border:1px solid #273c54;background:#0b1624;border-radius:16px}
+.manager-profile-head{display:grid;grid-template-columns:64px minmax(0,1fr) auto;align-items:center;gap:12px}
+.manager-profile-crest{width:64px;height:64px}.manager-profile-head span{color:#7dd3fc;font-size:8px;font-weight:900}.manager-profile-head h3{font-size:19px;margin:3px 0}.manager-profile-head p{color:#8fa2b8;font-size:9px}
+.manager-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:13px}
+.manager-stat-grid article{padding:10px;border:1px solid #273c54;background:#091421;border-radius:11px}
+.manager-stat-grid span,.manager-stat-grid small{display:block;color:#8fa2b8;font-size:8px}.manager-stat-grid strong{display:block;font-size:15px;margin:5px 0}
+.manager-current-md{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px;padding:12px;border:1px solid #2c465f;background:#102036;border-radius:12px}
+.manager-current-md span{color:#7dd3fc;font-size:8px;font-weight:900}.manager-current-md h4{font-size:13px;margin:4px 0}.manager-current-md p{color:#9bacc0;font-size:9px;line-height:1.4}
+.manager-transfer-list{display:grid;gap:6px;margin-top:10px}
+.manager-transfer-list article{display:grid;grid-template-columns:28px minmax(0,1fr) 28px;align-items:center;gap:8px;padding:8px;border:1px solid #263a52;background:#091421;border-radius:10px}
+.manager-transfer-list b,.manager-transfer-list small{display:block}.manager-transfer-list small{color:#8ca0b7;font-size:8px;margin-top:2px}
+.manager-transfer-list button{border:0;background:#2b1820;color:#fca5a5;border-radius:8px;height:27px}
+.league-timeline{padding:15px;border:1px solid #273c54;background:#0b1624;border-radius:16px}
+.timeline-event{display:grid;grid-template-columns:36px minmax(0,1fr);gap:9px;padding:10px 0;border-bottom:1px solid #1f3248}
+.timeline-event:last-child{border-bottom:0}.timeline-icon{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:#14263a}
+.timeline-event b,.timeline-event small{display:block}.timeline-event small{color:#8fa2b8;font-size:8px;margin-top:3px}
+.league-entry-modal{max-width:760px}
+@media(max-width:920px){
+  .league-intel-layout{grid-template-columns:1fr}
+  .manager-intel-list{grid-template-columns:1fr 1fr}
+  .manager-stat-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:650px){
+  .league-nav-wide{display:flex;overflow-x:auto;scrollbar-width:none}
+  .league-nav-wide button{min-width:110px}
+  .league-completion-stats{grid-template-columns:1fr}
+  .manager-intel-list{grid-template-columns:1fr}
+  .manager-profile-head{grid-template-columns:54px 1fr}
+  .manager-profile-head>.btn{grid-column:1/-1;width:100%}
+  .manager-profile-crest{width:54px;height:54px}
+  .manager-current-md{align-items:flex-start;flex-direction:column}
+  .manager-current-md .btn{width:100%}
+}

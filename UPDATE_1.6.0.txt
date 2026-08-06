@@ -1,0 +1,10 @@
+VERSION 1.6.0 – LEAGUE INTELLIGENCE
+
+- Gegneraufstellungen, Gegnerpunkte und Gegnertransfers freiwillig erfassen
+- Datenqualität und Vertrauensgrad je Manager
+- Vollständigkeitsbalken je Spieltag
+- Managerprofile und Lieblingsformationen
+- Liga-Timeline aus eigenen und erfassten Gegnerereignissen
+- Dezente Erinnerung, pro Spieltag ausblendbar
+- Keine Pflichtfelder und keine neue Supabase-Migration
+- CHANGELOG, UPDATE_GUIDE, ROADMAP und RELEASE_NOTES enthalten

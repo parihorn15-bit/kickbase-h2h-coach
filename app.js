@@ -775,7 +775,7 @@ const H2H_SCHEDULE=buildH2HSchedule();
 function managerById(id){return (data.leagueManagers||LEAGUE_MANAGERS).find(x=>x.id===id)||LEAGUE_MANAGERS.find(x=>x.id===id)}
 function managerLabel(id){const m=managerById(id);return m?`${m.team} (${m.manager})`:id}
 function otherManagerOptions(selected=''){return MANAGER_OPTIONS.map(m=>`<option value="${esc(m.team)}" ${selected===m.team?'selected':''}>${esc(m.team)} (${esc(m.manager)})</option>`).join('')}const DAILY_BONUSES=Array.from({length:10},(_,i)=>({label:`Tag ${i+1}`,amount:(i+1)*10000}));const ACHIEVEMENT_BONUSES=[{label:'Spieltagssieger',amount:1000000},{label:'Spieltagspunkte Silber (≥ 1.000)',amount:250000},{label:'Spieltagspunkte Gold (≥ 1.500)',amount:500000},{label:'Jahrhundertspiel (≥ 2.000)',amount:1000000},{label:'Topscorer (200 Punkte)',amount:100000},{label:'Matchwinner (300 Punkte)',amount:500000},{label:'Weltklasse (400 Punkte)',amount:1000000},{label:'Fußballgott (500 Punkte)',amount:2000000},{label:'MVP',amount:1000000},{label:'Tormaschine',amount:250000},{label:'Bronzenes Händchen (3 Mio. Gewinn)',amount:250000},{label:'Silbernes Händchen (5 Mio. Gewinn)',amount:500000},{label:'Goldenes Händchen (10 Mio. Gewinn)',amount:1000000},{label:'Königstransfer (25 Mio. Gewinn)',amount:2000000},{label:'Glückliches Händchen',amount:1000000},{label:'Meister',amount:2000000},{label:'Vizemeister',amount:1000000}];const SEEDED_DATA={"version":3,"settings":{"currentMd":1,"mode":"quick","startCapital":200000000,"homeBonus":1,"lineupSize":11},"players":[{"id":"4eb80f64-293c-4b3a-a93b-3989361b1027","name":"Axel Tape","team":"Bayer 04 Leverkusen","position":"Abwehr","buyDate":"2026-08-02","buyPrice":5071935,"marketAtBuy":0,"marketValue":4655501,"avgPoints":0,"note":""},{"id":"41172e46-cd74-405a-bf78-fa8884a27cac","name":"Robin Gosens","team":"FC Schalke 04","position":"Abwehr","buyDate":"2026-08-03","buyPrice":11445599,"marketAtBuy":0,"marketValue":11407285,"avgPoints":0,"note":"","soldDate":"2026-08-03","salePrice":11407285,"saleReason":"Sinkender Marktwert"},{"id":"016bc246-b164-4a17-a686-cd4a2e90c0d3","name":"Dominik Kohr","team":"1. FSV Mainz 05","position":"Abwehr","buyDate":"2026-08-03","buyPrice":6543210,"marketAtBuy":0,"marketValue":6627684,"avgPoints":0,"note":""},{"id":"6629cde9-bacc-4a2c-8cf1-d2bd98c55480","name":"Jovan Milosevic","team":"VfB Stuttgart","position":"Sturm","buyDate":"2026-08-03","buyPrice":4141414,"marketAtBuy":0,"marketValue":3539303,"avgPoints":0,"note":""}],"finances":[{"id":"start","date":"2026-08-01","type":"Startkapital","description":"Start ohne Kader","amount":200000000},{"id":"ac5941c7-600d-4b97-b27e-1af756a30baf","date":"2026-08-02","type":"Spielerkauf","description":"Kauf Axel Tape","amount":-5071935},{"id":"158bd348-1fc2-4dcd-85fe-0541c4901cfc","date":"2026-08-02","type":"Erfolgsbonus","description":"Kreisliga","amount":1000000},{"id":"466b9c05-c952-4ffa-802b-0861146ef671","date":"2026-08-02","type":"Erfolgsbonus","description":"Regionalliga","amount":1000000},{"id":"80b55a26-862c-4308-930c-2a0b0bac48af","date":"2026-08-02","type":"Erfolgsbonus","description":"Erster Deal","amount":100000},{"id":"ddee6a22-5c27-4387-baa0-caf7cdec2f05","date":"2026-08-03","type":"Tagesanmeldebonus","description":"Tag 1","amount":10000},{"id":"23eb8316-babe-4af3-bf4b-0921645d3098","date":"2026-08-04","type":"Tagesanmeldebonus","description":"Tag 2","amount":20000},{"id":"618181e0-a4f3-46a0-98af-eea7ba7d8d04","date":"2026-08-03","type":"Spielerkauf","description":"Kauf Robin Gosens","amount":-11445599},{"id":"4c3c279c-c039-4ecc-9b56-e105e858bbc1","date":"2026-08-03","type":"Spielerkauf","description":"Kauf Dominik Kohr","amount":-6543210},{"id":"b9c2a384-9ece-4b1f-a87b-4b00ae137cc4","date":"2026-08-03","type":"Spielerkauf","description":"Kauf Jovan Milosevic","amount":-4141414},{"id":"a511955c-44d8-46db-9b75-8fd010f78f26","date":"2026-08-03","type":"Spielerverkauf","description":"Verkauf Robin Gosens","amount":11407285}],"matchdays":[{"id":"6abff25d-b7c8-4738-80c1-fda4f34ebf2b","md":1,"mvp":"","points":{},"lineup":[],"soldPlayer":"","soldDate":"","soldPrice":0}],"opponents":[],"h2h":[],"teamStrength":{"1. FC Köln":5,"1. FC Union Berlin":5,"1. FSV Mainz 05":5,"Bayer 04 Leverkusen":5,"Borussia Dortmund":5,"Borussia Mönchengladbach":5,"Eintracht Frankfurt":5,"FC Augsburg":5,"FC Bayern München":5,"FC Schalke 04":5,"Hamburger SV":5,"RB Leipzig":5,"SC Paderborn 07":5,"SV Elversberg":5,"SV Werder Bremen":5,"Sport-Club Freiburg":5,"TSG Hoffenheim":5,"VfB Stuttgart":5}};const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));const id=()=>crypto.randomUUID?.()||Math.random().toString(36).slice(2);const FALLBACK_TEAMS=['1. FC Köln','1. FC Union Berlin','1. FSV Mainz 05','Bayer 04 Leverkusen','Borussia Dortmund','Borussia Mönchengladbach','Eintracht Frankfurt','FC Augsburg','FC Bayern München','FC Schalke 04','Hamburger SV','RB Leipzig','SC Paderborn 07','SV Elversberg','SV Werder Bremen','Sport-Club Freiburg','TSG Hoffenheim','VfB Stuttgart'];const TEAMS=[...new Set([...(Array.isArray(FIXTURES)?FIXTURES.flatMap(x=>[x.home,x.away]).filter(Boolean):[]),...FALLBACK_TEAMS])].sort((a,b)=>a.localeCompare(b,'de'));
-const defaults={version:28,teamStrengthDetails:{},teamStrengthCloudUpdatedAt:'',ui:{transferFilter:'all',transferSearch:'',leagueTab:'current',bundesligaTab:'matchups',bundesligaTeam:'Alle',bundesligaSearch:'',rulesSection:'overview',scoutPosition:'Alle',scoutTeam:'Alle',scoutSearch:''},settings:{currentMd:1,mode:'quick',startCapital:200000000,homeBonus:1,lineupSize:11},players:[],finances:[{id:'start',date:'2026-08-01',type:'Startkapital',description:'Start ohne Kader',amount:200000000}],matchdays:[],opponents:[],h2h:[],leagueManagers:LEAGUE_MANAGERS,lineupIntel:{pending:[],lastImport:''},teamStrength:{...TEAM_STRENGTH_BASELINE}};
+const defaults={version:29,teamStrengthDetails:{},teamStrengthCloudUpdatedAt:'',ui:{transferFilter:'all',transferSearch:'',leagueTab:'current',bundesligaTab:'matchups',bundesligaTeam:'Alle',bundesligaSearch:'',rulesSection:'overview',scoutPosition:'Alle',scoutTeam:'Alle',scoutSearch:''},settings:{currentMd:1,mode:'quick',startCapital:200000000,homeBonus:1,lineupSize:11},players:[],finances:[{id:'start',date:'2026-08-01',type:'Startkapital',description:'Start ohne Kader',amount:200000000}],matchdays:[],opponents:[],h2h:[],leagueManagers:LEAGUE_MANAGERS,leagueIntel:{managerData:{},reminderDismissed:{}},lineupIntel:{pending:[],lastImport:''},teamStrength:{...TEAM_STRENGTH_BASELINE}};
 let data=load(),page='dashboard';function mergeData(x){
   const source=x&&typeof x==='object'?x:{};
   const incomingStrengths=source.teamStrength&&typeof source.teamStrength==='object'
@@ -1830,19 +1830,166 @@ function calculateLeagueTable(){
   return rows.sort((a,b)=>b.tablePoints-a.tablePoints||(b.pointsFor-b.pointsAgainst)-(a.pointsFor-a.pointsAgainst)||b.pointsFor-a.pointsFor);
 }
 function teamOnly(id){return managerById(id)?.team||id}
+
+const OPPONENT_FORMATIONS=['3-4-3','4-4-2','4-5-1','5-3-2','5-4-1','4-2-4','3-5-2','5-2-3','4-3-3','3-6-1'];
+
+function ensureLeagueIntel(){
+  if(!data.leagueIntel||typeof data.leagueIntel!=='object')data.leagueIntel={managerData:{},reminderDismissed:{}};
+  if(!data.leagueIntel.managerData)data.leagueIntel.managerData={};
+  if(!data.leagueIntel.reminderDismissed)data.leagueIntel.reminderDismissed={};
+  return data.leagueIntel;
+}
+function managerLeagueData(managerId){
+  const root=ensureLeagueIntel();
+  if(!root.managerData[managerId]){
+    root.managerData[managerId]={matchdays:{},transfers:[],notes:''};
+  }
+  const row=root.managerData[managerId];
+  if(!row.matchdays)row.matchdays={};
+  if(!Array.isArray(row.transfers))row.transfers=[];
+  return row;
+}
+function managerMatchdayData(managerId,md=data.settings.currentMd){
+  const row=managerLeagueData(managerId);
+  if(!row.matchdays[md])row.matchdays[md]={points:null,formation:'',lineup:[],bank:[],note:''};
+  const entry=row.matchdays[md];
+  if(!Array.isArray(entry.lineup))entry.lineup=[];
+  if(!Array.isArray(entry.bank))entry.bank=[];
+  return entry;
+}
+function cleanNameList(value){
+  return String(value||'').split(/\n|,/).map(x=>x.trim()).filter(Boolean);
+}
+function managerDataQuality(managerId){
+  const row=managerLeagueData(managerId);
+  const matchdays=Object.values(row.matchdays||{});
+  const withPoints=matchdays.filter(x=>Number.isFinite(Number(x.points))).length;
+  const withLineup=matchdays.filter(x=>Array.isArray(x.lineup)&&x.lineup.length).length;
+  const withFormation=matchdays.filter(x=>x.formation).length;
+  const transfers=(row.transfers||[]).length;
+  const score=Math.min(100,Math.round(
+    Math.min(40,withPoints*5)+
+    Math.min(35,withLineup*4)+
+    Math.min(10,withFormation*2)+
+    Math.min(15,transfers*2)
+  ));
+  return{
+    score,
+    label:score>=75?'Hoch':score>=35?'Teilweise':'Wenig Daten',
+    withPoints,withLineup,withFormation,transfers,
+    matchdays:matchdays.length
+  };
+}
+function opponentCompletion(md=data.settings.currentMd){
+  const managers=MANAGER_OPTIONS;
+  const rows=managers.map(manager=>{
+    const entry=managerMatchdayData(manager.id,md);
+    return{
+      manager,
+      points:Number.isFinite(Number(entry.points)),
+      lineup:Array.isArray(entry.lineup)&&entry.lineup.length>0,
+      transfers:managerLeagueData(manager.id).transfers.some(t=>+t.md===+md)
+    };
+  });
+  const total=rows.length*3;
+  const done=rows.reduce((sum,row)=>sum+(row.points?1:0)+(row.lineup?1:0)+(row.transfers?1:0),0);
+  return{rows,done,total,pct:total?Math.round(done/total*100):0};
+}
+function opponentManagerStats(managerId){
+  const row=managerLeagueData(managerId);
+  const matchdays=Object.entries(row.matchdays||{}).map(([md,x])=>({md:+md,...x}));
+  const pointRows=matchdays.filter(x=>Number.isFinite(Number(x.points)));
+  const avg=pointRows.length?pointRows.reduce((s,x)=>s+Number(x.points),0)/pointRows.length:0;
+  const formations={};
+  matchdays.filter(x=>x.formation).forEach(x=>formations[x.formation]=(formations[x.formation]||0)+1);
+  const favorite=Object.entries(formations).sort((a,b)=>b[1]-a[1])[0];
+  const transferCount=(row.transfers||[]).length;
+  const buys=(row.transfers||[]).filter(t=>t.type==='Kauf').length;
+  const sales=(row.transfers||[]).filter(t=>t.type==='Verkauf').length;
+  const quality=managerDataQuality(managerId);
+  return{
+    avg,pointRows,matchdays,favorite:favorite?.[0]||'–',
+    favoriteCount:favorite?.[1]||0,transferCount,buys,sales,quality
+  };
+}
+function leagueIntelTimeline(){
+  const events=[];
+  (data.players||[]).forEach(p=>{
+    if(p.buyDate)events.push({date:p.buyDate,type:'transfer',icon:'🟢',title:`Du kaufst ${p.name}`,text:`${p.team||''} · ${euro(p.buyPrice)}`});
+    if(p.soldDate)events.push({date:p.soldDate,type:'transfer',icon:'🔴',title:`Du verkaufst ${p.name}`,text:`${euro(p.salePrice)}`});
+  });
+  MANAGER_OPTIONS.forEach(manager=>{
+    const row=managerLeagueData(manager.id);
+    (row.transfers||[]).forEach(t=>events.push({
+      date:t.date||'',md:t.md||0,type:'opponent-transfer',
+      icon:t.type==='Kauf'?'🟦':'🟥',
+      title:`${manager.team}: ${t.type} ${t.player}`,
+      text:[t.club,t.price?euro(t.price):'',t.note].filter(Boolean).join(' · ')
+    }));
+    Object.entries(row.matchdays||{}).forEach(([md,entry])=>{
+      if(Number.isFinite(Number(entry.points)))events.push({
+        date:entry.date||'',md:+md,type:'points',icon:'📊',
+        title:`${manager.team}: ${entry.points} Punkte`,
+        text:entry.formation?`Formation ${entry.formation}`:`Spieltag ${md}`
+      });
+      if(entry.lineup?.length)events.push({
+        date:entry.date||'',md:+md,type:'lineup',icon:'⚽',
+        title:`${manager.team}: Aufstellung erfasst`,
+        text:`${entry.formation||'Formation offen'} · ${entry.lineup.length} Spieler`
+      });
+    });
+  });
+  (data.h2h||[]).forEach(row=>{
+    const home=managerById(row.homeId),away=managerById(row.awayId);
+    if(home&&away)events.push({
+      date:'',md:+row.md,type:'h2h',icon:'🏆',
+      title:`Spieltag ${row.md}: ${home.team} ${row.homePoints}:${row.awayPoints} ${away.team}`,
+      text:'H2H-Ergebnis'
+    });
+  });
+  return events.sort((a,b)=>{
+    const dateA=a.date?new Date(a.date).getTime():0,dateB=b.date?new Date(b.date).getTime():0;
+    return dateB-dateA||(+b.md||0)-(+a.md||0);
+  });
+}
+function leagueReminder(md=data.settings.currentMd){
+  const completion=opponentCompletion(md);
+  const missing=completion.rows.filter(x=>!x.points||!x.lineup);
+  const dismissed=ensureLeagueIntel().reminderDismissed[md];
+  if(!missing.length||dismissed)return null;
+  return{
+    count:missing.length,
+    text:`Für Spieltag ${md} fehlen bei ${missing.length} Gegner${missing.length===1?'':'n'} noch Punkte oder Aufstellung.`
+  };
+}
+function confidenceLabel(count){
+  return count>=8?'Hoch':count>=3?'Mittel':'Niedrig';
+}
+
 function competition(){
+  ensureLeagueIntel();
   const currentMd=+data.settings.currentMd||1;
   const tab=data.ui?.leagueTab||'current';
+  const selectedManager=data.ui?.leagueManager||MANAGER_OPTIONS[0]?.id;
   const schedule=H2H_SCHEDULE.filter(x=>x.md===currentMd);
   const myGame=schedule.find(x=>x.home==='me'||x.away==='me');
   const otherGames=schedule.filter(x=>x!==myGame);
   const resultFor=g=>(data.h2h||[]).find(x=>+x.md===+g.md&&((x.homeId===g.home&&x.awayId===g.away)||(x.homeId===g.away&&x.awayId===g.home)));
-  const outcomeLabel=(g)=>{
-    const r=resultFor(g);
-    if(!r)return 'Ergebnis eintragen';
-    return `${r.homePoints} : ${r.awayPoints}`;
-  };
+  const outcomeLabel=g=>{const r=resultFor(g);return r?`${r.homePoints} : ${r.awayPoints}`:'Ergebnis eintragen'};
+  const completion=opponentCompletion(currentMd);
+  const reminder=leagueReminder(currentMd);
+
   const currentContent=`
+    ${reminder?`<div class="league-soft-reminder"><span>🔔 ${esc(reminder.text)}</span><button id="dismissLeagueReminder">Für diesen Spieltag ausblenden</button></div>`:''}
+    <section class="league-completion-card">
+      <div><span>DATENVOLLSTÄNDIGKEIT · SPIELTAG ${currentMd}</span><h3>${completion.pct} % erfasst</h3></div>
+      <div class="league-completion-bar"><i style="width:${completion.pct}%"></i></div>
+      <div class="league-completion-stats">
+        <span><b>${completion.rows.filter(x=>x.points).length}/${completion.rows.length}</b> Gegnerpunkte</span>
+        <span><b>${completion.rows.filter(x=>x.lineup).length}/${completion.rows.length}</b> Aufstellungen</span>
+        <span><b>${completion.rows.filter(x=>x.transfers).length}/${completion.rows.length}</b> Transferdaten</span>
+      </div>
+    </section>
     <section class="league-now">
       <div class="league-round-top">
         <button class="round-arrow" data-change-md="-1" ${currentMd<=1?'disabled':''}>‹</button>
@@ -1852,8 +1999,8 @@ function competition(){
       <article class="league-main-duel">
         <div class="main-team ${myGame?.home==='me'?'my-side':''}">${crest(teamOnly(myGame?.home||''),'main-crest')}<span>${esc(teamOnly(myGame?.home||''))}</span></div>
         <div class="main-versus">
-          <span>${resultFor(myGame||{})?outcomeLabel(myGame):'VS'}</span>
-          <button class="text-action" data-h2h-edit="${currentMd}|${myGame?.home||''}|${myGame?.away||''}">${resultFor(myGame||{})?'Bearbeiten':'Ergebnis eintragen'}</button>
+          <span>${myGame&&resultFor(myGame)?outcomeLabel(myGame):'VS'}</span>
+          ${myGame?`<button class="text-action" data-h2h-edit="${currentMd}|${myGame.home}|${myGame.away}">${resultFor(myGame)?'Bearbeiten':'Ergebnis eintragen'}</button>`:''}
         </div>
         <div class="main-team ${myGame?.away==='me'?'my-side':''}">${crest(teamOnly(myGame?.away||''),'main-crest')}<span>${esc(teamOnly(myGame?.away||''))}</span></div>
       </article>
@@ -1865,39 +2012,140 @@ function competition(){
           <span class="other-team right">${crest(teamOnly(g.away),'mini-crest')}<span>${esc(teamOnly(g.away))}</span></span>
         </button>`).join('')}</div>
     </section>`;
-  const scheduleContent=`
-    <div class="my-season-list">${Array.from({length:34},(_,i)=>i+1).map(md=>{
-      const game=H2H_SCHEDULE.find(x=>x.md===md&&(x.home==='me'||x.away==='me'));
-      const opp=game?(game.home==='me'?game.away:game.home):null;
-      const res=game?resultFor(game):null;
-      return `<button class="season-line ${md===currentMd?'active':''}" data-set-md="${md}">
-        <span class="season-number">${md}</span>
-        <span class="season-opponent">${esc(teamOnly(opp))}</span>
-        <span class="season-score">${res?`${res.homePoints} : ${res.awayPoints}`:'–'}</span>
-      </button>`;
-    }).join('')}</div>`;
+
+  const scheduleContent=`<div class="my-season-list">${Array.from({length:34},(_,i)=>i+1).map(md=>{
+    const game=H2H_SCHEDULE.find(x=>x.md===md&&(x.home==='me'||x.away==='me'));
+    const opp=game?(game.home==='me'?game.away:game.home):null;
+    const res=game?resultFor(game):null;
+    return `<button class="season-line ${md===currentMd?'active':''}" data-set-md="${md}">
+      <span class="season-number">${md}</span><span class="season-opponent">${esc(teamOnly(opp))}</span>
+      <span class="season-score">${res?`${res.homePoints} : ${res.awayPoints}`:'–'}</span>
+    </button>`;
+  }).join('')}</div>`;
+
   const standings=calculateLeagueTable();
-  const tableContent=`
-    <div class="minimal-table-wrap"><table class="minimal-league-table">
-      <thead><tr><th>#</th><th>Team</th><th>Sp.</th><th>S</th><th>U</th><th>N</th><th>Diff.</th><th>Pkt.</th></tr></thead>
-      <tbody>${standings.map((r,i)=>`<tr class="${r.isMe?'is-me':''}">
-        <td>${i+1}</td><td><span class="league-table-team">${crest(r.team,'table-crest')}<b>${esc(r.team)}</b></span></td><td>${r.played}</td><td>${r.wins}</td><td>${r.draws}</td><td>${r.losses}</td>
-        <td>${r.pointsFor-r.pointsAgainst>=0?'+':''}${r.pointsFor-r.pointsAgainst}</td><td><b>${r.tablePoints}</b></td>
-      </tr>`).join('')}</tbody>
-    </table></div>`;
-  const content=tab==='schedule'?scheduleContent:tab==='teams'?tableContent:currentContent;
+  const tableContent=`<div class="minimal-table-wrap"><table class="minimal-league-table">
+    <thead><tr><th>#</th><th>Team</th><th>Sp.</th><th>S</th><th>U</th><th>N</th><th>Diff.</th><th>Pkt.</th></tr></thead>
+    <tbody>${standings.map((r,i)=>`<tr class="${r.isMe?'is-me':''}">
+      <td>${i+1}</td><td><span class="league-table-team">${crest(r.team,'table-crest')}<b>${esc(r.team)}</b></span></td><td>${r.played}</td><td>${r.wins}</td><td>${r.draws}</td><td>${r.losses}</td>
+      <td>${r.pointsFor-r.pointsAgainst>=0?'+':''}${r.pointsFor-r.pointsAgainst}</td><td><b>${r.tablePoints}</b></td>
+    </tr>`).join('')}</tbody></table></div>`;
+
+  const managerCards=MANAGER_OPTIONS.map(manager=>{
+    const stats=opponentManagerStats(manager.id);
+    return `<button class="manager-intel-card ${selectedManager===manager.id?'active':''}" data-select-league-manager="${manager.id}">
+      ${crest(manager.team,'manager-intel-crest')}
+      <span><b>${esc(manager.team)}</b><small>${esc(manager.manager)} · Datenqualität ${stats.quality.score}%</small></span>
+      <i>${stats.quality.label}</i>
+    </button>`;
+  }).join('');
+
+  const selected=managerById(selectedManager);
+  const selectedStats=opponentManagerStats(selectedManager);
+  const selectedMd=managerMatchdayData(selectedManager,currentMd);
+  const managerContent=`<div class="league-intel-layout">
+    <aside class="manager-intel-list">${managerCards}</aside>
+    <section class="manager-profile-panel">
+      <div class="manager-profile-head">${crest(selected?.team,'manager-profile-crest')}<div><span>MANAGERPROFIL</span><h3>${esc(selected?.team||'Manager')}</h3><p>${esc(selected?.manager||'')}</p></div><button class="btn" data-edit-manager-md="${selectedManager}|${currentMd}">Spieltag ${currentMd} erfassen</button></div>
+      <div class="manager-stat-grid">
+        <article><span>Ø Punkte</span><strong>${selectedStats.pointRows.length?selectedStats.avg.toFixed(0):'–'}</strong><small>${selectedStats.pointRows.length} Spieltage · Vertrauen ${confidenceLabel(selectedStats.pointRows.length)}</small></article>
+        <article><span>Lieblingsformation</span><strong>${selectedStats.favorite}</strong><small>${selectedStats.favoriteCount} Einträge · Vertrauen ${confidenceLabel(selectedStats.favoriteCount)}</small></article>
+        <article><span>Transfers</span><strong>${selectedStats.transferCount}</strong><small>${selectedStats.buys} Käufe · ${selectedStats.sales} Verkäufe</small></article>
+        <article><span>Datenqualität</span><strong>${selectedStats.quality.score}%</strong><small>${selectedStats.quality.label}</small></article>
+      </div>
+      <div class="manager-current-md">
+        <div><span>SPIELTAG ${currentMd}</span><h4>${selectedMd.points??'–'} Punkte · ${esc(selectedMd.formation||'Formation offen')}</h4><p>${selectedMd.lineup.length?selectedMd.lineup.join(', '):'Noch keine Aufstellung erfasst.'}</p></div>
+        <button class="btn secondary" data-add-opponent-transfer="${selectedManager}">Transfer erfassen</button>
+      </div>
+      <div class="manager-transfer-list">${managerLeagueData(selectedManager).transfers.length?managerLeagueData(selectedManager).transfers.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,10).map(t=>`
+        <article><span>${t.type==='Kauf'?'🟢':'🔴'}</span><div><b>${esc(t.player)}</b><small>ST ${t.md||'–'} · ${esc(t.club||'Verein unbekannt')} · ${t.price?euro(t.price):'Preis offen'}</small></div><button data-delete-opponent-transfer="${selectedManager}|${t.id}">×</button></article>`).join(''):'<div class="empty-soft">Noch keine Gegnertransfers eingetragen.</div>'}</div>
+    </section>
+  </div>`;
+
+  const timeline=leagueIntelTimeline();
+  const timelineContent=`<section class="league-timeline">
+    <div class="section-head"><div><h2>Liga-Timeline</h2><p>Eigene und freiwillig erfasste Gegnerereignisse.</p></div></div>
+    ${timeline.length?timeline.slice(0,80).map(event=>`<article class="timeline-event">
+      <span class="timeline-icon">${event.icon}</span><div><b>${esc(event.title)}</b><small>${event.date?new Date(event.date).toLocaleDateString('de-DE'):event.md?`Spieltag ${event.md}`:'Ohne Datum'}${event.text?` · ${esc(event.text)}`:''}</small></div>
+    </article>`).join(''):'<div class="empty-soft">Die Timeline wächst automatisch mit deinen Einträgen.</div>'}
+  </section>`;
+
+  const content=tab==='schedule'?scheduleContent:tab==='teams'?tableContent:tab==='managers'?managerContent:tab==='timeline'?timelineContent:currentContent;
   return `<div class="league-redesign">
     <header class="league-page-header">
-      <div><span>6MINI · DIKS</span><h2>H2H Liga</h2></div>
+      <div><span>6MINI · DIKS</span><h2>League Intelligence</h2></div>
       <div class="league-current-pill">ST ${currentMd}</div>
     </header>
-    <nav class="league-nav">
+    <nav class="league-nav league-nav-wide">
       <button data-league-tab="current" class="${tab==='current'?'active':''}">Spieltag</button>
       <button data-league-tab="schedule" class="${tab==='schedule'?'active':''}">Mein Spielplan</button>
       <button data-league-tab="teams" class="${tab==='teams'?'active':''}">Tabelle</button>
+      <button data-league-tab="managers" class="${tab==='managers'?'active':''}">Manager</button>
+      <button data-league-tab="timeline" class="${tab==='timeline'?'active':''}">Timeline</button>
     </nav>
     <div class="league-content">${content}</div>
   </div><div id="competitionModal"></div>`;
+}
+
+function editOpponentMatchday(managerId,md){
+  const manager=managerById(managerId);
+  const row=managerMatchdayData(managerId,md);
+  $('#competitionModal').innerHTML=`<div class="modal-backdrop"><div class="card modal-card league-entry-modal">
+    <div class="section-head"><div><h2>${esc(manager?.team||'Manager')} · ST ${md}</h2><p>Alle Angaben sind optional und einzeln speicherbar.</p></div><button class="btn secondary" id="closeOpponentMd">Schließen</button></div>
+    <div class="form-grid" style="margin-top:14px">
+      <label>Punkte<input id="oppMdPoints" type="number" min="0" value="${row.points??''}" placeholder="optional"></label>
+      <label>Formation<select id="oppMdFormation"><option value="">Nicht bekannt</option>${OPPONENT_FORMATIONS.map(f=>`<option ${row.formation===f?'selected':''}>${f}</option>`).join('')}</select></label>
+      <label class="wide">Startelf · ein Spieler pro Zeile<textarea id="oppMdLineup" rows="8" placeholder="Spieler 1&#10;Spieler 2">${esc(row.lineup.join('\n'))}</textarea></label>
+      <label class="wide">Bank · optional<textarea id="oppMdBank" rows="4" placeholder="Spieler 1&#10;Spieler 2">${esc(row.bank.join('\n'))}</textarea></label>
+      <label class="wide">Notiz<textarea id="oppMdNote" rows="3">${esc(row.note||'')}</textarea></label>
+      <div class="full toolbar"><button class="btn" id="saveOpponentMd">Speichern</button><button class="btn danger-outline" id="clearOpponentMd">Daten für ST ${md} leeren</button></div>
+    </div>
+  </div></div>`;
+  $('#closeOpponentMd').onclick=()=>$('#competitionModal').innerHTML='';
+  $('#saveOpponentMd').onclick=()=>{
+    const value=$('#oppMdPoints').value;
+    Object.assign(row,{
+      points:value===''?null:Number(value),
+      formation:$('#oppMdFormation').value,
+      lineup:cleanNameList($('#oppMdLineup').value),
+      bank:cleanNameList($('#oppMdBank').value),
+      note:$('#oppMdNote').value.trim(),
+      date:localDateISO()
+    });
+    $('#competitionModal').innerHTML='';touch();toast('Gegnerdaten gespeichert');
+  };
+  $('#clearOpponentMd').onclick=()=>{
+    managerLeagueData(managerId).matchdays[md]={points:null,formation:'',lineup:[],bank:[],note:''};
+    $('#competitionModal').innerHTML='';touch();toast('Spieltagsdaten geleert');
+  };
+}
+function addOpponentTransfer(managerId){
+  const manager=managerById(managerId);
+  $('#competitionModal').innerHTML=`<div class="modal-backdrop"><div class="card modal-card league-entry-modal">
+    <div class="section-head"><div><h2>Transfer · ${esc(manager?.team||'Manager')}</h2><p>Optionaler Eintrag für Ligaübersicht und Statistiken.</p></div><button class="btn secondary" id="closeOpponentTransfer">Schließen</button></div>
+    <div class="form-grid" style="margin-top:14px">
+      <label>Typ<select id="oppTransferType"><option>Kauf</option><option>Verkauf</option></select></label>
+      <label>Spieltag<input id="oppTransferMd" type="number" min="1" max="34" value="${data.settings.currentMd}"></label>
+      <label class="wide">Spieler<input id="oppTransferPlayer" placeholder="Spielername"></label>
+      <label>Bundesligaverein<input id="oppTransferClub" placeholder="optional"></label>
+      <label>Preis (€)<input id="oppTransferPrice" class="money-field" inputmode="numeric" placeholder="optional"></label>
+      <label>Datum<input id="oppTransferDate" type="date" value="${localDateISO()}"></label>
+      <label class="wide">Notiz<input id="oppTransferNote" placeholder="optional"></label>
+      <div class="full"><button class="btn" id="saveOpponentTransfer">Transfer speichern</button></div>
+    </div>
+  </div></div>`;
+  bindMoneyFields();
+  $('#closeOpponentTransfer').onclick=()=>$('#competitionModal').innerHTML='';
+  $('#saveOpponentTransfer').onclick=()=>{
+    const player=$('#oppTransferPlayer').value.trim();
+    if(!player)return toast('Bitte einen Spielernamen eintragen');
+    managerLeagueData(managerId).transfers.push({
+      id:id(),type:$('#oppTransferType').value,md:+$('#oppTransferMd').value||data.settings.currentMd,
+      player,club:$('#oppTransferClub').value.trim(),price:parseMoney($('#oppTransferPrice').value),
+      date:$('#oppTransferDate').value,note:$('#oppTransferNote').value.trim()
+    });
+    $('#competitionModal').innerHTML='';touch();toast('Gegnertransfer gespeichert');
+  };
 }
 function editH2H(md,homeId,awayId){
   let row=(data.h2h||[]).find(x=>+x.md===+md&&((x.homeId===homeId&&x.awayId===awayId)||(x.homeId===awayId&&x.awayId===homeId)));
@@ -2184,6 +2432,19 @@ $$('[data-transfer-filter]').forEach(b=>b.onclick=()=>{data.ui.transferFilter=b.
 if($('#transferSearch'))$('#transferSearch').oninput=e=>{data.ui.transferSearch=e.target.value;save();render()};
 $$('[data-manage-transfer]').forEach(b=>b.onclick=()=>manageTransfer(b.dataset.manageTransfer));
 $$('[data-league-tab]').forEach(b=>b.onclick=()=>{data.ui.leagueTab=b.dataset.leagueTab;save();render()});
+$$('[data-select-league-manager]').forEach(b=>b.onclick=()=>{data.ui.leagueManager=b.dataset.selectLeagueManager;save();render()});
+$$('[data-edit-manager-md]').forEach(b=>b.onclick=()=>{const [managerId,md]=b.dataset.editManagerMd.split('|');editOpponentMatchday(managerId,+md)});
+$$('[data-add-opponent-transfer]').forEach(b=>b.onclick=()=>addOpponentTransfer(b.dataset.addOpponentTransfer));
+$$('[data-delete-opponent-transfer]').forEach(b=>b.onclick=()=>{
+  const [managerId,transferId]=b.dataset.deleteOpponentTransfer.split('|');
+  const row=managerLeagueData(managerId);
+  row.transfers=row.transfers.filter(t=>t.id!==transferId);
+  touch();toast('Gegnertransfer gelöscht');
+});
+if($('#dismissLeagueReminder'))$('#dismissLeagueReminder').onclick=()=>{
+  ensureLeagueIntel().reminderDismissed[data.settings.currentMd]=true;
+  save();render();
+};
 $$('[data-set-md]').forEach(b=>b.onclick=()=>{data.settings.currentMd=+b.dataset.setMd;data.ui.leagueTab='current';touch()});$$('[data-change-md]').forEach(b=>b.onclick=()=>{data.settings.currentMd=Math.max(1,Math.min(34,(+data.settings.currentMd||1)+(+b.dataset.changeMd||0)));touch()});
 $$('[data-h2h-edit]').forEach(b=>b.onclick=()=>{const [md,h,a]=b.dataset.h2hEdit.split('|');editH2H(md,h,a)});
 if($('#liAnalyze'))$('#liAnalyze').onclick=()=>{const changes=detectLiChanges($('#liPaste').value);data.lineupIntel.pending=changes;save();render();toast(changes.length?`${changes.length} Änderung(en) erkannt`:'Keine eindeutigen Änderungen erkannt')};
