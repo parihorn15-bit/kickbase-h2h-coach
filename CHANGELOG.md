@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.2 – Scout Assignment
+- Scout-Spieler direkt dem eigenen Team oder einem Gegner zuordnen
+- Vereinsdropdown bei Gegnertransfers
+- Scout-Vorausfüllung für Gegnerkäufe
+
+
 ## 1.6.1 – Opponent Transfer Fix
 - Gegner-Transferdialog vor Cloud-Neurendering geschützt
 - Sitzungsentwurf für noch nicht gespeicherte Transfers

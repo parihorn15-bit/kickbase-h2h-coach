@@ -1159,3 +1159,22 @@ body.lineup-dragging::after{
   .manager-current-md{align-items:flex-start;flex-direction:column}
   .manager-current-md .btn{width:100%}
 }
+
+/* Version 1.6.2 – Scout-Zielauswahl und Vereinsdropdown */
+.scout-target-panel{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  margin-bottom:9px;padding:11px 13px;border:1px solid #315471;
+  border-radius:14px;background:linear-gradient(135deg,#10243a,#0a1725)
+}
+.scout-target-panel label{display:flex;align-items:center;gap:10px;min-width:0}
+.scout-target-panel label>span{
+  color:#b8c7d8;font-size:9px;font-weight:900;white-space:nowrap
+}
+.scout-target-panel select{min-width:240px}
+.scout-target-panel small{color:#8fa2b8;font-size:8px;text-align:right;line-height:1.4}
+@media(max-width:650px){
+  .scout-target-panel{align-items:stretch;flex-direction:column}
+  .scout-target-panel label{align-items:stretch;flex-direction:column;gap:5px}
+  .scout-target-panel select{width:100%;min-width:0}
+  .scout-target-panel small{text-align:left}
+}

@@ -1,0 +1,18 @@
+VERSION 1.6.2 – SCOUT ASSIGNMENT
+
+GEGNERTRANSFERS
+- Bundesligaverein ist jetzt ein Dropdown aus der zentralen Club Registry.
+- Enthält verfügbare Vereine aus Bundesliga, Hintergrunddaten und Live-Kadern.
+- „Verein nicht bekannt“ bleibt als optionale Auswahl möglich.
+
+SCOUT CENTER
+- Neues Ziel-Dropdown: Mein Team oder jeder Gegner einzeln.
+- Ziel „Mein Team“ öffnet weiterhin den normalen Kaufdialog.
+- Bei einem Gegner öffnet sich dessen Transferdialog vorausgefüllt.
+- Spielername, Bundesligaverein, Spieltag, Typ Kauf und Datum werden übernommen.
+- Preis und Notiz bleiben freiwillig ergänzbar.
+- Der Gegnertransfer erscheint nach dem Speichern im Managerprofil und in der Liga-Timeline.
+
+TECHNIK
+- Eingabeschutz und Sitzungsentwurf aus 1.6.1 bleiben enthalten.
+- Keine neue Supabase-Migration erforderlich.
