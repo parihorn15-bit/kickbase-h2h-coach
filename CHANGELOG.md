@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.3 – Player Autocomplete
+- Suchbare alphabetische Spielerauswahl
+- Automatische Vereinszuordnung
+- Eigene und gegnerische Transfers unterstützt
+
+
 ## 1.6.2 – Scout Assignment
 - Scout-Spieler direkt dem eigenen Team oder einem Gegner zuordnen
 - Vereinsdropdown bei Gegnertransfers

@@ -1,0 +1,10 @@
+VERSION 1.6.3 – PLAYER AUTOCOMPLETE
+
+- Alphabetisch sortierte Spielerliste mit Vor- und Nachnamen.
+- Beim Eingeben von Buchstaben reduziert sich die Vorschlagsliste automatisch.
+- Auswahl per Maus, Touch oder Tastatur.
+- Nach Auswahl wird der zugehörige Bundesligaverein automatisch gesetzt.
+- Funktioniert bei eigenen Käufen und Gegnertransfers.
+- Vereinsauswahl bleibt anschließend manuell änderbar.
+- Freie Namenseingabe bleibt für noch nicht synchronisierte Spieler möglich.
+- Keine neue Supabase-Migration erforderlich.

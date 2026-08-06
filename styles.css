@@ -1178,3 +1178,7 @@ body.lineup-dragging::after{
   .scout-target-panel select{width:100%;min-width:0}
   .scout-target-panel small{text-align:left}
 }
+
+/* Version 1.6.3 – Player Autocomplete */
+input[list]{padding-right:30px}
+input[list]:focus{border-color:#38bdf8;box-shadow:0 0 0 2px rgba(56,189,248,.12)}
