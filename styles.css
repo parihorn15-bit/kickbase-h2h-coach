@@ -1196,3 +1196,30 @@ input[list]:focus{border-color:#38bdf8;box-shadow:0 0 0 2px rgba(56,189,248,.12)
 .manager-history-delete{border:1px solid #53232a;background:#2b1820;color:#fca5a5;border-radius:9px;font-size:15px}
 .manager-transfer-main{min-width:0;border:0;background:transparent;color:#fff;text-align:left;padding:0;cursor:pointer}.manager-transfer-main b,.manager-transfer-main small{display:block}.manager-transfer-main small{color:#8ca0b7;font-size:8px;margin-top:2px;white-space:normal;line-height:1.4}
 @media(max-width:850px){.manager-history-grid{grid-template-columns:1fr}}@media(max-width:560px){.manager-current-actions{width:100%}.manager-current-actions .btn{flex:1}.manager-lineup-main{grid-template-columns:40px minmax(0,1fr)}.manager-lineup-main i{grid-column:2}}
+
+/* Version 1.6.5 – Opponent Lineup Intelligence */
+.opponent-roster-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}
+.opponent-roster-summary span{padding:9px;border:1px solid #2a4057;border-radius:10px;background:#0a1523;color:#8fa3b9;font-size:8px}
+.opponent-roster-summary b{display:block;color:#fff;font-size:15px;margin-bottom:2px}
+.opponent-roster-picker{margin-top:12px;padding:12px;border:1px solid #273d55;border-radius:13px;background:#091421}
+.opponent-roster-picker-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:8px}
+.opponent-roster-picker-head span{color:#7dd3fc;font-size:8px;font-weight:900;letter-spacing:.08em}
+.opponent-roster-picker-head h3{font-size:14px;margin-top:2px}.opponent-roster-picker-head small{color:#8ea1b7;font-size:8px;max-width:420px;text-align:right}
+.opponent-roster-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.opponent-roster-player{display:grid;grid-template-columns:minmax(0,1fr) 130px;align-items:center;gap:8px;padding:8px;border:1px solid #263a51;border-radius:10px;background:#0d1a2a}
+.opponent-roster-player b,.opponent-roster-player small{display:block}.opponent-roster-player small{font-size:8px;color:#8da0b6;margin-top:2px}
+.opponent-lineup-actions{margin-top:12px}.opponent-analysis-modal{max-width:1100px}
+.opponent-analysis-summary{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
+.opponent-analysis-summary article{padding:10px;border:1px solid #273e57;background:#0a1523;border-radius:11px}.opponent-analysis-summary span,.opponent-analysis-summary strong{display:block}.opponent-analysis-summary span{font-size:8px;color:#8fa2b8}.opponent-analysis-summary strong{font-size:15px;margin-top:4px}
+.opponent-analysis-layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:10px;margin-top:12px}
+.opponent-analysis-pitch{padding:12px;border:1px solid #2b445e;border-radius:14px;background:linear-gradient(180deg,#102b22,#0b1b20)}
+.opponent-analysis-pitch-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}.opponent-analysis-pitch-head span{font-size:8px;color:#86efac;font-weight:900}
+.opponent-analysis-player-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.opponent-analysis-player{padding:9px;border:1px solid #305846;background:#0c1b1d;border-radius:11px}
+.opponent-analysis-player-top{display:grid;grid-template-columns:32px minmax(0,1fr) 36px;align-items:center;gap:7px}.opponent-analysis-player-top b,.opponent-analysis-player-top small{display:block}.opponent-analysis-player-top small{font-size:8px;color:#8ea4a8;margin-top:2px}.opponent-analysis-player-top>strong{text-align:right;color:#86efac;font-size:15px}
+.opponent-analysis-reasons{display:grid;gap:3px;margin-top:7px}.opponent-analysis-reasons span{font-size:8px;line-height:1.35}.opponent-analysis-reasons .positive{color:#bbf7d0}.opponent-analysis-reasons .negative{color:#fecaca}
+.opponent-analysis-side{display:grid;gap:8px;align-content:start}.opponent-analysis-side section{padding:11px;border:1px solid #273c54;background:#0a1523;border-radius:11px}.opponent-analysis-side section>span{display:block;color:#7dd3fc;font-size:8px;font-weight:900;margin-bottom:7px}.opponent-analysis-side small{color:#8fa2b8;font-size:8px;line-height:1.45}
+.opponent-bank-row{padding:6px 0;border-bottom:1px solid #1f3247}.opponent-bank-row:last-child{border-bottom:0}.opponent-bank-row b,.opponent-bank-row small{display:block}
+.manager-lineup-main{grid-template-columns:45px minmax(0,1fr) auto}.manager-lineup-open{border:0;background:transparent;color:#fff;text-align:left;padding:0;min-width:0}.manager-lineup-open b,.manager-lineup-open small{display:block}.manager-lineup-open small{margin-top:3px;color:#8ca0b7;font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.manager-lineup-edit{border:0;background:transparent;color:#7dd3fc;font-size:8px;font-weight:900}
+@media(max-width:850px){.opponent-analysis-layout{grid-template-columns:1fr}.opponent-analysis-summary{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:650px){.opponent-roster-grid,.opponent-analysis-player-grid{grid-template-columns:1fr}.opponent-roster-player{grid-template-columns:1fr}.opponent-roster-picker-head{align-items:flex-start;flex-direction:column}.opponent-roster-picker-head small{text-align:left}.opponent-analysis-summary{grid-template-columns:1fr 1fr}}

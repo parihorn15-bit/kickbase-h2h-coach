@@ -897,7 +897,7 @@ const H2H_SCHEDULE=buildH2HSchedule();
 function managerById(id){return (data.leagueManagers||LEAGUE_MANAGERS).find(x=>x.id===id)||LEAGUE_MANAGERS.find(x=>x.id===id)}
 function managerLabel(id){const m=managerById(id);return m?`${m.team} (${m.manager})`:id}
 function otherManagerOptions(selected=''){return MANAGER_OPTIONS.map(m=>`<option value="${esc(m.team)}" ${selected===m.team?'selected':''}>${esc(m.team)} (${esc(m.manager)})</option>`).join('')}const DAILY_BONUSES=Array.from({length:10},(_,i)=>({label:`Tag ${i+1}`,amount:(i+1)*10000}));const ACHIEVEMENT_BONUSES=[{label:'Spieltagssieger',amount:1000000},{label:'Spieltagspunkte Silber (≥ 1.000)',amount:250000},{label:'Spieltagspunkte Gold (≥ 1.500)',amount:500000},{label:'Jahrhundertspiel (≥ 2.000)',amount:1000000},{label:'Topscorer (200 Punkte)',amount:100000},{label:'Matchwinner (300 Punkte)',amount:500000},{label:'Weltklasse (400 Punkte)',amount:1000000},{label:'Fußballgott (500 Punkte)',amount:2000000},{label:'MVP',amount:1000000},{label:'Tormaschine',amount:250000},{label:'Bronzenes Händchen (3 Mio. Gewinn)',amount:250000},{label:'Silbernes Händchen (5 Mio. Gewinn)',amount:500000},{label:'Goldenes Händchen (10 Mio. Gewinn)',amount:1000000},{label:'Königstransfer (25 Mio. Gewinn)',amount:2000000},{label:'Glückliches Händchen',amount:1000000},{label:'Meister',amount:2000000},{label:'Vizemeister',amount:1000000}];const SEEDED_DATA={"version":3,"settings":{"currentMd":1,"mode":"quick","startCapital":200000000,"homeBonus":1,"lineupSize":11},"players":[{"id":"4eb80f64-293c-4b3a-a93b-3989361b1027","name":"Axel Tape","team":"Bayer 04 Leverkusen","position":"Abwehr","buyDate":"2026-08-02","buyPrice":5071935,"marketAtBuy":0,"marketValue":4655501,"avgPoints":0,"note":""},{"id":"41172e46-cd74-405a-bf78-fa8884a27cac","name":"Robin Gosens","team":"FC Schalke 04","position":"Abwehr","buyDate":"2026-08-03","buyPrice":11445599,"marketAtBuy":0,"marketValue":11407285,"avgPoints":0,"note":"","soldDate":"2026-08-03","salePrice":11407285,"saleReason":"Sinkender Marktwert"},{"id":"016bc246-b164-4a17-a686-cd4a2e90c0d3","name":"Dominik Kohr","team":"1. FSV Mainz 05","position":"Abwehr","buyDate":"2026-08-03","buyPrice":6543210,"marketAtBuy":0,"marketValue":6627684,"avgPoints":0,"note":""},{"id":"6629cde9-bacc-4a2c-8cf1-d2bd98c55480","name":"Jovan Milosevic","team":"VfB Stuttgart","position":"Sturm","buyDate":"2026-08-03","buyPrice":4141414,"marketAtBuy":0,"marketValue":3539303,"avgPoints":0,"note":""}],"finances":[{"id":"start","date":"2026-08-01","type":"Startkapital","description":"Start ohne Kader","amount":200000000},{"id":"ac5941c7-600d-4b97-b27e-1af756a30baf","date":"2026-08-02","type":"Spielerkauf","description":"Kauf Axel Tape","amount":-5071935},{"id":"158bd348-1fc2-4dcd-85fe-0541c4901cfc","date":"2026-08-02","type":"Erfolgsbonus","description":"Kreisliga","amount":1000000},{"id":"466b9c05-c952-4ffa-802b-0861146ef671","date":"2026-08-02","type":"Erfolgsbonus","description":"Regionalliga","amount":1000000},{"id":"80b55a26-862c-4308-930c-2a0b0bac48af","date":"2026-08-02","type":"Erfolgsbonus","description":"Erster Deal","amount":100000},{"id":"ddee6a22-5c27-4387-baa0-caf7cdec2f05","date":"2026-08-03","type":"Tagesanmeldebonus","description":"Tag 1","amount":10000},{"id":"23eb8316-babe-4af3-bf4b-0921645d3098","date":"2026-08-04","type":"Tagesanmeldebonus","description":"Tag 2","amount":20000},{"id":"618181e0-a4f3-46a0-98af-eea7ba7d8d04","date":"2026-08-03","type":"Spielerkauf","description":"Kauf Robin Gosens","amount":-11445599},{"id":"4c3c279c-c039-4ecc-9b56-e105e858bbc1","date":"2026-08-03","type":"Spielerkauf","description":"Kauf Dominik Kohr","amount":-6543210},{"id":"b9c2a384-9ece-4b1f-a87b-4b00ae137cc4","date":"2026-08-03","type":"Spielerkauf","description":"Kauf Jovan Milosevic","amount":-4141414},{"id":"a511955c-44d8-46db-9b75-8fd010f78f26","date":"2026-08-03","type":"Spielerverkauf","description":"Verkauf Robin Gosens","amount":11407285}],"matchdays":[{"id":"6abff25d-b7c8-4738-80c1-fda4f34ebf2b","md":1,"mvp":"","points":{},"lineup":[],"soldPlayer":"","soldDate":"","soldPrice":0}],"opponents":[],"h2h":[],"teamStrength":{"1. FC Köln":5,"1. FC Union Berlin":5,"1. FSV Mainz 05":5,"Bayer 04 Leverkusen":5,"Borussia Dortmund":5,"Borussia Mönchengladbach":5,"Eintracht Frankfurt":5,"FC Augsburg":5,"FC Bayern München":5,"FC Schalke 04":5,"Hamburger SV":5,"RB Leipzig":5,"SC Paderborn 07":5,"SV Elversberg":5,"SV Werder Bremen":5,"Sport-Club Freiburg":5,"TSG Hoffenheim":5,"VfB Stuttgart":5}};const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));const id=()=>crypto.randomUUID?.()||Math.random().toString(36).slice(2);const FALLBACK_TEAMS=['1. FC Köln','1. FC Union Berlin','1. FSV Mainz 05','Bayer 04 Leverkusen','Borussia Dortmund','Borussia Mönchengladbach','Eintracht Frankfurt','FC Augsburg','FC Bayern München','FC Schalke 04','Hamburger SV','RB Leipzig','SC Paderborn 07','SV Elversberg','SV Werder Bremen','Sport-Club Freiburg','TSG Hoffenheim','VfB Stuttgart'];const TEAMS=[...new Set([...(Array.isArray(FIXTURES)?FIXTURES.flatMap(x=>[x.home,x.away]).filter(Boolean):[]),...FALLBACK_TEAMS])].sort((a,b)=>a.localeCompare(b,'de'));
-const defaults={version:33,teamStrengthDetails:{},teamStrengthCloudUpdatedAt:'',ui:{transferFilter:'all',transferSearch:'',leagueTab:'current',bundesligaTab:'matchups',bundesligaTeam:'Alle',bundesligaSearch:'',rulesSection:'overview',scoutPosition:'Alle',scoutTeam:'Alle',scoutSearch:''},settings:{currentMd:1,mode:'quick',startCapital:200000000,homeBonus:1,lineupSize:11},players:[],finances:[{id:'start',date:'2026-08-01',type:'Startkapital',description:'Start ohne Kader',amount:200000000}],matchdays:[],opponents:[],h2h:[],leagueManagers:LEAGUE_MANAGERS,leagueIntel:{managerData:{},reminderDismissed:{}},lineupIntel:{pending:[],lastImport:''},teamStrength:{...TEAM_STRENGTH_BASELINE}};
+const defaults={version:34,teamStrengthDetails:{},teamStrengthCloudUpdatedAt:'',ui:{transferFilter:'all',transferSearch:'',leagueTab:'current',bundesligaTab:'matchups',bundesligaTeam:'Alle',bundesligaSearch:'',rulesSection:'overview',scoutPosition:'Alle',scoutTeam:'Alle',scoutSearch:''},settings:{currentMd:1,mode:'quick',startCapital:200000000,homeBonus:1,lineupSize:11},players:[],finances:[{id:'start',date:'2026-08-01',type:'Startkapital',description:'Start ohne Kader',amount:200000000}],matchdays:[],opponents:[],h2h:[],leagueManagers:LEAGUE_MANAGERS,leagueIntel:{managerData:{},reminderDismissed:{}},lineupIntel:{pending:[],lastImport:''},teamStrength:{...TEAM_STRENGTH_BASELINE}};
 let data=load(),page='dashboard';function mergeData(x){
   const source=x&&typeof x==='object'?x:{};
   const incomingStrengths=source.teamStrength&&typeof source.teamStrength==='object'
@@ -2024,6 +2024,114 @@ function opponentCompletion(md=data.settings.currentMd){
   const done=rows.reduce((sum,row)=>sum+(row.points?1:0)+(row.lineup?1:0)+(row.transfers?1:0),0);
   return{rows,done,total,pct:total?Math.round(done/total*100):0};
 }
+
+function opponentRoster(managerId,md=data.settings.currentMd){
+  const transfers=(managerLeagueData(managerId).transfers||[])
+    .filter(t=>(+t.md||0)<=+md)
+    .slice()
+    .sort((a,b)=>(+a.md||0)-(+b.md||0)||String(a.date||'').localeCompare(String(b.date||'')));
+
+  const roster=new Map();
+  transfers.forEach(t=>{
+    const key=normalizePlayerName(t.player);
+    if(!key)return;
+    if(t.type==='Verkauf'){
+      roster.delete(key);
+      return;
+    }
+    const live=findSelectablePlayerByName(t.player);
+    roster.set(key,{
+      id:key,
+      name:t.player,
+      team:t.club||live?.team||'',
+      buyPrice:Number(t.price||0),
+      boughtMd:+t.md||null,
+      position:t.position||live?.position||''
+    });
+  });
+  return [...roster.values()].sort((a,b)=>a.name.localeCompare(b.name,'de'));
+}
+function opponentRosterPlayer(managerId,name,md=data.settings.currentMd){
+  const key=normalizePlayerName(name);
+  return opponentRoster(managerId,md).find(p=>normalizePlayerName(p.name)===key)||null;
+}
+function opponentLineupDataQuality(managerId,md=data.settings.currentMd){
+  const entry=managerMatchdayData(managerId,md);
+  const roster=opponentRoster(managerId,md);
+  let score=0;
+  if(entry.lineup?.length)score+=40;
+  if(entry.formation)score+=20;
+  if(Number.isFinite(Number(entry.points)))score+=20;
+  if(roster.length>=11)score+=20;
+  return Math.min(100,score);
+}
+function opponentPlayerAnalysis(managerId,name,md=data.settings.currentMd){
+  const rosterPlayer=opponentRosterPlayer(managerId,name,md);
+  const live=findSelectablePlayerByName(name);
+  const base={
+    name,
+    team:rosterPlayer?.team||live?.team||'',
+    position:rosterPlayer?.position||live?.position||''
+  };
+  if(!live)return{
+    ...base,score:null,confidence:20,
+    reasons:['Keine Live-Spielerdaten vorhanden'],
+    risks:['Analyse basiert nur auf dem erfassten Gegnerkader']
+  };
+
+  const synthetic={
+    id:live.id||normalizePlayerName(live.name),
+    name:live.name,team:live.team,position:live.position,
+    avgPoints:0,liStatus:'Unbekannt',liUpdatedAt:null
+  };
+
+  let score=50,confidence=35,reasons=[],risks=[];
+  try{
+    const m=Number(matchup(synthetic,md));
+    if(Number.isFinite(m)){
+      score=Math.round(35+m*5);
+      reasons.push(`Matchup ${m.toFixed(1)}`);
+      confidence+=15;
+    }
+    const s=Number(strength(synthetic.team));
+    if(Number.isFinite(s)){
+      score+=Math.round((s-5)*2);
+      reasons.push(`Teamstärke ${s.toFixed(1)}`);
+      confidence+=10;
+    }
+    const f=fixture(synthetic.team,md);
+    if(f){
+      reasons.push(`${f.ha==='H'?'Heim':'Auswärts'} gegen ${f.opp}`);
+      if(f.ha==='H')score+=4;
+      confidence+=15;
+    }
+    const news=typeof newsImpactForPlayer==='function'?newsImpactForPlayer(synthetic):null;
+    if(news?.impact_score){
+      score+=Math.round(Math.max(-10,Math.min(10,news.impact_score*.35)));
+      (news.impact_score>0?reasons:risks).push(`Offizielle Meldung: ${news.title}`);
+    }
+  }catch{}
+  return{
+    ...base,
+    score:Math.max(0,Math.min(100,score)),
+    confidence:Math.max(20,Math.min(80,confidence)),
+    reasons:reasons.length?reasons:['Basisanalyse aus Verein und Gegner'],
+    risks
+  };
+}
+function opponentLineupAnalysis(managerId,md=data.settings.currentMd){
+  const entry=managerMatchdayData(managerId,md);
+  const players=(entry.lineup||[]).map(name=>opponentPlayerAnalysis(managerId,name,md));
+  const scored=players.filter(p=>Number.isFinite(p.score));
+  return{
+    players,
+    avgScore:scored.length?scored.reduce((s,p)=>s+p.score,0)/scored.length:0,
+    avgConfidence:players.length?players.reduce((s,p)=>s+p.confidence,0)/players.length:0,
+    completeness:opponentLineupDataQuality(managerId,md),
+    formation:entry.formation||'Formation offen'
+  };
+}
+
 function opponentManagerStats(managerId){
   const row=managerLeagueData(managerId);
   const matchdays=Object.entries(row.matchdays||{}).map(([md,x])=>({md:+md,...x}));
@@ -2198,11 +2306,13 @@ function competition(){
               .filter(row=>row.lineup?.length||row.points!==null||row.formation)
               .sort((a,b)=>b.md-a.md)
               .map(row=>`<article class="manager-lineup-history-row">
-                <button class="manager-lineup-main" data-edit-manager-md="${selectedManager}|${row.md}">
+                <div class="manager-lineup-main">
                   <span class="manager-history-md">ST ${row.md}</span>
-                  <div><b>${esc(row.formation||'Formation offen')} · ${row.points??'–'} Punkte</b><small>${row.lineup?.length?esc(row.lineup.join(', ')):'Keine Startelf erfasst'}</small></div>
-                  <i>Bearbeiten ›</i>
-                </button>
+                  <button class="manager-lineup-open" data-view-opponent-lineup="${selectedManager}|${row.md}">
+                    <b>${esc(row.formation||'Formation offen')} · ${row.points??'–'} Punkte</b><small>${row.lineup?.length?esc(row.lineup.join(', ')):'Keine Startelf erfasst'}</small>
+                  </button>
+                  <button class="manager-lineup-edit" data-edit-manager-md="${selectedManager}|${row.md}">Bearbeiten</button>
+                </div>
                 <button class="manager-history-delete" data-delete-opponent-md="${selectedManager}|${row.md}" title="Spieltagsdaten löschen">×</button>
               </article>`).join('') || '<div class="empty-soft">Noch keine Aufstellungen oder Spieltagspunkte eingetragen.</div>'
           }</div>
@@ -2255,29 +2365,77 @@ function competition(){
 function editOpponentMatchday(managerId,md){
   const manager=managerById(managerId);
   const row=managerMatchdayData(managerId,md);
-  $('#competitionModal').innerHTML=`<div class="modal-backdrop"><div class="card modal-card league-entry-modal">
-    <div class="section-head"><div><h2>${esc(manager?.team||'Manager')} · ST ${md}</h2><p>Alle Angaben sind optional und einzeln speicherbar.</p></div><button type="button" class="btn secondary" id="closeOpponentMd">Schließen</button></div>
+  const roster=opponentRoster(managerId,md);
+  const selected=new Set(row.lineup||[]);
+  const bankSelected=new Set(row.bank||[]);
+
+  $('#competitionModal').innerHTML=`<div class="modal-backdrop"><div class="card modal-card league-entry-modal opponent-lineup-entry">
+    <div class="section-head"><div><h2>${esc(manager?.team||'Manager')} · ST ${md}</h2><p>Aufstellung aus dem erfassten Kader dieses Managers auswählen.</p></div><button type="button" class="btn secondary" id="closeOpponentMd">Schließen</button></div>
+
+    <div class="opponent-roster-summary">
+      <span><b>${roster.length}</b> Spieler im erfassten Kader</span>
+      <span><b>${selected.size}</b> Startelf</span>
+      <span><b>${bankSelected.size}</b> Bank</span>
+    </div>
+
     <div class="form-grid" style="margin-top:14px">
       <label>Punkte<input id="oppMdPoints" type="number" min="0" value="${row.points??''}" placeholder="optional"></label>
       <label>Formation<select id="oppMdFormation"><option value="">Nicht bekannt</option>${OPPONENT_FORMATIONS.map(f=>`<option ${row.formation===f?'selected':''}>${f}</option>`).join('')}</select></label>
-      <label class="wide">Startelf · ein Spieler pro Zeile<textarea id="oppMdLineup" rows="8" placeholder="Spieler 1&#10;Spieler 2">${esc(row.lineup.join('\n'))}</textarea></label>
-      <label class="wide">Bank · optional<textarea id="oppMdBank" rows="4" placeholder="Spieler 1&#10;Spieler 2">${esc(row.bank.join('\n'))}</textarea></label>
       <label class="wide">Notiz<textarea id="oppMdNote" rows="3">${esc(row.note||'')}</textarea></label>
-      <div class="full toolbar"><button type="button" class="btn" id="saveOpponentMd">Speichern</button><button type="button" class="btn danger-outline" id="clearOpponentMd">Daten für ST ${md} leeren</button></div>
+    </div>
+
+    <div class="opponent-roster-picker">
+      <div class="opponent-roster-picker-head"><div><span>KADERAUSWAHL</span><h3>Spieler auswählen</h3></div><small>Startelf und Bank sind optional. Der Kader entsteht aus erfassten Käufen abzüglich Verkäufen.</small></div>
+      ${roster.length?`<div class="opponent-roster-grid">${roster.map(player=>{
+        const state=selected.has(player.name)?'lineup':bankSelected.has(player.name)?'bank':'none';
+        return `<article class="opponent-roster-player">
+          <div><b>${esc(player.name)}</b><small>${esc(player.team||'Verein unbekannt')}${player.position?` · ${esc(player.position)}`:''}</small></div>
+          <select data-opponent-player-state="${esc(player.name)}">
+            <option value="none" ${state==='none'?'selected':''}>Nicht erfasst</option>
+            <option value="lineup" ${state==='lineup'?'selected':''}>Startelf</option>
+            <option value="bank" ${state==='bank'?'selected':''}>Bank</option>
+          </select>
+        </article>`;
+      }).join('')}</div>`:`<div class="empty-soft">Noch kein Gegnerkader vorhanden. Erfasse zunächst Käufe für diesen Manager.</div>`}
+    </div>
+
+    <div class="full toolbar opponent-lineup-actions">
+      <button type="button" class="btn" id="saveOpponentMd">Speichern</button>
+      <button type="button" class="btn secondary" id="viewOpponentLineupAnalysis">Aufstellung ansehen & analysieren</button>
+      <button type="button" class="btn danger-outline" id="clearOpponentMd">Daten für ST ${md} leeren</button>
     </div>
   </div></div>`;
+
   $('#closeOpponentMd').onclick=()=>$('#competitionModal').innerHTML='';
   $('#saveOpponentMd').onclick=()=>{
-    const value=$('#oppMdPoints').value;
-    Object.assign(row,{
-      points:value===''?null:Number(value),
-      formation:$('#oppMdFormation').value,
-      lineup:cleanNameList($('#oppMdLineup').value),
-      bank:cleanNameList($('#oppMdBank').value),
-      note:$('#oppMdNote').value.trim(),
-      date:localDateISO()
+    const lineup=[],bank=[];
+    $$('[data-opponent-player-state]').forEach(select=>{
+      const name=select.dataset.opponentPlayerState;
+      if(select.value==='lineup')lineup.push(name);
+      if(select.value==='bank')bank.push(name);
     });
-    $('#competitionModal').innerHTML='';touch();toast('Gegnerdaten gespeichert');
+    if(lineup.length>11)return toast('Maximal 11 Spieler in der Startelf');
+    Object.assign(row,{
+      points:$('#oppMdPoints').value===''?null:Number($('#oppMdPoints').value),
+      formation:$('#oppMdFormation').value,
+      lineup,bank,note:$('#oppMdNote').value.trim(),date:localDateISO()
+    });
+    $('#competitionModal').innerHTML='';touch();toast('Gegneraufstellung gespeichert');
+  };
+  $('#viewOpponentLineupAnalysis').onclick=()=>{
+    const lineup=[],bank=[];
+    $$('[data-opponent-player-state]').forEach(select=>{
+      const name=select.dataset.opponentPlayerState;
+      if(select.value==='lineup')lineup.push(name);
+      if(select.value==='bank')bank.push(name);
+    });
+    Object.assign(row,{
+      points:$('#oppMdPoints').value===''?null:Number($('#oppMdPoints').value),
+      formation:$('#oppMdFormation').value,
+      lineup,bank,note:$('#oppMdNote').value.trim()
+    });
+    save();
+    showOpponentLineupAnalysis(managerId,md);
   };
   $('#clearOpponentMd').onclick=()=>{
     managerLeagueData(managerId).matchdays[md]={points:null,formation:'',lineup:[],bank:[],note:''};
@@ -2285,30 +2443,56 @@ function editOpponentMatchday(managerId,md){
   };
 }
 
-function opponentTransferDraftKey(managerId){
-  return `h2hOpponentTransferDraft:${managerId}`;
-}
-function readOpponentTransferDraft(managerId){
-  try{return JSON.parse(sessionStorage.getItem(opponentTransferDraftKey(managerId))||'{}')}catch{return{}}
-}
-function saveOpponentTransferDraft(managerId){
-  const modal=document.getElementById('competitionModal');
-  if(!modal?.querySelector('#oppTransferPlayer'))return;
-  const draft={
-    type:$('#oppTransferType')?.value||'Kauf',
-    md:$('#oppTransferMd')?.value||data.settings.currentMd,
-    player:$('#oppTransferPlayer')?.value||'',
-    club:$('#oppTransferClub')?.value||'',
-    price:$('#oppTransferPrice')?.value||'',
-    date:$('#oppTransferDate')?.value||localDateISO(),
-    note:$('#oppTransferNote')?.value||''
-  };
-  sessionStorage.setItem(opponentTransferDraftKey(managerId),JSON.stringify(draft));
-}
-function clearOpponentTransferDraft(managerId){
-  sessionStorage.removeItem(opponentTransferDraftKey(managerId));
-}
+function showOpponentLineupAnalysis(managerId,md){
+  const manager=managerById(managerId);
+  const entry=managerMatchdayData(managerId,md);
+  const analysis=opponentLineupAnalysis(managerId,md);
+  const roster=opponentRoster(managerId,md);
 
+  $('#competitionModal').innerHTML=`<div class="modal-backdrop"><div class="card modal-card opponent-analysis-modal">
+    <div class="section-head">
+      <div><h2>${esc(manager?.team||'Manager')} · Aufstellungsanalyse ST ${md}</h2><p>Nur auf Basis deiner erfassten Gegnerdaten und unserer vorhandenen Bundesliga-Daten.</p></div>
+      <button type="button" class="btn secondary" id="closeOpponentAnalysis">Schließen</button>
+    </div>
+
+    <div class="opponent-analysis-summary">
+      <article><span>Formation</span><strong>${esc(analysis.formation)}</strong></article>
+      <article><span>Startelf</span><strong>${entry.lineup.length}/11</strong></article>
+      <article><span>Analyse-Score</span><strong>${analysis.players.length?analysis.avgScore.toFixed(0):'–'}</strong></article>
+      <article><span>Confidence</span><strong>${analysis.players.length?analysis.avgConfidence.toFixed(0)+' %':'–'}</strong></article>
+      <article><span>Datenqualität</span><strong>${analysis.completeness} %</strong></article>
+    </div>
+
+    <div class="opponent-analysis-layout">
+      <section class="opponent-analysis-pitch">
+        <div class="opponent-analysis-pitch-head"><span>STARTELF</span><b>${esc(analysis.formation)}</b></div>
+        <div class="opponent-analysis-player-grid">
+          ${analysis.players.length?analysis.players.map(player=>`
+            <article class="opponent-analysis-player">
+              <div class="opponent-analysis-player-top">
+                ${player.team?bundesligaCrest(player.team,'table-club-crest'):''}
+                <div><b>${esc(player.name)}</b><small>${esc(player.position||'Position unbekannt')} · ${esc(player.team||'Verein unbekannt')}</small></div>
+                <strong>${player.score===null?'–':player.score}</strong>
+              </div>
+              <div class="confidence-line"><span>Confidence ${player.confidence}%</span><div><i style="width:${player.confidence}%"></i></div></div>
+              <div class="opponent-analysis-reasons">${player.reasons.map(r=>`<span class="positive">+ ${esc(r)}</span>`).join('')}${player.risks.map(r=>`<span class="negative">− ${esc(r)}</span>`).join('')}</div>
+            </article>`).join(''):'<div class="empty-soft">Noch keine Startelf gespeichert.</div>'}
+        </div>
+      </section>
+
+      <aside class="opponent-analysis-side">
+        <section><span>BANK</span>${entry.bank.length?entry.bank.map(name=>`<div class="opponent-bank-row"><b>${esc(name)}</b><small>${esc(opponentRosterPlayer(managerId,name,md)?.team||'')}</small></div>`).join(''):'<div class="empty-soft">Keine Bank erfasst.</div>'}</section>
+        <section><span>KADER</span><strong>${roster.length} Spieler</strong><small>aus erfassten Käufen und Verkäufen</small></section>
+        <section><span>ANALYSEGRENZE</span><small>Ohne automatische Kickbase-Daten kennt die App keine echten Gegner-Ø-Punkte oder Marktwerte. Die Gegneranalyse nutzt deshalb Verein, Matchup, Heim/Auswärts, Teamstärke und vorhandene offizielle Meldungen.</small></section>
+      </aside>
+    </div>
+
+    <div class="toolbar" style="margin-top:12px"><button type="button" class="btn" id="editOpponentAnalysisLineup">Aufstellung bearbeiten</button></div>
+  </div></div>`;
+
+  $('#closeOpponentAnalysis').onclick=()=>$('#competitionModal').innerHTML='';
+  $('#editOpponentAnalysisLineup').onclick=()=>editOpponentMatchday(managerId,md);
+}
 
 function editOpponentTransfer(managerId,transferId){
   const row=managerLeagueData(managerId);
@@ -2678,6 +2862,10 @@ $$('[data-delete-opponent-transfer]').forEach(b=>b.onclick=()=>{
   const row=managerLeagueData(managerId);
   row.transfers=row.transfers.filter(t=>t.id!==transferId);
   touch();toast('Gegnertransfer gelöscht');
+});
+$$('[data-view-opponent-lineup]').forEach(b=>b.onclick=()=>{
+  const [managerId,md]=b.dataset.viewOpponentLineup.split('|');
+  showOpponentLineupAnalysis(managerId,+md);
 });
 $$('[data-edit-opponent-transfer]').forEach(b=>b.onclick=()=>{const [managerId,transferId]=b.dataset.editOpponentTransfer.split('|');editOpponentTransfer(managerId,transferId)});
 $$('[data-delete-opponent-md]').forEach(b=>b.onclick=()=>{const [managerId,md]=b.dataset.deleteOpponentMd.split('|');delete managerLeagueData(managerId).matchdays[md];touch();toast(`Spieltagsdaten ST ${md} gelöscht`)});

@@ -1,0 +1,11 @@
+VERSION 1.6.5 – OPPONENT LINEUP INTELLIGENCE
+
+- Gegnerkader entsteht automatisch aus erfassten Käufen abzüglich Verkäufen.
+- Beim Erfassen der Gegneraufstellung werden nur Spieler dieses erfassten Kaders angeboten.
+- Spieler können als Startelf, Bank oder nicht erfasst markiert werden.
+- Eigene Aufstellungsansicht für jeden Gegner und Spieltag.
+- Analyse mit Formation, Analyse-Score, Confidence, Datenqualität und Einzelhinweisen.
+- Gegneranalyse nutzt vorhandene Bundesliga-Daten wie Matchup, Heim/Auswärts, Teamstärke und offizielle Meldungen.
+- Keine erfundenen Kickbase-Marktwerte oder Gegner-Ø-Punkte.
+- Aufstellungen bleiben jederzeit bearbeitbar.
+- Keine neue Supabase-Migration erforderlich.
