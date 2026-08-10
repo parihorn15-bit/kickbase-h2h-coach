@@ -1,0 +1,9 @@
+VERSION 1.6.4 – OPPONENT HISTORY
+
+- Alle erfassten Gegneraufstellungen pro Spieltag sichtbar.
+- Aufstellungen, Punkte, Formation, Bank und Notizen wieder öffnbar und bearbeitbar.
+- Komplette Spieltagsdaten eines Gegners können gelöscht werden.
+- Vollständiger Transferverlauf pro Gegner.
+- Gegnertransfers können geöffnet, geändert oder gelöscht werden.
+- Spieler-Autocomplete und automatische Vereinszuordnung funktionieren auch beim Bearbeiten.
+- Keine neue Supabase-Migration erforderlich.

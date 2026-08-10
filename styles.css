@@ -1182,3 +1182,17 @@ body.lineup-dragging::after{
 /* Version 1.6.3 – Player Autocomplete */
 input[list]{padding-right:30px}
 input[list]:focus{border-color:#38bdf8;box-shadow:0 0 0 2px rgba(56,189,248,.12)}
+
+/* Version 1.6.4 – Opponent History */
+.manager-current-actions{display:flex;gap:7px;flex-wrap:wrap}
+.manager-history-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.manager-history-panel{padding:12px;border:1px solid #273c54;background:#091421;border-radius:13px;min-width:0}
+.manager-history-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.manager-history-head span{color:#7dd3fc;font-size:8px;font-weight:900;letter-spacing:.08em}.manager-history-head h4{font-size:13px;margin-top:2px}.btn.compact{padding:6px 9px;font-size:8px}
+.manager-lineup-history{display:grid;gap:6px}.manager-lineup-history-row{display:grid;grid-template-columns:minmax(0,1fr) 30px;gap:5px}
+.manager-lineup-main{width:100%;display:grid;grid-template-columns:45px minmax(0,1fr) auto;align-items:center;gap:8px;border:1px solid #263a52;background:#0c1928;color:#fff;border-radius:10px;padding:8px;text-align:left}
+.manager-lineup-main:hover,.manager-transfer-main:hover{border-color:#38bdf8}.manager-history-md{font-size:9px;font-weight:900;color:#7dd3fc}
+.manager-lineup-main b,.manager-lineup-main small{display:block}.manager-lineup-main small{margin-top:3px;color:#8ca0b7;font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.manager-lineup-main i{font-style:normal;color:#7f94ac;font-size:8px}
+.manager-history-delete{border:1px solid #53232a;background:#2b1820;color:#fca5a5;border-radius:9px;font-size:15px}
+.manager-transfer-main{min-width:0;border:0;background:transparent;color:#fff;text-align:left;padding:0;cursor:pointer}.manager-transfer-main b,.manager-transfer-main small{display:block}.manager-transfer-main small{color:#8ca0b7;font-size:8px;margin-top:2px;white-space:normal;line-height:1.4}
+@media(max-width:850px){.manager-history-grid{grid-template-columns:1fr}}@media(max-width:560px){.manager-current-actions{width:100%}.manager-current-actions .btn{flex:1}.manager-lineup-main{grid-template-columns:40px minmax(0,1fr)}.manager-lineup-main i{grid-column:2}}
