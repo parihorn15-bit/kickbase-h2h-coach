@@ -1,0 +1,10 @@
+VERSION 1.6.9 – OPPONENT POSITION FIX
+
+- Gegner-Spieler erhalten beim Aufbau des Kaders automatisch ihre Position aus dem Bundesliga-Spielerdatensatz.
+- Live-Positionsbezeichnungen werden auf Tor / Abwehr / Mittelfeld / Sturm normalisiert.
+- Ausgewählte Gegner-Spieler erscheinen dadurch direkt in der passenden Spielfeldreihe.
+- Verein wird ebenfalls aus Live-Daten ergänzt, falls er im Transfer nicht gespeichert war.
+- Bereits erfasste Transfers müssen nicht neu angelegt werden.
+- Falls eine Position wirklich unbekannt bleibt, erscheint der Spieler sichtbar in einer Warnzeile statt unsichtbar zu bleiben.
+- Performance-Fixes aus 1.6.8 bleiben erhalten.
+- Keine neue Supabase-Migration erforderlich.

@@ -1265,3 +1265,12 @@ input[list]:focus{border-color:#38bdf8;box-shadow:0 0 0 2px rgba(56,189,248,.12)
   border-color:#354b65
 }
 .opponent-squad-player{contain:layout paint}
+
+/* Version 1.6.9 – Gegnerpositionen auf dem Spielfeld */
+.opponent-position-warning{
+  margin-top:8px;
+  padding:8px;
+  border:1px dashed #b7791f;
+  border-radius:12px;
+  background:rgba(120,80,20,.15)
+}
