@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.7 – Stability Fix
+- Freeze aus 1.6.6 behoben
+- Spielerindex und Gegnerbewertungen gecacht
+- Gegneranalyse wird lazy geladen
+
+
 ## 1.6.6 – Unified Lineup Intelligence
 - Einheitliche Coach-Skala für eigene und gegnerische Spieler
 - Aufstellungsumschalter Mein Team / Gegner

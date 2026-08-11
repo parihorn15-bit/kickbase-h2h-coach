@@ -1,0 +1,10 @@
+VERSION 1.6.7 – STABILITY & PERFORMANCE FIX
+
+- Behebt das Aufhängen der Seite aus Version 1.6.6.
+- Bundesliga-Spielerindex wird nur einmal aufgebaut und wiederverwendet.
+- Gegnerbewertungen werden pro Render-Durchlauf gecacht.
+- Die komplette Gegneranalyse wird nicht mehr beim Öffnen der Aufstellung berechnet.
+- Analyse wird erst beim tatsächlichen Öffnen des Analyse-Tabs geladen.
+- Team-Umschalter Mein Team / Gegner bleibt vollständig erhalten.
+- Einheitliche 0–100-Coach-Skala bleibt erhalten.
+- Keine neue Supabase-Migration erforderlich.
