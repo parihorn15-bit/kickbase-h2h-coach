@@ -1223,3 +1223,25 @@ input[list]:focus{border-color:#38bdf8;box-shadow:0 0 0 2px rgba(56,189,248,.12)
 .manager-lineup-main{grid-template-columns:45px minmax(0,1fr) auto}.manager-lineup-open{border:0;background:transparent;color:#fff;text-align:left;padding:0;min-width:0}.manager-lineup-open b,.manager-lineup-open small{display:block}.manager-lineup-open small{margin-top:3px;color:#8ca0b7;font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.manager-lineup-edit{border:0;background:transparent;color:#7dd3fc;font-size:8px;font-weight:900}
 @media(max-width:850px){.opponent-analysis-layout{grid-template-columns:1fr}.opponent-analysis-summary{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:650px){.opponent-roster-grid,.opponent-analysis-player-grid{grid-template-columns:1fr}.opponent-roster-player{grid-template-columns:1fr}.opponent-roster-picker-head{align-items:flex-start;flex-direction:column}.opponent-roster-picker-head small{text-align:left}.opponent-analysis-summary{grid-template-columns:1fr 1fr}}
+
+/* Version 1.6.6 – Unified Scoring & Lineup Switcher */
+.lineup-owner-switch{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  margin-bottom:12px;padding:11px 13px;border:1px solid #315471;border-radius:14px;
+  background:linear-gradient(135deg,#10243a,#0a1725)
+}
+.lineup-owner-switch label{display:flex;align-items:center;gap:10px}
+.lineup-owner-switch label>span{color:#b8c7d8;font-size:9px;font-weight:900;white-space:nowrap}
+.lineup-owner-switch select{min-width:280px}
+.lineup-owner-switch small{color:#8fa2b8;font-size:8px;text-align:right;line-height:1.4}
+.opponent-lineup-status{border-color:#315471}
+.opponent-football-pitch{background:linear-gradient(180deg,#174a31,#113c29)}
+.opponent-squad-player{cursor:pointer}
+.opponent-squad-player:hover{outline:1px solid #7dd3fc}
+.opponent-squad-player.bench-player{width:100%}
+@media(max-width:650px){
+  .lineup-owner-switch{align-items:stretch;flex-direction:column}
+  .lineup-owner-switch label{align-items:stretch;flex-direction:column;gap:5px}
+  .lineup-owner-switch select{width:100%;min-width:0}
+  .lineup-owner-switch small{text-align:left}
+}

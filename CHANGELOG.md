@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.6 – Unified Lineup Intelligence
+- Einheitliche Coach-Skala für eigene und gegnerische Spieler
+- Aufstellungsumschalter Mein Team / Gegner
+- Gegneraufstellung direkt auf Feld und Bank bearbeiten
+
+
 ## 1.6.3 – Player Autocomplete
 - Suchbare alphabetische Spielerauswahl
 - Automatische Vereinszuordnung

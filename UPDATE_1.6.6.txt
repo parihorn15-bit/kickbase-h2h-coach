@@ -1,0 +1,22 @@
+VERSION 1.6.6 – UNIFIED LINEUP INTELLIGENCE
+
+BEWERTUNGSLOGIK
+- Eigene und gegnerische Spieler verwenden jetzt dieselbe Coach-Formel und dieselbe 0–100-Skala.
+- Gegnerdaten werden nicht mehr durch ein starkes Matchup künstlich hochgerechnet.
+- Fehlende Ø-Punkte tragen 0 zum entsprechenden Faktor bei und senken die Confidence.
+- Fehlender Aufstellungsstatus senkt ebenfalls die Confidence.
+- Damit sind z. B. Musiala 75 und Olise 75 tatsächlich auf derselben Bewertungsbasis vergleichbar.
+- Persönliche Kalibrierung bleibt für dein Team aktiv; Gegner werden zum fairen Vergleich mit dem neutralen Basismodell bewertet.
+
+AUFSTELLUNG
+- Neuer Umschalter direkt oben in der Aufstellungsseite:
+  Mein Team oder jeder Gegner einzeln.
+- Gegner werden auf demselben Spielfeld-/Bank-Grundlayout angezeigt.
+- Gegnerkader entsteht aus erfassten Käufen abzüglich Verkäufen.
+- Spieler können direkt zwischen Startelf und Bank verschoben werden.
+- Formation wird automatisch erkannt, sobald Positionen und Elf vollständig passen.
+- Detailerfassung für Punkte, Formation und Notiz bleibt erreichbar.
+- Eigener Analyse-Tab für jeden Gegner.
+- Datenqualität und Confidence bleiben sichtbar.
+
+Keine neue Supabase-Migration erforderlich.
