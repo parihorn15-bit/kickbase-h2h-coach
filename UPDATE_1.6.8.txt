@@ -1,0 +1,11 @@
+VERSION 1.6.8 – OPPONENT LINEUP FREEZE FIX
+
+- Beim Wechsel auf einen Gegner werden keinerlei Coach-Scores mehr während des Seitenaufbaus berechnet.
+- Gegner-Aufstellungsseite rendert zunächst ausschließlich Kader, Feld, Bank und Formation.
+- Coach-Bewertungen werden nur im Analyse-Tab berechnet.
+- Gegnerkader wird pro Spieltag gecacht.
+- Beim normalen Seitenwechsel wird nicht mehr für jeden Gegner-Spieler die gesamte Bundesliga-Spielerliste durchsucht.
+- Team/Position werden erst bei Bedarf für Analyse/Details angereichert.
+- Ungültige gespeicherte Gegner-ID fällt sicher auf „Mein Team“ zurück.
+- Einheitliche Bewertungslogik aus 1.6.6 bleibt erhalten.
+- Keine neue Supabase-Migration erforderlich.

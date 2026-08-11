@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.8 – Opponent Lineup Freeze Fix
+- Keine Coach-Berechnung mehr beim Wechsel auf Gegner
+- Gegnerkader gecacht
+- Analyse ausschließlich lazy im Analyse-Tab
+
+
 ## 1.6.7 – Stability Fix
 - Freeze aus 1.6.6 behoben
 - Spielerindex und Gegnerbewertungen gecacht
