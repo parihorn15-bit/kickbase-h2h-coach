@@ -518,6 +518,7 @@ function coachAI(){
   return insights.slice(0,4);
 }
 function editingInProgress(){
+  if(window.h2hAiImportBusy)return true;
   return Boolean(document.querySelector(
     [
       '#modalArea .modal-backdrop',
@@ -919,7 +920,7 @@ const H2H_SCHEDULE=buildH2HSchedule();
 function managerById(id){return (data.leagueManagers||LEAGUE_MANAGERS).find(x=>x.id===id)||LEAGUE_MANAGERS.find(x=>x.id===id)}
 function managerLabel(id){const m=managerById(id);return m?`${m.team} (${m.manager})`:id}
 function otherManagerOptions(selected=''){return MANAGER_OPTIONS.map(m=>`<option value="${esc(m.team)}" ${selected===m.team?'selected':''}>${esc(m.team)} (${esc(m.manager)})</option>`).join('')}const DAILY_BONUSES=Array.from({length:10},(_,i)=>({label:`Tag ${i+1}`,amount:(i+1)*10000}));const ACHIEVEMENT_BONUSES=[{label:'Spieltagssieger',amount:1000000},{label:'Spieltagspunkte Silber (≥ 1.000)',amount:250000},{label:'Spieltagspunkte Gold (≥ 1.500)',amount:500000},{label:'Jahrhundertspiel (≥ 2.000)',amount:1000000},{label:'Topscorer (200 Punkte)',amount:100000},{label:'Matchwinner (300 Punkte)',amount:500000},{label:'Weltklasse (400 Punkte)',amount:1000000},{label:'Fußballgott (500 Punkte)',amount:2000000},{label:'MVP',amount:1000000},{label:'Tormaschine',amount:250000},{label:'Bronzenes Händchen (3 Mio. Gewinn)',amount:250000},{label:'Silbernes Händchen (5 Mio. Gewinn)',amount:500000},{label:'Goldenes Händchen (10 Mio. Gewinn)',amount:1000000},{label:'Königstransfer (25 Mio. Gewinn)',amount:2000000},{label:'Glückliches Händchen',amount:1000000},{label:'Meister',amount:2000000},{label:'Vizemeister',amount:1000000}];const SEEDED_DATA={"version":3,"settings":{"currentMd":1,"mode":"quick","startCapital":200000000,"homeBonus":1,"lineupSize":11},"players":[{"id":"4eb80f64-293c-4b3a-a93b-3989361b1027","name":"Axel Tape","team":"Bayer 04 Leverkusen","position":"Abwehr","buyDate":"2026-08-02","buyPrice":5071935,"marketAtBuy":0,"marketValue":4655501,"avgPoints":0,"note":""},{"id":"41172e46-cd74-405a-bf78-fa8884a27cac","name":"Robin Gosens","team":"FC Schalke 04","position":"Abwehr","buyDate":"2026-08-03","buyPrice":11445599,"marketAtBuy":0,"marketValue":11407285,"avgPoints":0,"note":"","soldDate":"2026-08-03","salePrice":11407285,"saleReason":"Sinkender Marktwert"},{"id":"016bc246-b164-4a17-a686-cd4a2e90c0d3","name":"Dominik Kohr","team":"1. FSV Mainz 05","position":"Abwehr","buyDate":"2026-08-03","buyPrice":6543210,"marketAtBuy":0,"marketValue":6627684,"avgPoints":0,"note":""},{"id":"6629cde9-bacc-4a2c-8cf1-d2bd98c55480","name":"Jovan Milosevic","team":"VfB Stuttgart","position":"Sturm","buyDate":"2026-08-03","buyPrice":4141414,"marketAtBuy":0,"marketValue":3539303,"avgPoints":0,"note":""}],"finances":[{"id":"start","date":"2026-08-01","type":"Startkapital","description":"Start ohne Kader","amount":200000000},{"id":"ac5941c7-600d-4b97-b27e-1af756a30baf","date":"2026-08-02","type":"Spielerkauf","description":"Kauf Axel Tape","amount":-5071935},{"id":"158bd348-1fc2-4dcd-85fe-0541c4901cfc","date":"2026-08-02","type":"Erfolgsbonus","description":"Kreisliga","amount":1000000},{"id":"466b9c05-c952-4ffa-802b-0861146ef671","date":"2026-08-02","type":"Erfolgsbonus","description":"Regionalliga","amount":1000000},{"id":"80b55a26-862c-4308-930c-2a0b0bac48af","date":"2026-08-02","type":"Erfolgsbonus","description":"Erster Deal","amount":100000},{"id":"ddee6a22-5c27-4387-baa0-caf7cdec2f05","date":"2026-08-03","type":"Tagesanmeldebonus","description":"Tag 1","amount":10000},{"id":"23eb8316-babe-4af3-bf4b-0921645d3098","date":"2026-08-04","type":"Tagesanmeldebonus","description":"Tag 2","amount":20000},{"id":"618181e0-a4f3-46a0-98af-eea7ba7d8d04","date":"2026-08-03","type":"Spielerkauf","description":"Kauf Robin Gosens","amount":-11445599},{"id":"4c3c279c-c039-4ecc-9b56-e105e858bbc1","date":"2026-08-03","type":"Spielerkauf","description":"Kauf Dominik Kohr","amount":-6543210},{"id":"b9c2a384-9ece-4b1f-a87b-4b00ae137cc4","date":"2026-08-03","type":"Spielerkauf","description":"Kauf Jovan Milosevic","amount":-4141414},{"id":"a511955c-44d8-46db-9b75-8fd010f78f26","date":"2026-08-03","type":"Spielerverkauf","description":"Verkauf Robin Gosens","amount":11407285}],"matchdays":[{"id":"6abff25d-b7c8-4738-80c1-fda4f34ebf2b","md":1,"mvp":"","points":{},"lineup":[],"soldPlayer":"","soldDate":"","soldPrice":0}],"opponents":[],"h2h":[],"teamStrength":{"1. FC Köln":5,"1. FC Union Berlin":5,"1. FSV Mainz 05":5,"Bayer 04 Leverkusen":5,"Borussia Dortmund":5,"Borussia Mönchengladbach":5,"Eintracht Frankfurt":5,"FC Augsburg":5,"FC Bayern München":5,"FC Schalke 04":5,"Hamburger SV":5,"RB Leipzig":5,"SC Paderborn 07":5,"SV Elversberg":5,"SV Werder Bremen":5,"Sport-Club Freiburg":5,"TSG Hoffenheim":5,"VfB Stuttgart":5}};const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));const id=()=>crypto.randomUUID?.()||Math.random().toString(36).slice(2);const FALLBACK_TEAMS=['1. FC Köln','1. FC Union Berlin','1. FSV Mainz 05','Bayer 04 Leverkusen','Borussia Dortmund','Borussia Mönchengladbach','Eintracht Frankfurt','FC Augsburg','FC Bayern München','FC Schalke 04','Hamburger SV','RB Leipzig','SC Paderborn 07','SV Elversberg','SV Werder Bremen','Sport-Club Freiburg','TSG Hoffenheim','VfB Stuttgart'];const TEAMS=[...new Set([...(Array.isArray(FIXTURES)?FIXTURES.flatMap(x=>[x.home,x.away]).filter(Boolean):[]),...FALLBACK_TEAMS])].sort((a,b)=>a.localeCompare(b,'de'));
-const defaults={version:45,teamStrengthDetails:{},teamStrengthCloudUpdatedAt:'',ui:{transferFilter:'all',transferSearch:'',leagueTab:'current',bundesligaTab:'matchups',bundesligaTeam:'Alle',bundesligaSearch:'',rulesSection:'overview',scoutPosition:'Alle',scoutTeam:'Alle',scoutSearch:''},settings:{currentMd:1,mode:'quick',startCapital:200000000,homeBonus:1,lineupSize:11},players:[],finances:[{id:'start',date:'2026-08-01',type:'Startkapital',description:'Start ohne Kader',amount:200000000}],matchdays:[],opponents:[],h2h:[],leagueManagers:LEAGUE_MANAGERS,leagueIntel:{managerData:{},reminderDismissed:{}},lineupIntel:{pending:[],lastImport:''},teamStrength:{...TEAM_STRENGTH_BASELINE}};
+const defaults={version:46,teamStrengthDetails:{},teamStrengthCloudUpdatedAt:'',ui:{transferFilter:'all',transferSearch:'',leagueTab:'current',bundesligaTab:'matchups',bundesligaTeam:'Alle',bundesligaSearch:'',rulesSection:'overview',scoutPosition:'Alle',scoutTeam:'Alle',scoutSearch:''},settings:{currentMd:1,mode:'quick',startCapital:200000000,homeBonus:1,lineupSize:11},players:[],finances:[{id:'start',date:'2026-08-01',type:'Startkapital',description:'Start ohne Kader',amount:200000000}],matchdays:[],opponents:[],h2h:[],leagueManagers:LEAGUE_MANAGERS,leagueIntel:{managerData:{},reminderDismissed:{}},lineupIntel:{pending:[],lastImport:''},teamStrength:{...TEAM_STRENGTH_BASELINE}};
 const KICKBASE_AI_ENDPOINT='https://amdtcadswtmgwdhytehe.supabase.co/functions/v1/kickbase-ai';
 let data=load(),page='dashboard';function mergeData(x){
   const source=x&&typeof x==='object'?x:{};
@@ -1120,6 +1121,7 @@ function init(){
 function render(){
   queueMicrotask(()=>restoreScreenshotImportUi());
   applyV200ScreenshotSeed();
+  applyV206LeagueSnapshot();
   resetOpponentAnalysisCache();
   resetOpponentRosterCache();document.body.classList.toggle('analysis',data.settings.mode==='analysis');if($('#currentMd'))$('#currentMd').value=data.settings.currentMd;$$('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===data.settings.mode));$$('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===page));const titles={dashboard:['Dashboard','Schnelle Entscheidungen und offene Aufgaben.'],squad:['Aufstellung','Deine Elf auf dem Spielfeld – ziehen oder antippen.'],scout:['Scout Center','Bundesligaspieler filtern und direkt zum Kauf vormerken.'],news:['News Intelligence','Offizielle Meldungen, gefiltert auf deine Kaderspieler.'],matchday:['Spieltag','Punkte, Bundesliga-MVP und Pflichtverkauf.'],bundesliga:['Bundesliga','Alle 34 Spieltage und die Matchups deines Kaders.'],transfers:['Transfers','Hier kaufst und verkaufst du Spieler. Der Kader aktualisiert sich automatisch.'],finances:['Finanzen','Startkapital, Boni und sämtliche Geldbewegungen.'],analysis:['H2H Intelligence','Was funktioniert bei deinen Transfers und Entscheidungen wirklich?'],lineupintel:['LigaInsider-Abgleich','Voraussichtliche Aufstellungen halbautomatisch prüfen und übernehmen.'],competition:['Liga','Dein aktuelles Duell, Spielplan und Tabelle.'],rules:['Regelwerk','Interaktive Regeln und dein aktueller Status.'],settings:['Einstellungen','Teamstärken, Matchups und Grundwerte.']};$('#pageTitle').textContent=titles[page][0];$('#pageSub').textContent=titles[page][1];try{
   const renderer=({dashboard,squad,scout,news,matchday,bundesliga,transfers,finances,analysis,lineupintel,competition,rules,settings}[page]);
@@ -2183,6 +2185,7 @@ function ensureLeagueIntel(){
 }
 const V200_SCREENSHOT_SEED={"Fäps Ham United":{"team":"Fäps Ham United","transfers":[{"type":"Kauf","player":"Eggestein","price":14999999},{"type":"Kauf","player":"Rieder","price":12888888},{"type":"Kauf","player":"Tapsoba","price":34999999},{"type":"Kauf","player":"Hendriks","price":12555555},{"type":"Kauf","player":"Gadou","price":24666666},{"type":"Kauf","player":"Marino","price":7899999},{"type":"Kauf","player":"Aouchiche","price":12399999},{"type":"Kauf","player":"Moreira","price":21999999},{"type":"Kauf","player":"Mwene","price":7899999},{"type":"Kauf","player":"Sticker","price":2199999},{"type":"Kauf","player":"van den Berg","price":3666666},{"type":"Kauf","player":"Backhaus","price":17888888},{"type":"Kauf","player":"Ibrahimović","price":6777777},{"type":"Verkauf","player":"Ibrahimović","price":6585689},{"type":"Verkauf","player":"van den Berg","price":3705134}],"lineup":[]},"Al Elshani":{"team":"Al Elshani","transfers":[{"type":"Kauf","player":"Musiala","price":36213452},{"type":"Kauf","player":"Baku","price":20612487},{"type":"Kauf","player":"Zieler","price":1835741},{"type":"Kauf","player":"Günther","price":7937315},{"type":"Kauf","player":"Lynen","price":7416099},{"type":"Kauf","player":"Schmahl","price":2546473},{"type":"Kauf","player":"Arévalo","price":3537247},{"type":"Kauf","player":"Katić","price":13532214},{"type":"Kauf","player":"Chuki","price":9936505},{"type":"Kauf","player":"Vermeeren","price":3641623},{"type":"Kauf","player":"Koch","price":24669518},{"type":"Kauf","player":"Porath","price":4649398},{"type":"Kauf","player":"Upamecano","price":34646680},{"type":"Kauf","player":"Damjanović","price":7658250},{"type":"Verkauf","player":"Damjanović","price":8347676},{"type":"Kauf","player":"Elfadli","price":3964212},{"type":"Verkauf","player":"Elfadli","price":4702842},{"type":"Kauf","player":"Ribeiro","price":5926876},{"type":"Verkauf","player":"Ribeiro","price":5646465},{"type":"Kauf","player":"Amoako","price":6201584},{"type":"Verkauf","player":"Amoako","price":6231729}],"lineup":["Musiala","Günther","Koch","Katić","Upamecano","Baku"]},"Calcio Rom FC":{"team":"Calcio Rom FC","transfers":[{"type":"Kauf","player":"Díaz","price":59888099},{"type":"Kauf","player":"Nmecha","price":29899999},{"type":"Kauf","player":"Querfeld","price":12864999},{"type":"Kauf","player":"Hashioka","price":6108899},{"type":"Kauf","player":"Muheim","price":9188089},{"type":"Kauf","player":"Gouweleeuw","price":11588889},{"type":"Kauf","player":"Friedl","price":11800089},{"type":"Kauf","player":"Claude-Maurice","price":12180009},{"type":"Kauf","player":"Becker","price":12380999},{"type":"Kauf","player":"Kabak","price":23108999},{"type":"Kauf","player":"Sander","price":10900089},{"type":"Kauf","player":"Noll","price":11278999},{"type":"Kauf","player":"Batshuayi","price":2111089},{"type":"Kauf","player":"Orban","price":31300089},{"type":"Verkauf","player":"Orban","price":30710853},{"type":"Kauf","player":"Schick","price":28969999},{"type":"Verkauf","player":"Schick","price":29026293},{"type":"Kauf","player":"Petersson","price":500009},{"type":"Verkauf","player":"Petersson","price":500000},{"type":"Kauf","player":"Baumann","price":19764849},{"type":"Verkauf","player":"Baumann","price":20010247},{"type":"Kauf","player":"Führich","price":25000000}],"lineup":["Díaz","Becker","Claude-Maurice","Sander","Nmecha","Führich","Friedl","Kabak","Querfeld"]},"Cello Football Club":{"team":"Cello Football Club","transfers":[{"type":"Kauf","player":"Bredlow","price":8375545},{"type":"Kauf","player":"Schlotterbeck","price":36124581},{"type":"Kauf","player":"Larsson","price":12184548},{"type":"Kauf","player":"Sakar","price":3385669},{"type":"Kauf","player":"Stiller","price":41822455},{"type":"Kauf","player":"Duric","price":5195558},{"type":"Kauf","player":"Thielmann","price":4945546},{"type":"Kauf","player":"Schnellbacher","price":2257115},{"type":"Kauf","player":"Maksimovic","price":4574558},{"type":"Kauf","player":"Palacios","price":26265455},{"type":"Kauf","player":"Collins","price":15855665},{"type":"Kauf","player":"Tiago Tomás","price":5784581},{"type":"Verkauf","player":"Tiago Tomás","price":5592722},{"type":"Kauf","player":"Maloney","price":3682258},{"type":"Verkauf","player":"Maloney","price":3143797},{"type":"Kauf","player":"Rosenfelder","price":5761584},{"type":"Verkauf","player":"Rosenfelder","price":4882932},{"type":"Kauf","player":"Banzuzi","price":3712455},{"type":"Verkauf","player":"Banzuzi","price":3657413},{"type":"Kauf","player":"Oermann","price":3215585},{"type":"Verkauf","player":"Oermann","price":4236377},{"type":"Kauf","player":"Ayhan","price":9045225},{"type":"Verkauf","player":"Ayhan","price":9384443},{"type":"Kauf","player":"Poreba","price":8052255},{"type":"Verkauf","player":"Poreba","price":8717610}],"lineup":["Bredlow","Schlotterbeck","Palacios","Larsson","Stiller"]},"Fapse FC":{"team":"Fapse FC","transfers":[{"type":"Kauf","player":"Mittelstädt","price":30500000},{"type":"Kauf","player":"Pavlović","price":34500000},{"type":"Kauf","player":"Karetsas","price":27500000},{"type":"Kauf","player":"Kleindienst","price":20030000},{"type":"Kauf","player":"Stöger","price":5000099},{"type":"Verkauf","player":"Stöger","price":5253555},{"type":"Kauf","player":"Sylla","price":7999999},{"type":"Verkauf","player":"Sylla","price":8400192},{"type":"Kauf","player":"Arthur","price":8777999},{"type":"Verkauf","player":"Arthur","price":6197946},{"type":"Kauf","player":"Ruoppi","price":5799999},{"type":"Verkauf","player":"Ruoppi","price":5924409},{"type":"Kauf","player":"Jatta","price":5099999},{"type":"Verkauf","player":"Jatta","price":5249276},{"type":"Kauf","player":"Arp/Hov","price":4999999},{"type":"Verkauf","player":"Arp/Hov","price":5230106},{"type":"Kauf","player":"Baack","price":5000999},{"type":"Verkauf","player":"Baack","price":5549790}],"lineup":["Karius","Svensson","Mittelstädt","Yilmaz","Mohya","Karetsas","Pavlović","Suzuki","Kemlein","Kleindienst"]}};
 
+const V206_SCREENSHOT_PATCH={"FÄPS HAM UNITED":{"team":"FÄPS HAM UNITED","lineup":["Moreira","Eggestein","Rieder","Aouchiche","Hendriks","Tapsoba","Gadou","Mwene","Backhaus"],"transfers":[]},"FAPSE FC":{"team":"FAPSE FC","lineup":["Karius","Svensson","Mittelstädt","Yilmaz","Mohya","Karetsas","Pavlović","Suzuki","Kemlein","Kleindienst"],"transfers":[{"type":"Kauf","player":"Svensson","price":19999999},{"type":"Kauf","player":"Mittelstädt","price":30500999},{"type":"Kauf","player":"Suzuki","price":12500000},{"type":"Kauf","player":"Pavlović","price":34500999},{"type":"Kauf","player":"Obermair","price":8666999},{"type":"Kauf","player":"Karetsas","price":27500000},{"type":"Kauf","player":"Karius","price":15555999},{"type":"Kauf","player":"Bøving","price":4099999},{"type":"Kauf","player":"Yilmaz","price":11750999},{"type":"Kauf","player":"Kemlein","price":7500000},{"type":"Kauf","player":"Kleindienst","price":20028034},{"type":"Kauf","player":"Hollerbach","price":4166666},{"type":"Kauf","player":"Džeko","price":7750000},{"type":"Kauf","player":"Mohya","price":10500000}]},"Horn Capital FC":{"team":"Horn Capital FC","lineup":["Kristof","Deman","Anton","Lienhart","Kohr","Götze","García","Beste","Olise","Erevbenagie","Conté"],"transfers":[{"type":"Kauf","player":"Schwolow","price":1000000},{"type":"Kauf","player":"Pruhs","price":600000},{"type":"Kauf","player":"Milosevic","price":4141414},{"type":"Kauf","player":"Gosens","price":11445599},{"type":"Verkauf","player":"Gosens","price":11407285},{"type":"Kauf","player":"Kohr","price":6543210},{"type":"Kauf","player":"Tape","price":5071935},{"type":"Kauf","player":"Kristof","price":12345678},{"type":"Kauf","player":"Götze","price":3222220},{"type":"Kauf","player":"Khedira","price":4455667},{"type":"Kauf","player":"Führich","price":26555555},{"type":"Kauf","player":"Labrović","price":3000000},{"type":"Kauf","player":"Conté","price":12345678},{"type":"Kauf","player":"Pfeiffer","price":5000000},{"type":"Verkauf","player":"Pfeiffer","price":5334535},{"type":"Verkauf","player":"Labrović","price":2698542},{"type":"Kauf","player":"Olise","price":69258147},{"type":"Kauf","player":"Burke","price":3566666},{"type":"Verkauf","player":"Khedira","price":4529355},{"type":"Verkauf","player":"Tape","price":5363338},{"type":"Kauf","player":"Beste","price":10700005},{"type":"Kauf","player":"García","price":44332211},{"type":"Verkauf","player":"Milosevic","price":5484262},{"type":"Kauf","player":"Erevbenagie","price":1899999},{"type":"Verkauf","player":"Burke","price":4451380},{"type":"Kauf","player":"Lienhart","price":13131313},{"type":"Kauf","player":"Pedersen","price":3888888},{"type":"Kauf","player":"Anton","price":38777999},{"type":"Kauf","player":"Deman","price":10777777},{"type":"Verkauf","player":"Führich","price":25000000}]}};
 function v200Norm(v){return String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim()}
 function v200ManagerId(team){const q=v200Norm(team);return MANAGER_OPTIONS.find(m=>[m.id,m.team,m.manager].map(v200Norm).some(x=>x===q||x.includes(q)||q.includes(x)))?.id||null}
 function applyV200ScreenshotSeed(){
@@ -2199,6 +2202,57 @@ function applyV200ScreenshotSeed(){
     if(seed.lineup?.length){const md=+data.settings.currentMd||1,r=managerMatchdayData(id,md);r.lineup=[...seed.lineup];r.bank=Array.isArray(r.bank)?r.bank:[]}
   });
   data.ui.v200ScreenshotSeedApplied=true;
+}
+
+
+function v206ManagerId(team){
+  const q=v200Norm(team);
+  return LEAGUE_MANAGERS.find(m=>[m.id,m.team,m.manager].map(v200Norm).some(x=>x===q||x.includes(q)||q.includes(x)))?.id||null;
+}
+function v206SeedRows(){
+  const merged={};
+  Object.values(V200_SCREENSHOT_SEED||{}).forEach(seed=>{merged[v200Norm(seed.team)]={team:seed.team,transfers:[...(seed.transfers||[])],lineup:[...(seed.lineup||[])]}});
+  Object.values(V206_SCREENSHOT_PATCH||{}).forEach(seed=>{
+    const key=v200Norm(seed.team);
+    if(!merged[key])merged[key]={team:seed.team,transfers:[],lineup:[]};
+    for(const t of seed.transfers||[]){
+      const found=merged[key].transfers.find(x=>x.type===t.type&&normalizePlayerName(x.player)===normalizePlayerName(t.player)&&Number(x.price||0)===Number(t.price||0));
+      if(!found)merged[key].transfers.push(t);
+    }
+    if(seed.lineup?.length)merged[key].lineup=[...seed.lineup];
+  });
+  return Object.values(merged);
+}
+function applyV206LeagueSnapshot(){
+  data.ui=data.ui||{};
+  const rows=v206SeedRows();
+  const expected={fabi:15,elias:21,manu:22,marci:25,fabio:30,me:30};
+  const incomplete=Object.entries(expected).some(([id,min])=>(data.leagueIntel?.managerData?.[id]?.transfers||[]).length<min);
+  if(data.ui.v206LeagueSnapshotApplied&&!incomplete)return;
+
+  rows.forEach(seed=>{
+    const id=v206ManagerId(seed.team); if(!id)return;
+    const row=managerLeagueData(id); row.transfers=Array.isArray(row.transfers)?row.transfers:[];
+    for(const incoming of seed.transfers||[]){
+      const same=row.transfers.filter(t=>t.type===incoming.type&&normalizePlayerName(t.player)===normalizePlayerName(incoming.player));
+      const exact=same.find(t=>Number(t.price||0)===Number(incoming.price||0));
+      if(exact){exact.source=exact.source||'Screenshot Liga-Snapshot 2.0.6';continue}
+      if(same.length===1&&same[0].source?.includes('Screenshot')){
+        same[0].price=Number(incoming.price||0);same[0].player=incoming.player;same[0].source='Screenshot Liga-Snapshot 2.0.6';
+      }else{
+        row.transfers.push({id:`v206-${id}-${Math.random().toString(36).slice(2)}`,type:incoming.type,md:+data.settings.currentMd||1,player:incoming.player,club:findSelectablePlayerByName(incoming.player)?.team||'',price:Number(incoming.price||0),date:'',note:'Aus bereits bereitgestelltem Kickbase-Screenshot',source:'Screenshot Liga-Snapshot 2.0.6'});
+      }
+    }
+    if(seed.lineup?.length){
+      const md=+data.settings.currentMd||1, m=managerMatchdayData(id,md);
+      m.lineup=[...seed.lineup];m.bank=Array.isArray(m.bank)?m.bank:[];
+      m.note=[m.note,'Aufstellung aus Liga-Screenshot 2.0.6'].filter(Boolean).join(' · ');
+    }
+  });
+  data.ui.v206LeagueSnapshotApplied=true;
+  localStorage.setItem('kickbaseCoachV07',JSON.stringify(data));
+  clearTimeout(window.__v206SeedSaveTimer);
+  window.__v206SeedSaveTimer=setTimeout(()=>{localStorage.setItem('kickbaseCoachV07',JSON.stringify(data));if(window.cloudQueueSave)window.cloudQueueSave();},2200);
 }
 
 function managerLeagueData(managerId){
@@ -2613,7 +2667,7 @@ function competition(){
   const content=tab==='schedule'?scheduleContent:tab==='teams'?tableContent:tab==='managers'?managerContent:tab==='timeline'?timelineContent:currentContent;
   return `<div class="league-redesign">
     <section class="card screenshot-import-card">
-      <div class="screenshot-import-copy"><span class="eyebrow">KICKBASE 2.0.5</span><h3>AI Screenshot Import · Abgleich & Übernahme</h3><p>Wähle einen oder mehrere Kickbase-Screenshots. Sie werden zunächst nur analysiert und als Vorschau angezeigt.</p></div>
+      <div class="screenshot-import-copy"><span class="eyebrow">KICKBASE 2.0.6</span><h3>AI Screenshot Import · Diagnose & Übernahme</h3><p>Wähle einen oder mehrere Kickbase-Screenshots. Sie werden zunächst nur analysiert und als Vorschau angezeigt.</p></div>
       <div class="screenshot-import-actions"><label class="btn secondary">Screenshots auswählen<input id="screenshotImportFiles" type="file" accept="image/*" multiple hidden></label><button type="button" class="btn" id="analyzeScreenshotFiles">Mit AI analysieren</button></div>
       <div id="screenshotImportStatus" class="screenshot-import-status">Noch keine Screenshots ausgewählt.</div>
       <div id="screenshotImportResult" class="screenshot-import-result"></div>
@@ -3090,6 +3144,8 @@ function deferredFilterUpdate({key,value,inputId,delay=320}){
 let screenshotImportSelection=[];
 let screenshotImportDraft={images:[],names:[]};
 let screenshotImportReview=null;
+let screenshotImportLastResult=null;
+let screenshotImportStatusText='';
 
 function restoreScreenshotImportUi(){
   const status=$('#screenshotImportStatus');
@@ -3105,7 +3161,9 @@ function restoreScreenshotImportUi(){
     result.innerHTML='<div class="screenshot-selection-ok">✓ Auswahl gespeichert – Cloud-Updates können sie nicht mehr verwerfen.</div>';
   }
   if(btn)btn.disabled=n===0;
+  if(screenshotImportLastResult&&targetIsLeagueImportVisible())renderScreenshotAiResult(screenshotImportLastResult);
 }
+function targetIsLeagueImportVisible(){return Boolean($('#screenshotImportResult'))}
 
 function fileToDataUrl(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result||''));r.onerror=()=>reject(r.error||new Error('Datei konnte nicht gelesen werden'));r.readAsDataURL(file)})}
 function aiKey(t){return `${normalizePlayerName(t.player||'')}|${String(t.type||'').toLowerCase()}`}
@@ -3116,13 +3174,13 @@ function renderScreenshotAiResult(result){
  const label=x=>x==='new'?'NEU':x==='update'?'ÄNDERN':x==='unchanged'?'UNVERÄNDERT':'PRÜFEN';
  target.innerHTML=`<div class="screenshot-result-head"><div><span>AI-ABGLEICH</span><h4>${esc(d.manager||'Manager nicht erkannt')}</h4></div><strong>${r.items.length} Transfers</strong></div>${!managerId?'<div class="ai-warning">Manager nicht eindeutig zugeordnet.</div>':''}<div class="screenshot-result-list">${r.items.map(x=>`<article class="ai-review-row"><label><input type="checkbox" data-ai="${x.id}" ${x.selected?'checked':''} ${x.action==='unchanged'?'disabled':''}></label><div><b>${esc(x.t.player||'Unbekannt')}</b><small>${esc(x.t.type||'')}</small></div><div>${Number.isFinite(Number(x.t.price))?money(Number(x.t.price)):'–'}</div><div class="ai-tag ${x.action}">${label(x.action)}</div><div>${Math.round((Number(x.t.confidence)||0)*100)}%</div></article>`).join('')}</div>${r.lineup.length?`<label class="ai-lineup"><input id="aiLineup" type="checkbox"> Erkannte Aufstellung übernehmen (${r.lineup.length})</label>`:''}<div class="ai-actions"><button class="btn" id="aiCommit" ${!managerId?'disabled':''}>Ausgewählte Änderungen übernehmen</button><button class="btn secondary" id="aiDiscard">Verwerfen</button></div><div class="screenshot-result-foot">Erst nach Bestätigung wird gespeichert.</div>`;
  $$('[data-ai]').forEach(c=>c.onchange=()=>{const x=r.items.find(i=>i.id===c.dataset.ai);if(x)x.selected=c.checked});
- if($('#aiCommit'))$('#aiCommit').onclick=commitAiReview;if($('#aiDiscard'))$('#aiDiscard').onclick=()=>{screenshotImportReview=null;target.innerHTML=''};
+ if($('#aiCommit'))$('#aiCommit').onclick=commitAiReview;if($('#aiDiscard'))$('#aiDiscard').onclick=()=>{screenshotImportReview=null;screenshotImportLastResult=null;screenshotImportDraft={images:[],names:[]};screenshotImportSelection=[];window.h2hAiImportBusy=false;target.innerHTML='';restoreScreenshotImportUi()};
 }
 function commitAiReview(){
  const r=screenshotImportReview;if(!r?.managerId)return;const row=managerLeagueData(r.managerId);row.transfers=Array.isArray(row.transfers)?row.transfers:[];let add=0,upd=0;
  r.items.forEach(x=>{if(!x.selected)return;const t=x.t;if(x.action==='update'&&x.candidateId){const old=row.transfers.find(v=>v.id===x.candidateId);if(old){old.player=t.player||old.player;old.price=Number(t.price)||old.price;old.source='AI Screenshot Import';upd++;return}}row.transfers.push({id:`ai-${Date.now()}-${Math.random().toString(36).slice(2)}`,type:t.type||'Kauf',md:+data.settings.currentMd||1,player:t.player||'',club:findSelectablePlayerByName(t.player)?.team||'',price:Number(t.price)||0,date:'',note:t.counterparty?`Screenshot: ${t.counterparty}`:'AI Screenshot Import',source:'AI Screenshot Import'});add++});
  if($('#aiLineup')?.checked&&r.lineup.length){const m=managerMatchdayData(r.managerId,+data.settings.currentMd||1);m.lineup=[...r.lineup];m.bank=Array.isArray(m.bank)?m.bank:[]}
- save();screenshotImportReview=null;screenshotImportDraft={images:[],names:[]};screenshotImportSelection=[];toast(`${add} neu · ${upd} aktualisiert`);render();
+ save();screenshotImportReview=null;screenshotImportLastResult=null;screenshotImportDraft={images:[],names:[]};screenshotImportSelection=[];window.h2hAiImportBusy=false;toast(`${add} neu · ${upd} aktualisiert`);render();
 }
 async function analyzeSelectedScreenshots(){
   const status=$('#screenshotImportStatus'),btn=$('#analyzeScreenshotFiles');
@@ -3139,18 +3197,22 @@ async function analyzeSelectedScreenshots(){
     if(btn){btn.disabled=true;btn.textContent='Analysiere…'}
     if(status)status.textContent=`${images.length} Screenshot${images.length===1?'':'s'} werden an die AI gesendet…`;
     const managerHint=data.ui?.leagueManager?(managerById(data.ui.leagueManager)?.team||''):'';
-    const res=await fetch(KICKBASE_AI_ENDPOINT,{
+    screenshotImportStatusText='Supabase/OpenAI wird aufgerufen…';
+    if(status)status.textContent=screenshotImportStatusText;
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),45000);
+    const res=await fetch(KICKBASE_AI_ENDPOINT,{signal:controller.signal,
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({images,managerHint})
     });
-    const result=await res.json().catch(()=>({}));
+    clearTimeout(timer);const result=await res.json().catch(()=>({}));
     if(!res.ok)throw new Error(result?.details||result?.message||result?.error||`HTTP ${res.status}`);
-    renderScreenshotAiResult(result);
+    screenshotImportLastResult=result;renderScreenshotAiResult(result);
     if(status)status.textContent='Analyse abgeschlossen. Bitte Ergebnis prüfen.';
   }catch(e){
     console.error(e);
-    if(status)status.textContent=`Analyse fehlgeschlagen: ${e?.message||String(e)}`
+    screenshotImportStatusText=`Analyse fehlgeschlagen: ${e?.name==='AbortError'?'Zeitüberschreitung nach 45 Sekunden':(e?.message||String(e))}`;if(status)status.textContent=screenshotImportStatusText
   }finally{
     if(btn){btn.disabled=false;btn.textContent='Mit AI analysieren'}
   }
@@ -3175,7 +3237,7 @@ if($('#screenshotImportFiles')){
     try{
       const images=[];
       for(const f of files)images.push(await fileToDataUrl(f));
-      screenshotImportDraft={images,names:files.map(f=>f.name)};
+      screenshotImportDraft={images,names:files.map(f=>f.name)};window.h2hAiImportBusy=true;
       screenshotImportSelection=files;
       if(result)result.innerHTML='<div class="screenshot-selection-ok">✓ Auswahl gespeichert – bereit zur AI-Analyse.</div>';
       restoreScreenshotImportUi();

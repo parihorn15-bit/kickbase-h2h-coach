@@ -1,0 +1,11 @@
+VERSION 2.0.6 – LIGA SNAPSHOT & AI DIAGNOSE
+
+- Bereits bereitgestellte Liga-Screenshots werden mit einer neuen 2.0.6-Migration erneut und dauerhaft eingespielt.
+- Gegnertransfers und sichtbare Gegneraufstellungen werden ergänzt.
+- Horn Capital FC erhält zusätzlich einen Snapshot der bereits sichtbaren Transferhistorie und 11/11-Aufstellung als Liga-Referenz.
+- Migration wird nach der initialen Cloud-Synchronisierung erneut gespeichert, damit die Cloud sie nicht wieder überschreibt.
+- AI-Import schützt sich während Auswahl/Analyse/Review vor Cloud-bedingten Rerenders.
+- AI-Ergebnis bleibt bei UI-Rerenders erhalten.
+- 45-Sekunden-Timeout und sichtbare Fehlermeldungen statt stillem 'nichts passiert'.
+- NEU / ÄNDERN / UNVERÄNDERT / PRÜFEN und explizite Übernahme bleiben erhalten.
+- Keine neue Supabase-Migration erforderlich.
