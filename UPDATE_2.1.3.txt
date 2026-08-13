@@ -1,0 +1,23 @@
+VERSION 2.1.3 – SMART TRANSFER MATCHING
+
+BESTANDSABGLEICH
+- AI-Transfers werden mit bereits manuell und automatisch erfassten Transfers verglichen.
+- Vergleich berücksichtigt Spieler, Kauf/Verkauf, Preis und – soweit verfügbar – Transferdatum.
+- Exakte Treffer werden als UNVERÄNDERT markiert.
+- Wahrscheinlich gleiche Transfers werden als ÄNDERN angeboten statt doppelt angelegt.
+- Ähnliche, aber nicht eindeutige Treffer werden als PRÜFEN markiert.
+
+VEREINE
+- Vereinszuordnung zuerst über exakten Bundesliga-Spielernamen.
+- Danach vorsichtiger Fallback über eindeutigen Nachnamen/normalisierte Namensbestandteile.
+- Bereits vorhandene Transfers ohne Verein werden einmalig nachträglich ergänzt.
+- Wenn keine sichere Zuordnung möglich ist, bleibt „Verein unbekannt“ sichtbar statt einen Verein zu erfinden.
+
+TRANSFERDATUM
+- Bei tagesaktuellen Screenshots werden relative Kickbase-Angaben wie „vor 2 Std.“, „gestern“ oder „vor 3 Tagen“ in ein konkretes Datum umgerechnet.
+- Als Referenz dient der Aufnahme-/Dateizeitpunkt des ausgewählten Screenshots.
+- Das Datum wird nur automatisch gesetzt, wenn der Screenshot als tagesaktuell erkannt wird.
+- Bei unsicherer Zeitangabe bleibt das Datum offen statt geraten zu werden.
+
+- Transfer Single Source aus 2.1.2 bleibt vollständig erhalten.
+- Keine neue Supabase-Migration erforderlich.

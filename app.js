@@ -920,7 +920,7 @@ const H2H_SCHEDULE=buildH2HSchedule();
 function managerById(id){return (data.leagueManagers||LEAGUE_MANAGERS).find(x=>x.id===id)||LEAGUE_MANAGERS.find(x=>x.id===id)}
 function managerLabel(id){const m=managerById(id);return m?`${m.team} (${m.manager})`:id}
 function otherManagerOptions(selected=''){return MANAGER_OPTIONS.map(m=>`<option value="${esc(m.team)}" ${selected===m.team?'selected':''}>${esc(m.team)} (${esc(m.manager)})</option>`).join('')}const DAILY_BONUSES=Array.from({length:10},(_,i)=>({label:`Tag ${i+1}`,amount:(i+1)*10000}));const ACHIEVEMENT_BONUSES=[{label:'Spieltagssieger',amount:1000000},{label:'Spieltagspunkte Silber (≥ 1.000)',amount:250000},{label:'Spieltagspunkte Gold (≥ 1.500)',amount:500000},{label:'Jahrhundertspiel (≥ 2.000)',amount:1000000},{label:'Topscorer (200 Punkte)',amount:100000},{label:'Matchwinner (300 Punkte)',amount:500000},{label:'Weltklasse (400 Punkte)',amount:1000000},{label:'Fußballgott (500 Punkte)',amount:2000000},{label:'MVP',amount:1000000},{label:'Tormaschine',amount:250000},{label:'Bronzenes Händchen (3 Mio. Gewinn)',amount:250000},{label:'Silbernes Händchen (5 Mio. Gewinn)',amount:500000},{label:'Goldenes Händchen (10 Mio. Gewinn)',amount:1000000},{label:'Königstransfer (25 Mio. Gewinn)',amount:2000000},{label:'Glückliches Händchen',amount:1000000},{label:'Meister',amount:2000000},{label:'Vizemeister',amount:1000000}];const SEEDED_DATA={"version":3,"settings":{"currentMd":1,"mode":"quick","startCapital":200000000,"homeBonus":1,"lineupSize":11},"players":[{"id":"4eb80f64-293c-4b3a-a93b-3989361b1027","name":"Axel Tape","team":"Bayer 04 Leverkusen","position":"Abwehr","buyDate":"2026-08-02","buyPrice":5071935,"marketAtBuy":0,"marketValue":4655501,"avgPoints":0,"note":""},{"id":"41172e46-cd74-405a-bf78-fa8884a27cac","name":"Robin Gosens","team":"FC Schalke 04","position":"Abwehr","buyDate":"2026-08-03","buyPrice":11445599,"marketAtBuy":0,"marketValue":11407285,"avgPoints":0,"note":"","soldDate":"2026-08-03","salePrice":11407285,"saleReason":"Sinkender Marktwert"},{"id":"016bc246-b164-4a17-a686-cd4a2e90c0d3","name":"Dominik Kohr","team":"1. FSV Mainz 05","position":"Abwehr","buyDate":"2026-08-03","buyPrice":6543210,"marketAtBuy":0,"marketValue":6627684,"avgPoints":0,"note":""},{"id":"6629cde9-bacc-4a2c-8cf1-d2bd98c55480","name":"Jovan Milosevic","team":"VfB Stuttgart","position":"Sturm","buyDate":"2026-08-03","buyPrice":4141414,"marketAtBuy":0,"marketValue":3539303,"avgPoints":0,"note":""}],"finances":[{"id":"start","date":"2026-08-01","type":"Startkapital","description":"Start ohne Kader","amount":200000000},{"id":"ac5941c7-600d-4b97-b27e-1af756a30baf","date":"2026-08-02","type":"Spielerkauf","description":"Kauf Axel Tape","amount":-5071935},{"id":"158bd348-1fc2-4dcd-85fe-0541c4901cfc","date":"2026-08-02","type":"Erfolgsbonus","description":"Kreisliga","amount":1000000},{"id":"466b9c05-c952-4ffa-802b-0861146ef671","date":"2026-08-02","type":"Erfolgsbonus","description":"Regionalliga","amount":1000000},{"id":"80b55a26-862c-4308-930c-2a0b0bac48af","date":"2026-08-02","type":"Erfolgsbonus","description":"Erster Deal","amount":100000},{"id":"ddee6a22-5c27-4387-baa0-caf7cdec2f05","date":"2026-08-03","type":"Tagesanmeldebonus","description":"Tag 1","amount":10000},{"id":"23eb8316-babe-4af3-bf4b-0921645d3098","date":"2026-08-04","type":"Tagesanmeldebonus","description":"Tag 2","amount":20000},{"id":"618181e0-a4f3-46a0-98af-eea7ba7d8d04","date":"2026-08-03","type":"Spielerkauf","description":"Kauf Robin Gosens","amount":-11445599},{"id":"4c3c279c-c039-4ecc-9b56-e105e858bbc1","date":"2026-08-03","type":"Spielerkauf","description":"Kauf Dominik Kohr","amount":-6543210},{"id":"b9c2a384-9ece-4b1f-a87b-4b00ae137cc4","date":"2026-08-03","type":"Spielerkauf","description":"Kauf Jovan Milosevic","amount":-4141414},{"id":"a511955c-44d8-46db-9b75-8fd010f78f26","date":"2026-08-03","type":"Spielerverkauf","description":"Verkauf Robin Gosens","amount":11407285}],"matchdays":[{"id":"6abff25d-b7c8-4738-80c1-fda4f34ebf2b","md":1,"mvp":"","points":{},"lineup":[],"soldPlayer":"","soldDate":"","soldPrice":0}],"opponents":[],"h2h":[],"teamStrength":{"1. FC Köln":5,"1. FC Union Berlin":5,"1. FSV Mainz 05":5,"Bayer 04 Leverkusen":5,"Borussia Dortmund":5,"Borussia Mönchengladbach":5,"Eintracht Frankfurt":5,"FC Augsburg":5,"FC Bayern München":5,"FC Schalke 04":5,"Hamburger SV":5,"RB Leipzig":5,"SC Paderborn 07":5,"SV Elversberg":5,"SV Werder Bremen":5,"Sport-Club Freiburg":5,"TSG Hoffenheim":5,"VfB Stuttgart":5}};const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));const id=()=>crypto.randomUUID?.()||Math.random().toString(36).slice(2);const FALLBACK_TEAMS=['1. FC Köln','1. FC Union Berlin','1. FSV Mainz 05','Bayer 04 Leverkusen','Borussia Dortmund','Borussia Mönchengladbach','Eintracht Frankfurt','FC Augsburg','FC Bayern München','FC Schalke 04','Hamburger SV','RB Leipzig','SC Paderborn 07','SV Elversberg','SV Werder Bremen','Sport-Club Freiburg','TSG Hoffenheim','VfB Stuttgart'];const TEAMS=[...new Set([...(Array.isArray(FIXTURES)?FIXTURES.flatMap(x=>[x.home,x.away]).filter(Boolean):[]),...FALLBACK_TEAMS])].sort((a,b)=>a.localeCompare(b,'de'));
-const defaults={version:52,teamStrengthDetails:{},teamStrengthCloudUpdatedAt:'',ui:{transferFilter:'all',transferSearch:'',leagueTab:'current',bundesligaTab:'matchups',bundesligaTeam:'Alle',bundesligaSearch:'',rulesSection:'overview',scoutPosition:'Alle',scoutTeam:'Alle',scoutSearch:''},settings:{currentMd:1,mode:'quick',startCapital:200000000,homeBonus:1,lineupSize:11},players:[],finances:[{id:'start',date:'2026-08-01',type:'Startkapital',description:'Start ohne Kader',amount:200000000}],matchdays:[],opponents:[],h2h:[],leagueManagers:LEAGUE_MANAGERS,leagueIntel:{managerData:{},reminderDismissed:{}},lineupIntel:{pending:[],lastImport:''},teamStrength:{...TEAM_STRENGTH_BASELINE}};
+const defaults={version:53,teamStrengthDetails:{},teamStrengthCloudUpdatedAt:'',ui:{transferFilter:'all',transferSearch:'',leagueTab:'current',bundesligaTab:'matchups',bundesligaTeam:'Alle',bundesligaSearch:'',rulesSection:'overview',scoutPosition:'Alle',scoutTeam:'Alle',scoutSearch:''},settings:{currentMd:1,mode:'quick',startCapital:200000000,homeBonus:1,lineupSize:11},players:[],finances:[{id:'start',date:'2026-08-01',type:'Startkapital',description:'Start ohne Kader',amount:200000000}],matchdays:[],opponents:[],h2h:[],leagueManagers:LEAGUE_MANAGERS,leagueIntel:{managerData:{},reminderDismissed:{}},lineupIntel:{pending:[],lastImport:''},teamStrength:{...TEAM_STRENGTH_BASELINE}};
 const KICKBASE_AI_ENDPOINT='https://amdtcadswtmgwdhytehe.supabase.co/functions/v1/kickbase-ai';
 let data=load(),page='dashboard';function mergeData(x){
   const source=x&&typeof x==='object'?x:{};
@@ -1119,6 +1119,23 @@ function init(){
   render();
 }
 
+
+function applyV213SmartTransferMigration(){
+  data.ui=data.ui||{};
+  if(data.ui.v213SmartTransferApplied)return;
+  backfillTransferClubs();
+  syncTransferSingleSource();
+  data.ui.v213SmartTransferApplied=true;
+  localStorage.setItem('kickbaseCoachV07',JSON.stringify(data));
+  clearTimeout(window.__v213SaveTimer);
+  window.__v213SaveTimer=setTimeout(()=>{
+    backfillTransferClubs();
+    syncTransferSingleSource();
+    localStorage.setItem('kickbaseCoachV07',JSON.stringify(data));
+    if(window.cloudQueueSave)window.cloudQueueSave();
+  },1800);
+}
+
 function applyV212TransferSingleSourceMigration(){
   data.ui=data.ui||{};
   if(data.ui.v212TransferSingleSourceApplied)return;
@@ -1135,6 +1152,7 @@ function applyV212TransferSingleSourceMigration(){
 
 function render(){
   applyV212TransferSingleSourceMigration();
+  applyV213SmartTransferMigration();
   queueMicrotask(()=>restoreScreenshotImportUi());
   applyV200ScreenshotSeed();
   applyV206LeagueSnapshot();
@@ -2809,7 +2827,7 @@ function competition(){
                 .map(t=>`<article>
                   <span>${t.type==='Kauf'?'🟢':'🔴'}</span>
                   <button class="manager-transfer-main" data-edit-opponent-transfer="${selectedManager}|${t.id}">
-                    <b>${esc(t.player)}</b><small>${t.type} · ST ${t.md||'–'} · ${esc(t.club||'Verein unbekannt')} · ${t.price?euro(t.price):'Preis offen'}${t.date?` · ${new Date(t.date).toLocaleDateString('de-DE')}`:''}</small>
+                    <b>${esc(t.player)}</b><small>${t.type} · ST ${t.md||'–'} · ${esc(t.club||resolvePlayerClubSmart(t.player).club||'Verein unbekannt')} · ${t.price?euro(t.price):'Preis offen'}${t.date?` · ${new Date(t.date).toLocaleDateString('de-DE')}`:''}</small>
                   </button>
                   <button data-delete-opponent-transfer="${selectedManager}|${t.id}" title="Transfer löschen">×</button>
                 </article>`).join('')
@@ -2831,7 +2849,7 @@ function competition(){
   const content=tab==='schedule'?scheduleContent:tab==='teams'?tableContent:tab==='managers'?managerContent:tab==='timeline'?timelineContent:currentContent;
   return `<div class="league-redesign">
     <section class="card screenshot-import-card">
-      <div class="screenshot-import-copy"><span class="eyebrow">KICKBASE 2.1.2</span><h3>AI Screenshot Import · 2.1.2</h3><p>Screenshot → Transferhistorie → aktueller Kader → Aufstellungsseite. Nach deiner Bestätigung werden Käufe und Verkäufe beim gewählten Manager sichtbar und wirken direkt auf dessen Kader.</p></div>
+      <div class="screenshot-import-copy"><span class="eyebrow">KICKBASE 2.1.3</span><h3>AI Screenshot Import · 2.1.3</h3><p>Screenshot → intelligenter Bestandsabgleich → Transferhistorie → aktueller Kader → Aufstellungsseite. Verein und – bei tagesaktuellem Screenshot – Transferdatum werden automatisch ergänzt.</p></div>
       <div class="screenshot-import-actions"><label class="btn secondary">Screenshots auswählen<input id="screenshotImportFiles" type="file" accept="image/*" multiple hidden></label><button type="button" class="btn" id="analyzeScreenshotFiles">Mit AI analysieren</button></div>
       <div id="screenshotImportStatus" class="screenshot-import-status">Noch keine Screenshots ausgewählt.</div><div class="ai-import-receipt">${data.ui?.lastAiImport?`Letzter Import: ${esc(managerById(data.ui.lastAiImport.managerId)?.team||data.ui.lastAiImport.managerId)} · ${data.ui.lastAiImport.added} neu · ${data.ui.lastAiImport.updated} geändert · ${data.ui.lastAiImport.beforeCount} → ${data.ui.lastAiImport.afterCount} Transfers · ${data.ui.lastAiImport.rosterAfter??'–'} im aktuellen Kader`:''}</div>
       <div id="aiUsageBox" class="ai-usage-box"></div><div id="screenshotImportResult" class="screenshot-import-result"></div>
@@ -3306,7 +3324,7 @@ function deferredFilterUpdate({key,value,inputId,delay=320}){
 
 
 let screenshotImportSelection=[];
-let screenshotImportDraft={images:[],names:[]};
+let screenshotImportDraft={images:[],names:[],referenceAt:null,referenceTrusted:false};
 let screenshotImportReview=null;
 let screenshotImportLastResult=null;
 let aiUsageSession={calls:0,screenshots:0,inputTokens:0,outputTokens:0,totalTokens:0,estimatedCost:0};
@@ -3346,13 +3364,188 @@ function restoreScreenshotImportUi(){
 function targetIsLeagueImportVisible(){return Boolean($('#screenshotImportResult'))}
 
 function fileToDataUrl(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result||''));r.onerror=()=>reject(r.error||new Error('Datei konnte nicht gelesen werden'));r.readAsDataURL(file)})}
+
+function localIsoDateFromDate(date){
+  const d=new Date(date);
+  if(Number.isNaN(d.getTime()))return '';
+  const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function screenshotReferenceInfo(){
+  const raw=screenshotImportDraft.referenceAt;
+  const ref=raw?new Date(raw):new Date();
+  const now=new Date();
+  const trusted=Boolean(
+    screenshotImportDraft.referenceTrusted &&
+    localIsoDateFromDate(ref)===localIsoDateFromDate(now)
+  );
+  return {ref,trusted};
+}
+function deriveTransferDate(relativeTime){
+  const text=String(relativeTime||'').trim().toLowerCase();
+  if(!text)return {date:'',confidence:0,note:'Keine Zeitangabe erkannt'};
+  const {ref,trusted}=screenshotReferenceInfo();
+  if(!trusted)return {date:'',confidence:.25,note:'Screenshot-Aufnahmedatum nicht als tagesaktuell bestätigt'};
+
+  let d=new Date(ref);
+  const num=(pattern)=>{const m=text.match(pattern);return m?Number(String(m[1]).replace(',','.')):null};
+
+  if(text==='heute'||text.includes('gerade eben')||text.includes('wenigen sek')||text.includes('sekunde')){
+    return {date:localIsoDateFromDate(d),confidence:.98,note:'aus tagesaktuellem Screenshot'};
+  }
+  if(text==='gestern'){
+    d.setDate(d.getDate()-1);
+    return {date:localIsoDateFromDate(d),confidence:.98,note:'aus „gestern“'};
+  }
+
+  let n=num(/vor\s+(\d+(?:[.,]\d+)?)\s*(?:min|minuten?)/);
+  if(n!==null){
+    d=new Date(d.getTime()-n*60*1000);
+    return {date:localIsoDateFromDate(d),confidence:.92,note:'aus relativer Minutenangabe'};
+  }
+  n=num(/vor\s+(\d+(?:[.,]\d+)?)\s*(?:std|stunden?|h)\b/);
+  if(n!==null){
+    d=new Date(d.getTime()-n*60*60*1000);
+    return {date:localIsoDateFromDate(d),confidence:n<20?.9:.72,note:n<20?'aus relativer Stundenangabe':'Tagesgrenze kann je nach Aufnahmezeit knapp sein'};
+  }
+  n=num(/vor\s+(\d+(?:[.,]\d+)?)\s*(?:tag|tage|tagen)\b/);
+  if(n!==null){
+    d.setDate(d.getDate()-Math.round(n));
+    return {date:localIsoDateFromDate(d),confidence:.96,note:'aus relativer Tagesangabe'};
+  }
+  n=num(/vor\s+(\d+(?:[.,]\d+)?)\s*(?:woche|wochen)\b/);
+  if(n!==null){
+    d.setDate(d.getDate()-Math.round(n*7));
+    return {date:localIsoDateFromDate(d),confidence:.9,note:'aus relativer Wochenangabe'};
+  }
+
+  return {date:'',confidence:.35,note:`Zeitangabe nicht sicher umrechenbar: ${relativeTime}`};
+}
+function normalizedNameParts(name){
+  return normalizePlayerName(name).split(/\s+/).filter(Boolean);
+}
+function resolvePlayerClubSmart(name,existingClub=''){
+  if(existingClub)return {club:existingClub,confidence:1,method:'vorhandener Transfer'};
+  const exact=findSelectablePlayerByName(name);
+  if(exact?.team)return {club:exact.team,confidence:1,method:'exakter Spielername'};
+
+  const parts=normalizedNameParts(name);
+  const surname=parts.at(-1)||'';
+  if(!surname)return {club:'',confidence:0,method:'kein Treffer'};
+
+  const candidates=selectablePlayerIndex().list.filter(p=>{
+    const pp=normalizedNameParts(p.name);
+    return pp.at(-1)===surname;
+  });
+  const teams=[...new Set(candidates.map(p=>p.team).filter(Boolean))];
+  if(candidates.length===1&&teams.length===1){
+    return {club:teams[0],confidence:.88,method:'eindeutiger Nachname'};
+  }
+
+  // Cautious token match for names with accents/compound first names.
+  const tokenMatches=selectablePlayerIndex().list.filter(p=>{
+    const pp=normalizedNameParts(p.name);
+    const common=parts.filter(x=>pp.includes(x));
+    return common.length>=Math.min(2,parts.length)&&pp.at(-1)===surname;
+  });
+  const tokenTeams=[...new Set(tokenMatches.map(p=>p.team).filter(Boolean))];
+  if(tokenMatches.length===1&&tokenTeams.length===1){
+    return {club:tokenTeams[0],confidence:.8,method:'normalisierte Namensübereinstimmung'};
+  }
+  return {club:'',confidence:0,method:'Verein unbekannt'};
+}
+function daysBetweenIso(a,b){
+  if(!a||!b)return null;
+  const da=new Date(`${a}T12:00:00`),db=new Date(`${b}T12:00:00`);
+  if(Number.isNaN(da.getTime())||Number.isNaN(db.getTime()))return null;
+  return Math.round(Math.abs(da-db)/86400000);
+}
+function smartTransferMatch(existing,t,derivedDate){
+  const same=existing.filter(x=>
+    normalizePlayerName(x.player)===normalizePlayerName(t.player) &&
+    String(x.type||'').toLowerCase()===String(t.type||'').toLowerCase()
+  );
+  if(!same.length)return {action:'new',candidate:null,reason:'Kein bestehender Transfer dieses Spielers/Typ'};
+
+  const price=Number(t.price)||0;
+  let best=null,bestScore=-1;
+  for(const x of same){
+    const oldPrice=Number(x.price)||0;
+    const priceDiff=Math.abs(oldPrice-price);
+    const pricePct=price&&oldPrice?priceDiff/Math.max(price,oldPrice):1;
+    const dateDiff=daysBetweenIso(x.date,derivedDate);
+    let score=0;
+    if(price&&oldPrice&&priceDiff===0)score+=65;
+    else if(price&&oldPrice&&pricePct<=.002)score+=55;
+    else if(price&&oldPrice&&pricePct<=.01)score+=42;
+    else if(price&&oldPrice&&pricePct<=.05)score+=22;
+    if(x.date&&derivedDate&&dateDiff===0)score+=30;
+    else if(x.date&&derivedDate&&dateDiff===1)score+=18;
+    else if(!x.date||!derivedDate)score+=6;
+    if(!best||score>bestScore){best=x;bestScore=score}
+  }
+
+  if(bestScore>=80)return {action:'unchanged',candidate:best,reason:'Spieler, Typ, Preis und Datum stimmen überein'};
+  if(bestScore>=50)return {action:'update',candidate:best,reason:'Wahrscheinlich derselbe Transfer – Screenshot kann bestehende Angaben präzisieren'};
+  if(same.length===1&&(!same[0].date||!derivedDate)&&Math.abs(Number(same[0].price||0)-price)<=Math.max(50000,price*.01)){
+    return {action:'update',candidate:same[0],reason:'Ein bestehender Transfer mit nahezu gleichem Preis'};
+  }
+  return {action:'uncertain',candidate:best,reason:'Ähnlicher bestehender Transfer vorhanden – bitte prüfen'};
+}
+function backfillTransferClubs(){
+  for(const manager of LEAGUE_MANAGERS){
+    const row=managerLeagueData(manager.id);
+    for(const t of row.transfers||[]){
+      if(t.club)continue;
+      const resolved=resolvePlayerClubSmart(t.player);
+      if(resolved.club){
+        t.club=resolved.club;
+        t.clubResolution=resolved.method;
+      }
+    }
+  }
+}
+
 function aiKey(t){return `${normalizePlayerName(t.player||'')}|${String(t.type||'').toLowerCase()}`}
 function renderScreenshotAiResult(result){
  const d=result?.data||{},ts=Array.isArray(d.transfers)?d.transfers:[],recognizedManagerId=v200ManagerId(d.manager||''),managerId=recognizedManagerId||'',row=managerId?managerLeagueData(managerId):null,existing=Array.isArray(row?.transfers)?row.transfers:[];
- screenshotImportReview={managerId,recognizedManagerId,lineup:Array.isArray(d.lineup)?d.lineup:[],items:ts.map((t,i)=>{const same=existing.filter(x=>aiKey(x)===aiKey(t)),exact=same.find(x=>Number(x.price||0)===Number(t.price||0)),cand=!exact&&same.length?same[same.length-1]:null;let action=exact?'unchanged':cand?'update':'new';if((Number(t.confidence)||0)<.75)action='uncertain';return{id:`r${i}`,t,action,candidateId:cand?.id||null,selected:action!=='unchanged'&&action!=='uncertain'}})};
+ const items=ts.map((t,i)=>{
+   const dateInfo=deriveTransferDate(t.relative_time);
+   const clubInfo=resolvePlayerClubSmart(t.player);
+   const match=smartTransferMatch(existing,t,dateInfo.date);
+   let action=match.action;
+   if((Number(t.confidence)||0)<.75)action='uncertain';
+   return {
+     id:`r${i}`,t,
+     action,
+     candidateId:match.candidate?.id||null,
+     selected:action!=='unchanged'&&action!=='uncertain',
+     derivedDate:dateInfo.date,
+     dateConfidence:dateInfo.confidence,
+     dateNote:dateInfo.note,
+     club:clubInfo.club,
+     clubConfidence:clubInfo.confidence,
+     clubMethod:clubInfo.method,
+     matchReason:match.reason
+   };
+ });
+ screenshotImportReview={managerId,recognizedManagerId,lineup:Array.isArray(d.lineup)?d.lineup:[],items};
  const r=screenshotImportReview,target=$('#screenshotImportResult');if(!target)return;
  const label=x=>x==='new'?'NEU':x==='update'?'ÄNDERN':x==='unchanged'?'UNVERÄNDERT':'PRÜFEN';
- target.innerHTML=`<div class="screenshot-result-head"><div><span>AI-ABGLEICH</span><h4>${esc(d.manager||'Manager nicht erkannt')}</h4></div><strong>${r.items.length} Transfers</strong></div><div class="ai-manager-assignment ${managerId?'confirmed':'uncertain'}"><label>Ziel-Manager für diesen Import</label><select id="aiTargetManager"><option value="">Bitte Manager auswählen…</option>${aiManagerOptions(managerId)}</select><small>${managerId?`AI erkannt: ${esc(d.manager||'')} – bitte vor Übernahme prüfen.`:'AI konnte den Manager nicht eindeutig erkennen. Manuelle Auswahl ist erforderlich.'}</small></div><div class="screenshot-result-list">${r.items.map(x=>`<article class="ai-review-row"><label><input type="checkbox" data-ai="${x.id}" ${x.selected?'checked':''} ${x.action==='unchanged'?'disabled':''}></label><div><b>${esc(x.t.player||'Unbekannt')}</b><small>${esc(x.t.type||'')}</small></div><div>${Number.isFinite(Number(x.t.price))?euro(Number(x.t.price)):'–'}</div><div class="ai-tag ${x.action}">${label(x.action)}</div><div>${Math.round((Number(x.t.confidence)||0)*100)}%</div></article>`).join('')}</div>${r.lineup.length?`<label class="ai-lineup"><input id="aiLineup" type="checkbox"> Erkannte Aufstellung übernehmen (${r.lineup.length})</label>`:''}<div class="ai-actions"><button class="btn" id="aiCommit" ${!managerId?'disabled':''}>Ausgewählte Änderungen übernehmen</button><button class="btn secondary" id="aiDiscard">Verwerfen</button></div><div class="screenshot-result-foot">Nach Bestätigung wird lokal gespeichert, der Gegner-Kader neu berechnet und die Cloud-Speicherung abgewartet.</div>`;
+ const ref=screenshotReferenceInfo();
+ target.innerHTML=`<div class="screenshot-result-head"><div><span>AI-ABGLEICH</span><h4>${esc(d.manager||'Manager nicht erkannt')}</h4></div><strong>${r.items.length} Transfers</strong></div>
+ <div class="ai-reference-date ${ref.trusted?'trusted':'uncertain'}"><b>Screenshot-Referenz:</b> ${esc(localIsoDateFromDate(ref.ref)||'unbekannt')} ${ref.trusted?'· tagesaktuell erkannt':'· nicht als tagesaktuell bestätigt – Transferdaten werden nicht automatisch gesetzt'}</div>
+ <div class="ai-manager-assignment ${managerId?'confirmed':'uncertain'}"><label>Ziel-Manager für diesen Import</label><select id="aiTargetManager"><option value="">Bitte Manager auswählen…</option>${aiManagerOptions(managerId)}</select><small>${managerId?`AI erkannt: ${esc(d.manager||'')} – bitte vor Übernahme prüfen.`:'AI konnte den Manager nicht eindeutig erkennen. Manuelle Auswahl ist erforderlich.'}</small></div>
+ <div class="screenshot-result-list">${r.items.map(x=>`<article class="ai-review-row smart ${x.action}">
+   <label><input type="checkbox" data-ai="${x.id}" ${x.selected?'checked':''} ${x.action==='unchanged'?'disabled':''}></label>
+   <div class="ai-player-main"><b>${esc(x.t.player||'Unbekannt')}</b><small>${esc(x.t.type||'')} · ${x.club?esc(x.club):'Verein unbekannt'}</small><small>${x.derivedDate?`Transferdatum ${esc(x.derivedDate)}`:'Transferdatum offen'}${x.t.relative_time?` · ${esc(x.t.relative_time)}`:''}</small><small class="ai-match-reason">${esc(x.matchReason)}</small></div>
+   <div class="ai-review-price">${Number.isFinite(Number(x.t.price))?euro(Number(x.t.price)):'–'}</div>
+   <div class="ai-tag ${x.action}">${label(x.action)}</div>
+   <div class="screenshot-confidence">${Math.round((Number(x.t.confidence)||0)*100)}%</div>
+ </article>`).join('')}</div>
+ ${r.lineup.length?`<label class="ai-lineup"><input id="aiLineup" type="checkbox"> Erkannte Aufstellung übernehmen (${r.lineup.length})</label>`:''}
+ <div class="ai-actions"><button class="btn" id="aiCommit" ${!managerId?'disabled':''}>Ausgewählte Änderungen übernehmen</button><button class="btn secondary" id="aiDiscard">Verwerfen</button></div>
+ <div class="screenshot-result-foot">Abgleich berücksichtigt Spieler, Kauf/Verkauf, Preis und – wenn tagesaktuell ableitbar – das Transferdatum. Verein wird aus dem Bundesliga-Spielerdatensatz ergänzt.</div>`;
  $$('[data-ai]').forEach(c=>c.onchange=()=>{const x=r.items.find(i=>i.id===c.dataset.ai);if(x)x.selected=c.checked});
  if($('#aiTargetManager'))$('#aiTargetManager').onchange=e=>{
    r.managerId=e.target.value||'';
@@ -3369,7 +3562,12 @@ function renderScreenshotAiResult(result){
  $$('[data-ai]').forEach(c=>c.addEventListener('change',refreshAiCommitState));
  $('#aiTargetManager')?.addEventListener('change',refreshAiCommitState);
  refreshAiCommitState();
- if($('#aiCommit'))$('#aiCommit').onclick=commitAiReview;if($('#aiDiscard'))$('#aiDiscard').onclick=()=>{screenshotImportReview=null;screenshotImportLastResult=null;screenshotImportDraft={images:[],names:[]};screenshotImportSelection=[];window.h2hAiImportBusy=false;target.innerHTML='';restoreScreenshotImportUi()};
+ if($('#aiCommit'))$('#aiCommit').onclick=commitAiReview;
+ if($('#aiDiscard'))$('#aiDiscard').onclick=()=>{
+   screenshotImportReview=null;screenshotImportLastResult=null;
+   screenshotImportDraft={images:[],names:[],referenceAt:null,referenceTrusted:false};
+   screenshotImportSelection=[];window.h2hAiImportBusy=false;target.innerHTML='';restoreScreenshotImportUi()
+ };
 }
 async function commitAiReview(){
   const r=screenshotImportReview;
@@ -3407,31 +3605,31 @@ async function commitAiReview(){
     const price=Number(t.price)||0;
     if(!player)continue;
 
-    // Re-evaluate against the actual target manager at commit time.
-    const same=row.transfers.filter(x=>
-      normalizePlayerName(x.player)===normalizePlayerName(player) &&
-      String(x.type||'').toLowerCase()===type.toLowerCase()
-    );
-    const exact=same.find(x=>Number(x.price||0)===price);
+    const derivedDate=item.derivedDate||'';
+    const clubResolved=item.club||resolvePlayerClubSmart(player).club||'';
+    const liveMatch=smartTransferMatch(row.transfers,{player,type,price},derivedDate);
 
-    if(exact){
+    if(liveMatch.action==='unchanged'&&liveMatch.candidate){
+      const exact=liveMatch.candidate;
+      if(!exact.club&&clubResolved)exact.club=clubResolved;
+      if(!exact.date&&derivedDate)exact.date=derivedDate;
       exact.source=exact.source||'AI Screenshot Import';
       unchanged++;
-      committed.push({player,type,price,mode:'unchanged'});
+      committed.push({player,type,price,date:derivedDate,mode:'unchanged'});
       continue;
     }
 
-    // Only update an existing row when the review classified it as an update.
-    if(item.action==='update' && same.length){
-      const old=same[same.length-1];
+    if((item.action==='update'||liveMatch.action==='update')&&liveMatch.candidate){
+      const old=liveMatch.candidate;
       old.player=player;
       old.type=type;
-      old.price=price;
-      old.club=findSelectablePlayerByName(player)?.team||old.club||'';
+      old.price=price||old.price;
+      old.club=clubResolved||old.club||'';
+      old.date=derivedDate||old.date||'';
       old.note=t.counterparty?`Screenshot: ${t.counterparty}`:(old.note||'AI Screenshot Import');
       old.source='AI Screenshot Import';
       updated++;
-      committed.push({player,type,price,mode:'updated'});
+      committed.push({player,type,price,date:old.date,mode:'updated'});
       continue;
     }
 
@@ -3440,9 +3638,9 @@ async function commitAiReview(){
       type,
       md:+data.settings.currentMd||1,
       player,
-      club:findSelectablePlayerByName(player)?.team||'',
+      club:clubResolved,
       price,
-      date:'',
+      date:derivedDate,
       note:t.counterparty?`Screenshot: ${t.counterparty}`:'AI Screenshot Import',
       source:'AI Screenshot Import'
     });
@@ -3465,7 +3663,8 @@ async function commitAiReview(){
     row.transfers.some(x=>
       normalizePlayerName(x.player)===normalizePlayerName(c.player) &&
       String(x.type||'').toLowerCase()===c.type.toLowerCase() &&
-      Number(x.price||0)===Number(c.price||0)
+      Number(x.price||0)===Number(c.price||0) &&
+      (!c.date || !x.date || x.date===c.date)
     )
   );
 
@@ -3503,7 +3702,7 @@ async function commitAiReview(){
 
   screenshotImportReview=null;
   screenshotImportLastResult=null;
-  screenshotImportDraft={images:[],names:[]};
+  screenshotImportDraft={images:[],names:[],referenceAt:null,referenceTrusted:false};
   screenshotImportSelection=[];
   window.h2hAiImportBusy=false;
 
@@ -3544,7 +3743,7 @@ async function analyzeSelectedScreenshots(){
     const res=await fetch(KICKBASE_AI_ENDPOINT,{signal:controller.signal,
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({images,managerHint})
+      body:JSON.stringify({images,managerHint,screenshotReferenceAt:screenshotImportDraft.referenceAt,screenshotReferenceTrusted:screenshotImportDraft.referenceTrusted})
     });
     clearTimeout(timer);const result=await res.json().catch(()=>({}));
     if(!res.ok)throw new Error(result?.details||result?.message||result?.error||`HTTP ${res.status}`);
@@ -3568,7 +3767,7 @@ if($('#screenshotImportFiles')){
     if(btn)btn.disabled=true;
     if(status)status.textContent=files.length?'Screenshot-Auswahl wird gesichert…':'Noch keine Screenshots ausgewählt.';
     if(!files.length){
-      screenshotImportDraft={images:[],names:[]};
+      screenshotImportDraft={images:[],names:[],referenceAt:null,referenceTrusted:false};
       if(result)result.innerHTML='';
       restoreScreenshotImportUi();
       return;
@@ -3577,12 +3776,15 @@ if($('#screenshotImportFiles')){
     try{
       const images=[];
       for(const f of files)images.push(await fileToDataUrl(f));
-      screenshotImportDraft={images,names:files.map(f=>f.name)};window.h2hAiImportBusy=true;
+      const latestModified=Math.max(...files.map(f=>Number(f.lastModified)||0),0);
+      const referenceAt=latestModified?new Date(latestModified).toISOString():new Date().toISOString();
+      const referenceTrusted=localIsoDateFromDate(referenceAt)===localIsoDateFromDate(new Date());
+      screenshotImportDraft={images,names:files.map(f=>f.name),referenceAt,referenceTrusted};window.h2hAiImportBusy=true;
       screenshotImportSelection=files;
       if(result)result.innerHTML='<div class="screenshot-selection-ok">✓ Auswahl gespeichert – bereit zur AI-Analyse.</div>';
       restoreScreenshotImportUi();
     }catch(err){
-      screenshotImportDraft={images:[],names:[]};
+      screenshotImportDraft={images:[],names:[],referenceAt:null,referenceTrusted:false};
       if(status)status.textContent=`Screenshot konnte nicht gesichert werden: ${err?.message||String(err)}`;
       if(result)result.innerHTML='';
       if(btn)btn.disabled=true;
