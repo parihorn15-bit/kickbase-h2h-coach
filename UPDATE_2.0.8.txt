@@ -1,0 +1,7 @@
+VERSION 2.0.8 – AI RESULT RENDER FIX
+
+- Behebt den Fehler "money is not defined" nach erfolgreicher Screenshot-Analyse.
+- Der AI-Importer verwendet jetzt die vorhandene euro()-Formatierung.
+- Cache-Bust-Core aus 2.0.7 bleibt aktiv.
+- Liga-Snapshot, AI-Diagnose und Import-Commit bleiben enthalten.
+- Keine neue Supabase-Migration erforderlich.
