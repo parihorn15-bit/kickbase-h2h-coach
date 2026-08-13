@@ -1,0 +1,10 @@
+VERSION 2.1.1 – TRANSACTIONAL AI COMMIT
+
+- Commit liest beim Klick direkt den aktuell gewählten Ziel-Manager und die tatsächlich angehakten Transferzeilen aus der UI.
+- Keine Übernahme möglich, wenn 0 Änderungen ausgewählt sind.
+- Transferabgleich wird beim Commit erneut gegen den tatsächlichen Ziel-Manager gerechnet.
+- Nach dem Schreiben prüft die App selbst, ob jede Änderung im Ziel-Datensatz vorhanden ist.
+- Lokaler Save und Cloud-Flush erfolgen erst nach erfolgreicher interner Prüfung.
+- Nach Gegnerimport öffnet die App direkt dessen Managerprofil zur Kontrolle.
+- Importbeleg speichert Vorher-/Nachher-Anzahl und Anzahl neuer/geänderter Transfers.
+- Keine neue Supabase-Migration erforderlich.
