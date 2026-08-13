@@ -1,0 +1,22 @@
+VERSION 2.1.5b – INDEXED IDENTITY ENGINE
+
+Stabilitäts-Refactor:
+- KEINE automatische Spielerbereinigung beim Start, Rendern oder Cloud-Sync.
+- Dadurch kann die App nicht mehr durch die Bereinigung beim Start einfrieren.
+- Canonical-Spielerindex wird einmal mit Maps aufgebaut (vollständiger Name / Nachname).
+- Manager-Transfers werden nicht mehr als Quelle des Master-Spielerindex verwendet.
+  Das verhindert rekursive/self-reinforcing Matches.
+- Bereinigung arbeitet linear mit Maps statt verschachtelten Vollsuchen.
+- Bereinigung wird bewusst über „Spielerdaten bereinigen“ in der Transferseite ausgelöst.
+- Während des Bereinigungslaufs kein Cloud-Save.
+- Nach erfolgreichem Lauf wird zunächst nur lokal gespeichert.
+- Cloud kann danach normal über den bestehenden Sync-Mechanismus gespeichert werden.
+
+Fachlich:
+- Nachnamen aus Kickbase werden auf eindeutige vollständige Bundesliga-Spieler aufgelöst.
+- Vollständiger Spieler ist Master für Name, Verein und Position.
+- Transfer-Dubletten und aktive Spieler-Dubletten werden zusammengeführt.
+- Aufstellungs-/Bankreferenzen werden auf den vollständigen Namen umgeschrieben.
+- Historische Horn-Capital-Datenkorrektur bleibt erhalten.
+
+Keine Supabase-Migration erforderlich.
