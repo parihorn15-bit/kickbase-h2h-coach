@@ -1,0 +1,8 @@
+VERSION 2.0.2 – SCREENSHOT SELECTION FIX
+
+- Screenshot-Auswahl wird jetzt separat im Speicher gehalten.
+- Dateiname(n) werden nach der Auswahl sichtbar angezeigt.
+- Analyse-Button bleibt deaktiviert, bis mindestens ein gültiges Bild gewählt wurde.
+- Der AI-Request verwendet exakt die gespeicherte Auswahl.
+- Maximal 10 Bilder pro Analyse.
+- Keine automatische Speicherung von Transfers: weiterhin sichere Vorschau.
