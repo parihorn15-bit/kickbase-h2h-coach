@@ -1,0 +1,35 @@
+VERSION 2.1.4 – CANONICAL PLAYER CLEANUP
+
+ZIEL
+Die bereits sichtbaren Fehler aus 2.1.3 werden nicht nur für neue Imports verhindert,
+sondern im vorhandenen Datenbestand aktiv bereinigt.
+
+SPIELER-MATCHING
+- Kurznamen/Nachnamen wie ANTON, PEDERSEN, LIENHART oder GÖTZE werden gegen bekannte
+  vollständige Spielernamen aus Spielerdatenbank, eigenem Kader und Transferhistorie aufgelöst.
+- Nur eindeutige Nachnamen/Kurznamen werden automatisch zusammengeführt.
+- Der kanonische vollständige Name wird anschließend in Transfer- und Spielerdatensätzen verwendet.
+
+DUBLETTEN
+- Eigene aktive Spieler-Dubletten werden konservativ zusammengeführt, wenn kanonischer Spieler
+  und Preis/Quelle plausibel denselben Transfer darstellen.
+- Transfer-Dubletten werden pro Manager nach Spieler + Kauf/Verkauf + Preis + Datum zusammengeführt.
+- Bevorzugt wird der reichere Datensatz mit Verein, echtem Datum und manueller/qualitativer Quelle.
+- Die Single-Source-Kette Transfers -> Kader -> Aufstellungsseite bleibt erhalten.
+
+VEREINE
+- Vorhandene Vereinsangaben aus bereits korrekten manuellen Spielern werden bevorzugt übernommen.
+- Bundesliga-Spielerdatenbank bleibt zusätzlicher Resolver.
+- Die Vereins-Bereinigung kann nach späterem Laden der Live-Spielerdaten erneut laufen;
+  sie ist nicht mehr durch einen zu frühen Einmal-Migrationsschalter blockiert.
+
+HISTORISCHE DATEN
+- Die bereits bereitgestellten Horn-Capital-Screenshots verwenden den Referenztag 12.08.2026.
+- Die bekannten relativen Kickbase-Zeiten wurden für die vorhandenen Snapshot-Transfers auf
+  konkrete historische Daten zurückgerechnet.
+- Beispiele: Anton/Pedersen/Lienhart -> 10.08.2026; Götze -> 07.08.2026;
+  Deman/García -> 12.08.2026.
+- Falsche 14.08.2026-Daten aus früheren Screenshot-Migrationen werden bei eindeutig identifizierten
+  Transaktionen korrigiert.
+
+- Keine neue Supabase-Migration erforderlich.
