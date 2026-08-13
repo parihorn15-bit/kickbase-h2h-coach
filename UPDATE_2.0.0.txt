@@ -1,0 +1,7 @@
+VERSION 2.0.0 – LEAGUE INTELLIGENCE
+
+- Gegner-Transfers aus den bereitgestellten Screenshots integriert und mit vorhandenen Einträgen abgeglichen.
+- Sichtbare Gegneraufstellungen als aktueller Stand übernommen.
+- Neuer Screenshot-Import-Einstieg vorbereitet.
+- Automatische Bildanalyse in der lokalen App benötigt weiterhin eine AI-Schnittstelle.
+- Keine neue Supabase-Migration erforderlich.

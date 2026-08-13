@@ -1274,3 +1274,4 @@ input[list]:focus{border-color:#38bdf8;box-shadow:0 0 0 2px rgba(56,189,248,.12)
   border-radius:12px;
   background:rgba(120,80,20,.15)
 }
+.screenshot-import-card{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;padding:15px;border-color:#315d78;background:linear-gradient(135deg,#10243a,#0a1725)}.screenshot-import-card .eyebrow{font-size:8px;font-weight:900;letter-spacing:.12em;color:#7dd3fc}.screenshot-import-card h3{font-size:16px;margin:3px 0}.screenshot-import-card p{font-size:9px;color:#91a5bb;max-width:650px}.screenshot-import-actions{display:flex;gap:8px;flex-wrap:wrap}.screenshot-import-status{width:100%;font-size:8px;color:#8fa2b8}
