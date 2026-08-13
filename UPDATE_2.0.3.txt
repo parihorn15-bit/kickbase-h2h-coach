@@ -1,0 +1,9 @@
+VERSION 2.0.3 – CLOUD-SAFE SCREENSHOT IMPORT
+
+- Screenshot-Auswahl wird unmittelbar nach der Dateiauswahl in Data-URLs umgewandelt.
+- Die AI-Analyse hängt nicht mehr am kurzlebigen <input type=file>.
+- Normale Cloud-Synchronisierung/Render-Vorgänge dürfen die Auswahl nicht mehr verwerfen.
+- Nach einem Render wird der sichtbare Import-Status aus dem gespeicherten Draft wiederhergestellt.
+- Analyse-Button bleibt gesperrt, bis die Bilddaten wirklich gesichert wurden.
+- Noch keine automatische Übernahme von Transfers: weiterhin Vorschau-Modus.
+- Keine neue Supabase-Migration erforderlich.
