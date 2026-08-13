@@ -1,0 +1,17 @@
+VERSION 2.1.5a – CANONICAL IDENTITY HOTFIX
+
+Behebt den Freeze / Cloud-Sync-Loop von 2.1.5.
+
+Änderungen:
+- Canonical-Player-Bereinigung läuft nicht mehr während des normalen Render-/Cloud-Starts.
+- Bereinigung wird 2,5 Sekunden nach dem ersten stabilen Render zeitversetzt gestartet.
+- Maximal ein Bereinigungslauf pro Browser-Session.
+- Während der Bereinigung kein localStorage-Save und kein Cloud-Save.
+- Nach der Bereinigung nur ein lokales Re-Render.
+- Keine automatische Cloud-Sync-Kaskade.
+- Die fachliche Canonical-Identity-Logik aus 2.1.5 bleibt erhalten.
+
+Wichtig:
+- Keine Daten zurücksetzen.
+- Nicht „Lokalen Stand hochladen“ verwenden, solange die App noch synchronisiert.
+- Keine neue Supabase-Migration erforderlich.
