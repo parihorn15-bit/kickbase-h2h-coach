@@ -1,0 +1,3 @@
+VERSION 2.0.5 – AI IMPORT COMMIT
+
+AI-Abgleich mit NEU / ÄNDERN / UNVERÄNDERT / PRÜFEN. Unsichere Treffer sind abgewählt. Speicherung erst nach Bestätigung. Aufstellung optional übernehmbar. Keine neue Supabase-Migration.
