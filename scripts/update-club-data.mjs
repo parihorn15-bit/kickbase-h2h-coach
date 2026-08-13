@@ -8,28 +8,9 @@ if (!token || !supabaseUrl || !serviceKey) {
 }
 const wait = ms => new Promise(resolve=>setTimeout(resolve,ms));
 async function fd(path) {
-  for (let attempt = 1; attempt <= 5; attempt++) {
-    const response = await fetch(`${BASE}${path}`, {
-      headers: {"X-Auth-Token": token}
-    });
-
-    if (response.ok) {
-      return response.json();
-    }
-
-    const message = await response.text();
-
-    if (response.status === 429 && attempt < 5) {
-      const match = message.match(/Wait\s+(\d+)\s+seconds/i);
-      const seconds = match ? Number(match[1]) + 2 : 8;
-
-      console.log(`API-Limit erreicht. Warte ${seconds} Sekunden...`);
-      await wait(seconds * 1000);
-      continue;
-    }
-
-    throw new Error(`${path}: ${response.status} ${message}`);
-  }
+  const response = await fetch(`${BASE}${path}`, {headers:{"X-Auth-Token":token}});
+  if (!response.ok) throw new Error(`${path}: ${response.status} ${await response.text()}`);
+  return response.json();
 }
 async function upsert(table, rows, conflict) {
   if (!rows.length) return;
@@ -46,14 +27,11 @@ async function upsert(table, rows, conflict) {
   if (!response.ok) throw new Error(`${table}: ${response.status} ${await response.text()}`);
 }
 
-const teamsData = await fd("/competitions/BL1/teams");
-await wait(6500);
-
-const standingsData = await fd("/competitions/BL1/standings");
-await wait(6500);
-
-const matchesData = await fd("/competitions/BL1/matches?status=SCHEDULED");
-await wait(6500);
+const [teamsData, standingsData, matchesData] = await Promise.all([
+  fd("/competitions/BL1/teams"),
+  fd("/competitions/BL1/standings"),
+  fd("/competitions/BL1/matches?status=SCHEDULED")
+]);
 const table = standingsData.standings?.find(s=>s.type==="TOTAL")?.table || [];
 const tableById = Object.fromEntries(table.map(x=>[x.team.id,x]));
 const scheduled = matchesData.matches || [];

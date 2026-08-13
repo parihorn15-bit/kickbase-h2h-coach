@@ -1,0 +1,7 @@
+VERSION 2.0.1 – AI SCREENSHOT PREVIEW
+
+- Screenshot-Auswahl direkt in League Intelligence.
+- Browser -> Supabase kickbase-ai -> OpenAI -> Vorschau.
+- Erkannte Transfers und Aufstellung werden angezeigt.
+- Noch keine Speicherung oder Überschreibung.
+- Keine neue Supabase-Migration erforderlich.
