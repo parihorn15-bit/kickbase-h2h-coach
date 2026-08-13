@@ -1,0 +1,12 @@
+VERSION 2.1.0 – SAFE AI MANAGER ASSIGNMENT
+
+- AI-Import ordnet Transfers nicht mehr stillschweigend dem aktuell geöffneten Manager zu.
+- Ziel-Manager wird aus dem Screenshot erkannt und immer sichtbar angezeigt.
+- Bei unsicherer/fehlender Erkennung ist eine manuelle Manager-Auswahl Pflicht.
+- Ziel-Manager kann vor jeder Übernahme bewusst geändert werden.
+- Reliable AI Commit aus 2.0.9 bleibt erhalten: lokaler Save, Kadercache-Reset, Cloud-Flush.
+- AI-Nutzungsbox zählt Aufrufe und Screenshots.
+- Tokenverbrauch wird angezeigt, wenn die Supabase Function Usage-Daten zurückliefert.
+- Geschätzte Kosten werden angezeigt, wenn die Function diese liefert; andernfalls wird nichts erfunden.
+- Cache-Bust-Core bleibt aktiv.
+- Keine neue Supabase-Migration erforderlich.

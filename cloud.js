@@ -219,7 +219,26 @@
   window.cloudQueueSave = () => {
     if (!cloudReady) return;
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(pushCloudState, 700);
+    const attempt = async () => {
+      if (syncing) {
+        saveTimer = setTimeout(attempt, 500);
+        return;
+      }
+      await pushCloudState();
+    };
+    saveTimer = setTimeout(attempt, 350);
+  };
+
+  window.cloudFlushSave = async () => {
+    if (!cloudReady) return false;
+    clearTimeout(saveTimer);
+    const started = Date.now();
+    while (syncing && Date.now() - started < 10000) {
+      await new Promise(resolve => setTimeout(resolve, 150));
+    }
+    if (syncing) return false;
+    await pushCloudState();
+    return true;
   };
 
   async function signIn() {

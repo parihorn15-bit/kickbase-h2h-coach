@@ -1288,3 +1288,9 @@ input[list]:focus{border-color:#38bdf8;box-shadow:0 0 0 2px rgba(56,189,248,.12)
 .screenshot-import-status{min-height:18px;padding:5px 0}.ai-warning{white-space:pre-wrap}
 
 /* 2.0.7 cache-bust core */
+
+/* 2.0.9 reliable AI commit */
+#aiCommit:disabled{opacity:.6;cursor:wait}
+
+/* 2.1.0 safe manager assignment + AI usage */
+.ai-manager-assignment{margin:9px 0;padding:10px;border:1px solid #315d78;border-radius:10px;background:#0a1624}.ai-manager-assignment.uncertain{border-color:#713f46}.ai-manager-assignment label{display:block;font-size:8px;font-weight:900;color:#7dd3fc;margin-bottom:5px}.ai-manager-assignment select{width:100%;max-width:420px}.ai-manager-assignment small{display:block;margin-top:5px;color:#94a3b8}.ai-usage-box{width:100%;font-size:8px;color:#8ea1b7;padding-top:4px}

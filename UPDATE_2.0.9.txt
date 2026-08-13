@@ -1,0 +1,11 @@
+VERSION 2.0.9 – RELIABLE AI COMMIT
+
+- Behebt, dass bestätigte AI-Transfers nach „Übernehmen“ nicht sichtbar/persistent waren.
+- Gegner-Kader-Cache wird nach AI-Import sofort geleert und neu aufgebaut.
+- Lokale Speicherung erfolgt unmittelbar vor dem Render.
+- Cloud-Speicherungen werden nicht mehr verworfen, wenn gerade parallel synchronisiert wird.
+- Neuer cloudFlushSave wartet auf eine echte Cloud-Speicherung.
+- Erfolgsstatus zeigt Manager, Anzahl neuer/geänderter Transfers und aktuellen Transfer-Gesamtstand.
+- Aufstellungsübernahme läuft durch denselben zuverlässigen Commit.
+- Cache-Bust-Core bleibt aktiv.
+- Keine Supabase-Migration erforderlich.
