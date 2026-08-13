@@ -1,0 +1,20 @@
+2.1.4a HOTFIX
+
+Behebt den Browser-Freeze von 2.1.4.
+
+Ursache:
+Die neue kanonische Bereinigung war in einen häufig aufgerufenen
+Transfer-Synchronisationspfad eingebaut und konnte beim Start mehrfach bzw.
+rekursiv ausgeführt werden.
+
+Änderungen:
+- Bereinigung aus syncTransferSingleSource() entfernt.
+- Einmaliger, geschützter Migrationslauf beim Versionswechsel.
+- Keine rekursive Verwendung des abgeleiteten selectablePlayerIndex()
+  innerhalb der Migration.
+- Cloud-Speicherung erfolgt zeitversetzt nach dem ersten Rendern.
+- Fachliche 2.1.4-Fixes (Dubletten, Vereine, historische Transferdaten)
+  bleiben erhalten.
+
+Keine Daten zurücksetzen.
+Keine neue Supabase-Migration erforderlich.
