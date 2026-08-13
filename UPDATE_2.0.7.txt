@@ -1,0 +1,9 @@
+VERSION 2.0.7 – CACHE-BUST CORE
+
+- Behebt Split-Versionen wie: Header 2.0.6, Funktionslogik 2.0.5.
+- app.js, cloud.js, config.js und styles.css erhalten versionierte URLs (?v=207).
+- Service Worker lädt HTML/JS/CSS/Manifest Network-First mit cache:no-store.
+- Alte Cache-Versionen werden automatisch gelöscht.
+- Service Worker selbst wird versioniert registriert.
+- Liga Snapshot und AI-Diagnose aus 2.0.6 bleiben enthalten.
+- Keine neue Supabase-Migration erforderlich.

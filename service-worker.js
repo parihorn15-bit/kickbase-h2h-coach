@@ -1,70 +1,55 @@
-const CACHE_NAME = 'h2h-coach-cloud-v206';
-const APP_SHELL = [
-  './',
-  './index.html',
-  './styles.css',
-  './app.js',
-  './cloud.js',
-  './manifest.webmanifest'
-];
+const CACHE_NAME='h2h-coach-cloud-v207';
+const CORE=['./','./index.html','./styles.css?v=207','./config.js?v=207','./app.js?v=207','./cloud.js?v=207','./manifest.webmanifest'];
 
-self.addEventListener('install', event => {
+self.addEventListener('install',event=>{
   self.skipWaiting();
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
+  event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(CORE)));
 });
 
-self.addEventListener('activate', event => {
+self.addEventListener('activate',event=>{
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))))
-      .then(() => self.clients.claim())
-      .then(async () => {
-        const clients = await self.clients.matchAll({type:'window', includeUncontrolled:true});
-        for (const client of clients) client.postMessage({type:'APP_UPDATED', version:'2.0.6'});
+      .then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k))))
+      .then(()=>self.clients.claim())
+      .then(async()=>{
+        const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});
+        for(const client of clients) client.postMessage({type:'APP_UPDATED',version:'2.0.7'});
       })
   );
 });
 
-self.addEventListener('fetch', event => {
-  const req = event.request;
-  if (req.method !== 'GET') return;
-  const url = new URL(req.url);
-  const sameOrigin = url.origin === self.location.origin;
+self.addEventListener('fetch',event=>{
+  const req=event.request;
+  if(req.method!=='GET')return;
+  const url=new URL(req.url);
+  const same=url.origin===self.location.origin;
 
-  if (req.mode === 'navigate' || (sameOrigin && url.pathname.endsWith('/index.html'))) {
+  if(!same)return;
+
+  const coreText=req.mode==='navigate' ||
+    url.pathname.endsWith('/index.html') ||
+    /\.(?:js|css|webmanifest)$/.test(url.pathname);
+
+  if(coreText){
     event.respondWith(
-      fetch(req, {cache:'no-store'})
-        .then(response => {
-          const copy=response.clone();
+      fetch(req,{cache:'no-store'}).then(resp=>{
+        if(resp && resp.ok){
+          const copy=resp.clone();
           caches.open(CACHE_NAME).then(cache=>cache.put(req,copy));
-          return response;
-        })
-        .catch(()=>caches.match(req).then(r=>r||caches.match('./index.html')))
+        }
+        return resp;
+      }).catch(()=>caches.match(req).then(r=>r||caches.match('./index.html')))
     );
     return;
   }
 
-  if (sameOrigin && /\.(?:js|css|webmanifest)$/.test(url.pathname)) {
-    event.respondWith(
-      caches.match(req).then(cached=>{
-        const network=fetch(req,{cache:'no-store'}).then(response=>{
-          const copy=response.clone();
-          caches.open(CACHE_NAME).then(cache=>cache.put(req,copy));
-          return response;
-        }).catch(()=>cached);
-        return cached||network;
-      })
-    );
-    return;
-  }
-
-  if (sameOrigin) {
-    event.respondWith(
-      caches.match(req).then(cached=>cached||fetch(req).then(response=>{
-        const copy=response.clone();
+  event.respondWith(
+    caches.match(req).then(cached=>cached||fetch(req).then(resp=>{
+      if(resp && resp.ok){
+        const copy=resp.clone();
         caches.open(CACHE_NAME).then(cache=>cache.put(req,copy));
-        return response;
-      }))
-    );
-  }
+      }
+      return resp;
+    }))
+  );
 });

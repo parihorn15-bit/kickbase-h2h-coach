@@ -1286,3 +1286,5 @@ input[list]:focus{border-color:#38bdf8;box-shadow:0 0 0 2px rgba(56,189,248,.12)
 
 /* 2.0.6 durability + diagnostics */
 .screenshot-import-status{min-height:18px;padding:5px 0}.ai-warning{white-space:pre-wrap}
+
+/* 2.0.7 cache-bust core */
