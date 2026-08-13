@@ -1279,3 +1279,5 @@ input[list]:focus{border-color:#38bdf8;box-shadow:0 0 0 2px rgba(56,189,248,.12)
 
 /* Version 2.0.3 – importer survives cloud rerenders */
 .screenshot-import-card[data-import-stable="true"]{outline:1px solid rgba(125,211,252,.15)}
+
+/* 2.0.4 update reliability patch */

@@ -1,10 +1,70 @@
-const CACHE='h2h-coach-cloud-v203';
-const ASSETS=['./','./index.html','./styles.css','./app.js','./cloud.js','./config.js','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./team-logos/horn-capital-fc.webp','./team-logos/faeps-ham-united.webp','./team-logos/al-elshani.webp','./team-logos/calcio-rom-fc.webp','./team-logos/cello-football-club.webp','./team-logos/fapse-fc.webp'];
-self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));
-self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))));
-self.addEventListener('fetch',e=>{
-  if(e.request.method!=='GET') return;
-  e.respondWith(fetch(e.request).then(r=>{
-    const copy=r.clone(); caches.open(CACHE).then(c=>c.put(e.request,copy)); return r;
-  }).catch(()=>caches.match(e.request).then(x=>x||caches.match('./index.html'))));
+const CACHE_NAME = 'h2h-coach-cloud-v204';
+const APP_SHELL = [
+  './',
+  './index.html',
+  './styles.css',
+  './app.js',
+  './cloud.js',
+  './manifest.webmanifest'
+];
+
+self.addEventListener('install', event => {
+  self.skipWaiting();
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))))
+      .then(() => self.clients.claim())
+      .then(async () => {
+        const clients = await self.clients.matchAll({type:'window', includeUncontrolled:true});
+        for (const client of clients) client.postMessage({type:'APP_UPDATED', version:'2.0.4'});
+      })
+  );
+});
+
+self.addEventListener('fetch', event => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  const sameOrigin = url.origin === self.location.origin;
+
+  if (req.mode === 'navigate' || (sameOrigin && url.pathname.endsWith('/index.html'))) {
+    event.respondWith(
+      fetch(req, {cache:'no-store'})
+        .then(response => {
+          const copy=response.clone();
+          caches.open(CACHE_NAME).then(cache=>cache.put(req,copy));
+          return response;
+        })
+        .catch(()=>caches.match(req).then(r=>r||caches.match('./index.html')))
+    );
+    return;
+  }
+
+  if (sameOrigin && /\.(?:js|css|webmanifest)$/.test(url.pathname)) {
+    event.respondWith(
+      caches.match(req).then(cached=>{
+        const network=fetch(req,{cache:'no-store'}).then(response=>{
+          const copy=response.clone();
+          caches.open(CACHE_NAME).then(cache=>cache.put(req,copy));
+          return response;
+        }).catch(()=>cached);
+        return cached||network;
+      })
+    );
+    return;
+  }
+
+  if (sameOrigin) {
+    event.respondWith(
+      caches.match(req).then(cached=>cached||fetch(req).then(response=>{
+        const copy=response.clone();
+        caches.open(CACHE_NAME).then(cache=>cache.put(req,copy));
+        return response;
+      }))
+    );
+  }
 });

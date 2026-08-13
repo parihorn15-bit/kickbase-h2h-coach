@@ -1,0 +1,10 @@
+VERSION 2.0.4 – UPDATE RELIABILITY
+
+- Navigation nutzt Network-First statt alten HTML-Cache.
+- Neue Versionen von index.html werden sofort vom Server geholt.
+- JS/CSS aktualisieren ihren Cache im Hintergrund.
+- Alte Cache-Versionen werden beim Aktivieren gelöscht.
+- Neuer Service Worker übernimmt sofort.
+- Nach erfolgreichem Update lädt die App einmal automatisch neu.
+- Screenshot-Fixes aus 2.0.3 bleiben erhalten.
+- Keine Supabase-Migration erforderlich.
