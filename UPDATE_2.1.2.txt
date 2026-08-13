@@ -1,0 +1,18 @@
+VERSION 2.1.2 – TRANSFER SINGLE SOURCE
+
+Zentrale Logik:
+Screenshot -> Transferhistorie -> aktueller Kader -> Aufstellungsseite.
+
+Fixes:
+- Käufe eines Managers erscheinen automatisch in dessen aktuellem Kader.
+- Verkäufe entfernen den Spieler automatisch aus dem aktuellen Kader.
+- Die konkrete Startelf bleibt weiterhin separat und wird nicht durch einen Kauf automatisch verändert.
+- Gegner-Aufstellungsseiten bauen ihren verfügbaren Kader direkt aus der Transferhistorie auf.
+- Für Horn Capital FC werden leagueIntel.managerData['me'].transfers und das bestehende data.players-System synchronisiert.
+- Dadurch erscheinen bereits intern vorhandene/alte Screenshot-Transfers nun auch im normalen Menü „Transfers“ und auf deiner Aufstellungsseite.
+- Neue AI-Transfers für Horn Capital FC werden nach der Übernahme automatisch als normale Spieler-/Transferdatensätze sichtbar.
+- Eigene manuell gepflegte Transfers werden umgekehrt ebenfalls in die Liga-Transferhistorie gespiegelt.
+- AI-Commit synchronisiert nach jeder Übernahme Transferhistorie, Kader und Aufstellungsverfügbarkeit.
+- Importbeleg zeigt zusätzlich die aktuelle Kadergröße.
+- Bereits vorhandene Seed-/Screenshot-Daten dürfen nicht mehr „unsichtbar vorhanden“ sein.
+- Keine neue Supabase-Migration erforderlich.

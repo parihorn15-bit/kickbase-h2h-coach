@@ -1298,3 +1298,6 @@ input[list]:focus{border-color:#38bdf8;box-shadow:0 0 0 2px rgba(56,189,248,.12)
 /* 2.1.1 transactional AI commit */
 .ai-import-receipt{width:100%;font-size:8px;color:#86efac;margin-top:3px}
 #aiCommit:disabled{opacity:.5;cursor:not-allowed}
+
+/* 2.1.2 – transfer history is the roster source */
+.transfer-source-note{font-size:8px;color:#86efac}

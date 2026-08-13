@@ -1,5 +1,5 @@
-const CACHE_NAME='h2h-coach-cloud-v211';
-const CORE=['./','./index.html','./styles.css?v=211','./config.js?v=211','./app.js?v=211','./cloud.js?v=211','./manifest.webmanifest'];
+const CACHE_NAME='h2h-coach-cloud-v212';
+const CORE=['./','./index.html','./styles.css?v=212','./config.js?v=212','./app.js?v=212','./cloud.js?v=212','./manifest.webmanifest'];
 
 self.addEventListener('install',event=>{
   self.skipWaiting();
@@ -13,7 +13,7 @@ self.addEventListener('activate',event=>{
       .then(()=>self.clients.claim())
       .then(async()=>{
         const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});
-        for(const client of clients) client.postMessage({type:'APP_UPDATED',version:'2.1.1'});
+        for(const client of clients) client.postMessage({type:'APP_UPDATED',version:'2.1.2'});
       })
   );
 });
