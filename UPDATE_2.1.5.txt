@@ -1,0 +1,36 @@
+VERSION 2.1.5 – CANONICAL PLAYER IDENTITY
+
+GRUNDPRINZIP
+Der Name aus dem Kickbase-Screenshot ist nur ein Hinweis.
+Der vollständige Spielerdatensatz aus der Bundesliga-Spielerdatenbank ist der Master.
+
+MATCHING
+- Exakter vollständiger Name zuerst.
+- Danach eindeutiger Nachname (Kickbase zeigt in Transfers oft nur den Nachnamen).
+- Bei gleichem Nachnamen mehrerer Spieler werden Verein und bereits vorhandene Managerdaten zur Auflösung verwendet.
+- Wenn es danach noch mehrdeutig ist, wird NICHT geraten.
+
+BEISPIELE
+- Anton -> Waldemar Anton
+- Olise -> Michael Olise
+- Götze -> Mario Götze
+- Kohr -> Dominik Kohr
+- Schwolow -> Alexander Schwolow
+- Pedersen -> Mads Pedersen
+- Lienhart -> Philipp Lienhart
+
+BEREINIGUNG
+- Transfer-Datensätze werden auf den kanonischen vollständigen Namen umgeschrieben.
+- Eigene Spieler-Dubletten werden auf einen Master-Datensatz zusammengeführt.
+- Preis, Kauf-/Verkaufsdatum, Quelle und Notizen aus Screenshot-Dubletten werden in den Master gemerged.
+- Aufstellungs- und Bankreferenzen werden ebenfalls auf den vollständigen Spielernamen umgeschrieben.
+- Verein und Position werden aus dem vollständigen Spielerdatensatz ergänzt.
+- Die alte 2.1.4-Heuristik ist deaktiviert; die neue Migration läuft einmalig und geschützt.
+
+IMPORT
+- Neue AI-Screenshot-Transfers werden vor Vorschau und Commit kanonisch aufgelöst.
+- So entstehen künftig keine neuen Kurzname-Dubletten mehr.
+
+- Transfer Single Source bleibt aktiv.
+- Historische Horn-Capital-Datenkorrektur bleibt aktiv.
+- Keine neue Supabase-Migration erforderlich.
