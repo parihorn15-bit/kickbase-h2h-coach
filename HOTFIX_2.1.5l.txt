@@ -1,0 +1,11 @@
+VERSION 2.1.5l – BUNDESLIGA MASTER PLAYER IDs
+
+- Primäre Masterquelle: bundesliga_players (erfolgreich aktualisiert: 555 Spieler).
+- external_id / Player-ID wird als stabile Identität gespeichert.
+- Nachnamen werden über last_name bzw. letzten Namensbestandteil aufgelöst.
+- Automatische Zuordnung nur bei eindeutigen Treffern.
+- Bei Mehrdeutigkeit helfen Verein/Position; sonst bleibt der Fall offen.
+- Vereine und Positionen werden aus dem Master ergänzt.
+- Transfer- und Spieler-Dubletten werden bevorzugt über Player-ID gruppiert.
+- Nicht auflösbare Namen erscheinen als „Offen zur Prüfung“.
+- Cloud/Bootstrap aus 2.1.5j/k bleibt unverändert.
