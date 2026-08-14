@@ -1,0 +1,13 @@
+VERSION 2.1.5e – IDENTITY DIAGNOSTICS + REAL MASTER SOURCE
+
+- Der Spielerresolver nutzt jetzt exakt denselben Pool wie die bereits funktionierende UI:
+  selectableBundesligaPlayers() / selectablePlayerIndex().
+- Einwort-Datensätze ohne Verein bleiben als Master ausgeschlossen.
+- Vollständige/enriched lokale Datensätze dürfen als Master dienen, selbst wenn Supabase gerade noch lädt.
+- Diagnosebereich zeigt Master-Anzahl, Supabase-Anzahl, lokale Datensätze und konkrete Alias-Matches.
+- Testet u.a. Anton, Olise, Burke, Götze, Kohr, Schwolow, Pedersen, Lienhart, Gosens.
+- Bereinigung startet nur manuell.
+- Transfer-Dubletten mit gleichem kanonischen Spieler/Typ/Preis werden zusammengeführt,
+  wenn mindestens einer der Datensätze aus Screenshot-Import stammt.
+- Keine automatische Migration beim Start.
+- Keine Supabase-Migration erforderlich.
