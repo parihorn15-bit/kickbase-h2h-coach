@@ -1,0 +1,6 @@
+VERSION 2.1.5c – IDENTITY CLEANUP CONTROL
+
+- Fix: sichtbarer Button „Spielerdaten bereinigen“ direkt im Kopf der Transferhistorie.
+- Status des letzten Bereinigungslaufs wird direkt darunter angezeigt.
+- Bereinigung bleibt vollständig manuell; kein automatischer Lauf beim App-Start oder Cloud-Sync.
+- Indexed Identity Engine aus 2.1.5b bleibt unverändert erhalten.

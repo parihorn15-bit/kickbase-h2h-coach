@@ -1318,3 +1318,5 @@ input[list]:focus{border-color:#38bdf8;box-shadow:0 0 0 2px rgba(56,189,248,.12)
 .canonical-cleanup-card{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:10px 0;padding:12px;border:1px solid #29455f;border-radius:12px;background:#0b1827}
 .canonical-cleanup-card>div:first-child{display:flex;flex-direction:column;gap:3px}.canonical-cleanup-card small{color:#8fa6bc}
 #canonicalCleanupStatus{width:100%;font-size:8px;color:#86efac}
+
+.canonical-cleanup-status{margin:-2px 0 12px;color:#86efac;font-size:11px;min-height:14px}
