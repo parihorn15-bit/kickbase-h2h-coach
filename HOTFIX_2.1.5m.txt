@@ -1,0 +1,21 @@
+VERSION 2.1.5m – canonicalIdentitySourceRows Hotfix
+
+Minimaler Fix auf Basis des hochgeladenen 2.1.5l-Projektstands.
+
+Behoben:
+- canonicalIdentitySourceRows is not defined
+
+Umsetzung:
+- compatibility shim canonicalIdentitySourceRows() ergänzt
+- nutzt die bereits vorhandene und autoritative Quelle bundesligaMasterPlayers()
+- keine Änderung an Cloud-Sync
+- keine Änderung am football-data.org Workflow
+- keine Änderung an Supabase
+- keine automatische Datenmigration
+
+Test:
+1. Deployen.
+2. App hart neu laden.
+3. Prüfen, dass Version 2.1.5m angezeigt wird.
+4. Transfers -> Spielerdaten bereinigen.
+5. Ergebniszeile / offenen Fälle prüfen.
