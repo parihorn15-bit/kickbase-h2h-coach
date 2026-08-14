@@ -1,29 +1,4 @@
 
-function mergeData(localValue, remoteValue){
-  // 2.1.5h: defensive recursive merge used by cloud synchronization.
-  // Remote data wins for scalar conflicts, while object keys from both sides are preserved.
-  if(remoteValue===undefined || remoteValue===null) return localValue;
-  if(localValue===undefined || localValue===null) return remoteValue;
-
-  if(Array.isArray(localValue) || Array.isArray(remoteValue)){
-    // App arrays are domain records; replacing with remote is safer than index-wise merging.
-    return Array.isArray(remoteValue) ? remoteValue : localValue;
-  }
-
-  const localIsObj=typeof localValue==='object' && localValue!==null;
-  const remoteIsObj=typeof remoteValue==='object' && remoteValue!==null;
-  if(localIsObj && remoteIsObj){
-    const out={...localValue};
-    for(const [key,value] of Object.entries(remoteValue)){
-      out[key]=key in out ? mergeData(out[key],value) : value;
-    }
-    return out;
-  }
-
-  return remoteValue;
-}
-
-
 (() => {
   const cfg = window.H2H_CLOUD_CONFIG || {};
   const configured =
@@ -369,5 +344,3 @@ function mergeData(localValue, remoteValue){
 
   window.addEventListener("DOMContentLoaded", initCloud);
 })();
-
-try{ window.mergeData=mergeData; }catch(e){}

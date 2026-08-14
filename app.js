@@ -52,20 +52,6 @@ const LEAGUE_CRESTS={
   'Cello Football Club':'team-logos/cello-football-club.webp',
   'FAPSE FC':'team-logos/fapse-fc.webp'
 };
-
-function mergeData(localValue, remoteValue){
-  if(window.mergeData && window.mergeData!==mergeData)return window.mergeData(localValue,remoteValue);
-  if(remoteValue===undefined || remoteValue===null)return localValue;
-  if(localValue===undefined || localValue===null)return remoteValue;
-  if(Array.isArray(localValue) || Array.isArray(remoteValue))return Array.isArray(remoteValue)?remoteValue:localValue;
-  if(typeof localValue==='object'&&localValue&&typeof remoteValue==='object'&&remoteValue){
-    const out={...localValue};
-    for(const [k,v] of Object.entries(remoteValue))out[k]=k in out?mergeData(out[k],v):v;
-    return out;
-  }
-  return remoteValue;
-}
-
 function localDateISO(date=new Date()){
   const parts=new Intl.DateTimeFormat('en-CA',{
     timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone||'Europe/Berlin',
@@ -812,55 +798,6 @@ function selectablePlayerIndex(){
 }
 
 
-let __canonicalIdentityIndex=null;
-let __canonicalIdentityIndexStamp='';
-
-function canonicalIdentitySourceRows(){
-  // 2.1.5f: build identities from all reliable sources, including the transfer
-  // history itself. This is crucial when Kickbase screenshots only contain surnames.
-  const raw=selectableBundesligaPlayers();
-  const rows=[];
-
-  const pushMaster=(p,source='ui-master')=>{
-    const name=String(p?.name||p?.player||'').trim();
-    if(!name)return;
-    const tokens=normalizePlayerName(name).split(/\s+/).filter(Boolean);
-    const team=String(p?.team||p?.club||'').trim();
-    const position=String(p?.position||'').trim();
-
-    // Never promote a bare imported surname without enrichment.
-    if(tokens.length===1 && !team && !position)return;
-    rows.push({id:p?.id||'',name,team,position,source});
-  };
-
-  for(const p of raw)pushMaster(p,'selectable');
-
-  // A full-name transfer row is itself a strong local identity master.
-  // This lets Gosens -> Robin Gosens, Kohr -> Dominik Kohr, Tape -> Axel Tape,
-  // even if the remote player catalogue is unavailable or incomplete.
-  for(const manager of LEAGUE_MANAGERS){
-    const transfers=managerLeagueData(manager.id)?.transfers||[];
-    for(const t of transfers){
-      const name=String(t?.player||'').trim();
-      const parts=normalizePlayerName(name).split(/\s+/).filter(Boolean);
-      if(parts.length>1)pushMaster({
-        id:t.id||'',
-        name,
-        team:t.club||'',
-        position:t.position||''
-      },'transfer-fullname');
-    }
-  }
-
-  const byName=new Map();
-  for(const p of rows){
-    const key=normalizePlayerName(p.name);
-    const old=byName.get(key);
-    const richness=x=>(x.team?4:0)+(x.position?2:0)+(x.source==='selectable'?1:0);
-    if(!old||richness(p)>richness(old))byName.set(key,p);
-  }
-  return [...byName.values()];
-}
 let _canonicalIdentityIndex=null;
 function buildCanonicalIdentityIndex(force=false){
   if(_canonicalIdentityIndex && !force)return _canonicalIdentityIndex;
@@ -933,6 +870,334 @@ function canonicalPlayerKey(name,context={}){
   return normalizePlayerName(r.matched?r.name:name);
 }
 
+
+function findSelectablePlayerByName(name){
+  return selectablePlayerIndex().index.get(normalizePlayerName(name))||null;
+}
+function bindPlayerAutocomplete({inputId,clubId}){
+  const input=document.getElementById(inputId);
+  const club=document.getElementById(clubId);
+  if(!input||!club)return;
+
+  const applyClub=()=>{
+    const player=findSelectablePlayerByName(input.value);
+    if(!player?.team)return;
+
+    if(club.tagName==='SELECT'&&!Array.from(club.options).some(option=>option.value===player.team)){
+      const option=document.createElement('option');
+      option.value=player.team;
+      option.textContent=player.team;
+      club.appendChild(option);
+    }
+    club.value=player.team;
+    club.dispatchEvent(new Event('change',{bubbles:true}));
+  };
+
+  input.addEventListener('input',()=>{
+    if(findSelectablePlayerByName(input.value))applyClub();
+  });
+  input.addEventListener('change',applyClub);
+  input.addEventListener('blur',applyClub);
+  if(input.value)applyClub();
+}
+
+function selectableGermanClubs(){
+  const live=(window.BUNDESLIGA_CLUBS||[])
+    .map(club=>club.team)
+    .filter(Boolean);
+  const players=(window.BUNDESLIGA_PLAYERS||[])
+    .map(player=>player.team)
+    .filter(Boolean);
+  return [...new Set([...TEAMS,...live,...players])]
+    .sort((a,b)=>a.localeCompare(b,'de'));
+}
+function clubSelectOptions(selected='',includeUnknown=true){
+  const clubs=selectableGermanClubs();
+  return `${includeUnknown?`<option value="">Verein nicht bekannt</option>`:''}${clubs.map(club=>
+    `<option value="${esc(club)}" ${club===selected?'selected':''}>${esc(club)}</option>`
+  ).join('')}`;
+}
+function scoutTargetOptions(selected='me'){
+  return [
+    `<option value="me" ${selected==='me'?'selected':''}>Mein Team</option>`,
+    ...MANAGER_OPTIONS.map(manager=>
+      `<option value="${manager.id}" ${selected===manager.id?'selected':''}>${esc(manager.team)} · ${esc(manager.manager)}</option>`
+    )
+  ].join('');
+}
+function scoutTargetLabel(targetId){
+  if(targetId==='me')return 'Mein Team';
+  return managerById(targetId)?.team||'Gegner';
+}
+function routeLivePlayer(externalId){
+  const player=window.BUNDESLIGA_PLAYERS.find(x=>+x.external_id===+externalId);
+  if(!player)return toast('Spieler nicht gefunden');
+  const target=data.ui?.scoutTarget||'me';
+  if(target==='me'){
+    buyLivePlayer(externalId);
+    return;
+  }
+  addOpponentTransfer(target,{
+    type:'Kauf',
+    md:data.settings.currentMd,
+    player:player.name||'',
+    club:player.team||'',
+    date:localDateISO(),
+    note:'Aus dem Scout Center übernommen'
+  });
+}
+
+function buyLivePlayer(externalId){
+  const p=window.BUNDESLIGA_PLAYERS.find(x=>+x.external_id===+externalId);
+  if(!p)return toast('Spieler nicht gefunden');
+  sessionStorage.setItem(TRANSFER_DRAFT_KEY,JSON.stringify({
+    pfName:p.name||'',
+    pfTeam:p.team||'',
+    pfPos:mapLivePosition(p.position),
+    pfDate:localDateISO(),
+    pfBuy:'',
+    pfMwb:'',
+    pfMw:'',
+    pfAvg:'',
+    pfBuySource:'Transfermarkt',
+    pfBuyCounterparty:'',
+    pfBuyReasons:['Gutes Programm'],
+    pfNote:'',
+    externalPlayerId:p.external_id,
+    photoUrl:p.photo_url||''
+  }));
+  page='transfers';
+  render();
+  setTimeout(()=>$('#buyPlayer')?.click(),0);
+}
+
+
+const H2H_ROUNDS=[
+[['fabi','fabio'],['elias','marci'],['me','manu']],
+[['marci','fabi'],['me','fabio'],['manu','elias']],
+[['me','fabi'],['marci','manu'],['fabio','elias']],
+[['manu','fabi'],['me','elias'],['fabio','marci']],
+[['fabi','elias'],['manu','fabio'],['me','marci']]
+];
+function buildH2HSchedule(){
+  const out=[];
+  for(let md=1;md<=34;md++){
+    const cycle=Math.floor((md-1)/5);
+    const round=H2H_ROUNDS[(md-1)%5];
+    round.forEach(([a,b],index)=>{
+      const reverse=cycle%2===1;
+      out.push({md,slot:index+1,home:reverse?b:a,away:reverse?a:b});
+    });
+  }
+  return out;
+}
+const H2H_SCHEDULE=buildH2HSchedule();
+function managerById(id){return (data.leagueManagers||LEAGUE_MANAGERS).find(x=>x.id===id)||LEAGUE_MANAGERS.find(x=>x.id===id)}
+function managerLabel(id){const m=managerById(id);return m?`${m.team} (${m.manager})`:id}
+function otherManagerOptions(selected=''){return MANAGER_OPTIONS.map(m=>`<option value="${esc(m.team)}" ${selected===m.team?'selected':''}>${esc(m.team)} (${esc(m.manager)})</option>`).join('')}const DAILY_BONUSES=Array.from({length:10},(_,i)=>({label:`Tag ${i+1}`,amount:(i+1)*10000}));const ACHIEVEMENT_BONUSES=[{label:'Spieltagssieger',amount:1000000},{label:'Spieltagspunkte Silber (≥ 1.000)',amount:250000},{label:'Spieltagspunkte Gold (≥ 1.500)',amount:500000},{label:'Jahrhundertspiel (≥ 2.000)',amount:1000000},{label:'Topscorer (200 Punkte)',amount:100000},{label:'Matchwinner (300 Punkte)',amount:500000},{label:'Weltklasse (400 Punkte)',amount:1000000},{label:'Fußballgott (500 Punkte)',amount:2000000},{label:'MVP',amount:1000000},{label:'Tormaschine',amount:250000},{label:'Bronzenes Händchen (3 Mio. Gewinn)',amount:250000},{label:'Silbernes Händchen (5 Mio. Gewinn)',amount:500000},{label:'Goldenes Händchen (10 Mio. Gewinn)',amount:1000000},{label:'Königstransfer (25 Mio. Gewinn)',amount:2000000},{label:'Glückliches Händchen',amount:1000000},{label:'Meister',amount:2000000},{label:'Vizemeister',amount:1000000}];const SEEDED_DATA={"version":3,"settings":{"currentMd":1,"mode":"quick","startCapital":200000000,"homeBonus":1,"lineupSize":11},"players":[{"id":"4eb80f64-293c-4b3a-a93b-3989361b1027","name":"Axel Tape","team":"Bayer 04 Leverkusen","position":"Abwehr","buyDate":"2026-08-02","buyPrice":5071935,"marketAtBuy":0,"marketValue":4655501,"avgPoints":0,"note":""},{"id":"41172e46-cd74-405a-bf78-fa8884a27cac","name":"Robin Gosens","team":"FC Schalke 04","position":"Abwehr","buyDate":"2026-08-03","buyPrice":11445599,"marketAtBuy":0,"marketValue":11407285,"avgPoints":0,"note":"","soldDate":"2026-08-03","salePrice":11407285,"saleReason":"Sinkender Marktwert"},{"id":"016bc246-b164-4a17-a686-cd4a2e90c0d3","name":"Dominik Kohr","team":"1. FSV Mainz 05","position":"Abwehr","buyDate":"2026-08-03","buyPrice":6543210,"marketAtBuy":0,"marketValue":6627684,"avgPoints":0,"note":""},{"id":"6629cde9-bacc-4a2c-8cf1-d2bd98c55480","name":"Jovan Milosevic","team":"VfB Stuttgart","position":"Sturm","buyDate":"2026-08-03","buyPrice":4141414,"marketAtBuy":0,"marketValue":3539303,"avgPoints":0,"note":""}],"finances":[{"id":"start","date":"2026-08-01","type":"Startkapital","description":"Start ohne Kader","amount":200000000},{"id":"ac5941c7-600d-4b97-b27e-1af756a30baf","date":"2026-08-02","type":"Spielerkauf","description":"Kauf Axel Tape","amount":-5071935},{"id":"158bd348-1fc2-4dcd-85fe-0541c4901cfc","date":"2026-08-02","type":"Erfolgsbonus","description":"Kreisliga","amount":1000000},{"id":"466b9c05-c952-4ffa-802b-0861146ef671","date":"2026-08-02","type":"Erfolgsbonus","description":"Regionalliga","amount":1000000},{"id":"80b55a26-862c-4308-930c-2a0b0bac48af","date":"2026-08-02","type":"Erfolgsbonus","description":"Erster Deal","amount":100000},{"id":"ddee6a22-5c27-4387-baa0-caf7cdec2f05","date":"2026-08-03","type":"Tagesanmeldebonus","description":"Tag 1","amount":10000},{"id":"23eb8316-babe-4af3-bf4b-0921645d3098","date":"2026-08-04","type":"Tagesanmeldebonus","description":"Tag 2","amount":20000},{"id":"618181e0-a4f3-46a0-98af-eea7ba7d8d04","date":"2026-08-03","type":"Spielerkauf","description":"Kauf Robin Gosens","amount":-11445599},{"id":"4c3c279c-c039-4ecc-9b56-e105e858bbc1","date":"2026-08-03","type":"Spielerkauf","description":"Kauf Dominik Kohr","amount":-6543210},{"id":"b9c2a384-9ece-4b1f-a87b-4b00ae137cc4","date":"2026-08-03","type":"Spielerkauf","description":"Kauf Jovan Milosevic","amount":-4141414},{"id":"a511955c-44d8-46db-9b75-8fd010f78f26","date":"2026-08-03","type":"Spielerverkauf","description":"Verkauf Robin Gosens","amount":11407285}],"matchdays":[{"id":"6abff25d-b7c8-4738-80c1-fda4f34ebf2b","md":1,"mvp":"","points":{},"lineup":[],"soldPlayer":"","soldDate":"","soldPrice":0}],"opponents":[],"h2h":[],"teamStrength":{"1. FC Köln":5,"1. FC Union Berlin":5,"1. FSV Mainz 05":5,"Bayer 04 Leverkusen":5,"Borussia Dortmund":5,"Borussia Mönchengladbach":5,"Eintracht Frankfurt":5,"FC Augsburg":5,"FC Bayern München":5,"FC Schalke 04":5,"Hamburger SV":5,"RB Leipzig":5,"SC Paderborn 07":5,"SV Elversberg":5,"SV Werder Bremen":5,"Sport-Club Freiburg":5,"TSG Hoffenheim":5,"VfB Stuttgart":5}};const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));const id=()=>crypto.randomUUID?.()||Math.random().toString(36).slice(2);const FALLBACK_TEAMS=['1. FC Köln','1. FC Union Berlin','1. FSV Mainz 05','Bayer 04 Leverkusen','Borussia Dortmund','Borussia Mönchengladbach','Eintracht Frankfurt','FC Augsburg','FC Bayern München','FC Schalke 04','Hamburger SV','RB Leipzig','SC Paderborn 07','SV Elversberg','SV Werder Bremen','Sport-Club Freiburg','TSG Hoffenheim','VfB Stuttgart'];const TEAMS=[...new Set([...(Array.isArray(FIXTURES)?FIXTURES.flatMap(x=>[x.home,x.away]).filter(Boolean):[]),...FALLBACK_TEAMS])].sort((a,b)=>a.localeCompare(b,'de'));
+const defaults={version:66,teamStrengthDetails:{},teamStrengthCloudUpdatedAt:'',ui:{transferFilter:'all',transferSearch:'',leagueTab:'current',bundesligaTab:'matchups',bundesligaTeam:'Alle',bundesligaSearch:'',rulesSection:'overview',scoutPosition:'Alle',scoutTeam:'Alle',scoutSearch:''},settings:{currentMd:1,mode:'quick',startCapital:200000000,homeBonus:1,lineupSize:11},players:[],finances:[{id:'start',date:'2026-08-01',type:'Startkapital',description:'Start ohne Kader',amount:200000000}],matchdays:[],opponents:[],h2h:[],leagueManagers:LEAGUE_MANAGERS,leagueIntel:{managerData:{},reminderDismissed:{}},lineupIntel:{pending:[],lastImport:''},teamStrength:{...TEAM_STRENGTH_BASELINE}};
+const KICKBASE_AI_ENDPOINT='https://amdtcadswtmgwdhytehe.supabase.co/functions/v1/kickbase-ai';
+let data=load(),page='dashboard';function mergeData(x){
+  const source=x&&typeof x==='object'?x:{};
+  const incomingStrengths=source.teamStrength&&typeof source.teamStrength==='object'
+    ? source.teamStrength
+    : {};
+  const known=Object.values(incomingStrengths).filter(v=>Number.isFinite(+v));
+  const looksLikeOldPlaceholder=known.length>0&&known.every(v=>+v===5);
+  const strengths=looksLikeOldPlaceholder
+    ? {...TEAM_STRENGTH_BASELINE}
+    : {...TEAM_STRENGTH_BASELINE,...incomingStrengths};
+
+  return {
+    ...structuredClone(defaults),
+    ...source,
+    version:7,
+    ui:{...defaults.ui,...(source.ui||{})},
+    settings:{...defaults.settings,...(source.settings||{})},
+    leagueManagers:LEAGUE_MANAGERS,
+    lineupIntel:{...defaults.lineupIntel,...(source.lineupIntel||{})},
+    teamStrength:strengths,
+    teamStrengthDetails:{
+      ...(defaults.teamStrengthDetails||{}),
+      ...(source.teamStrengthDetails&&typeof source.teamStrengthDetails==='object'
+        ? source.teamStrengthDetails
+        : {})
+    },
+    teamStrengthCloudUpdatedAt:source.teamStrengthCloudUpdatedAt||''
+  };
+}
+function fixture(team,md=data.settings.currentMd){
+  const f=FIXTURES.find(x=>+x.md===+md&&(x.home===team||x.away===team));
+  if(!f)return null;
+  return{
+    opp:f.home===team?f.away:f.home,
+    ha:f.home===team?'H':'A',
+    date:f.date
+  };
+}
+function strength(team){
+  const value=Number(data?.teamStrength?.[team]);
+  return Number.isFinite(value)?value:Number(TEAM_STRENGTH_BASELINE[team]||5);
+}
+function strengthDetail(team){
+  const detail=data?.teamStrengthDetails?.[team];
+  return detail&&typeof detail==='object'?detail:null;
+}
+function strengthFreshness(){
+  const raw=data?.teamStrengthCloudUpdatedAt;
+  if(!raw)return `Lokale Basiswerte · Stand ${TEAM_STRENGTH_META.updatedAt}`;
+  const parsed=new Date(raw);
+  if(Number.isNaN(parsed.getTime()))return 'Cloud-Teamstärken geladen';
+  return `Cloud-Update ${parsed.toLocaleString('de-DE')}`;
+}
+function matchup(player,md=data.settings.currentMd){
+  const f=fixture(player.team,md);
+  if(!f)return 5;
+  const homeBonus=f.ha==='H'?Number(data.settings.homeBonus||0):0;
+  return Math.max(1,Math.min(10,5+strength(player.team)-strength(f.opp)+homeBonus));
+}
+function score(player){
+  return Number(player.avgPoints||0)+matchup(player)*10+(LI_SCORE[player.liStatus||'Unbekannt']||0);
+}
+function rankPlayers(){
+  return [...activePlayers()].sort((a,b)=>score(b)-score(a));
+}
+function previousSavedLineup(md){
+  const activeIds=new Set(activePlayers().map(player=>player.id));
+  const previous=(data.matchdays||[])
+    .filter(record=>+record.md<+md&&Array.isArray(record.lineup)&&record.lineup.length)
+    .sort((a,b)=>+b.md-+a.md)[0];
+  if(!previous)return{lineup:[],sourceMd:null};
+  return{
+    lineup:[...new Set(previous.lineup.filter(playerId=>activeIds.has(playerId)))].slice(0,11),
+    sourceMd:+previous.md
+  };
+}
+function mdRecord(md){
+  let record=data.matchdays.find(x=>+x.md===+md);
+  if(!record){
+    const inherited=previousSavedLineup(md);
+    record={
+      id:id(),md:+md,mvp:'',points:{},
+      lineup:[...inherited.lineup],
+      lineupInheritedFrom:inherited.sourceMd,
+      lineupInheritedAt:inherited.sourceMd?new Date().toISOString():null,
+      soldPlayer:'',soldDate:'',soldPrice:0
+    };
+    data.matchdays.push(record);
+  }
+  if(!record.points||typeof record.points!=='object')record.points={};
+  if(!Array.isArray(record.lineup))record.lineup=[];
+  return record;
+}
+function top3(md){
+  const record=mdRecord(md);
+  return activePlayers()
+    .map(player=>({p:player,pts:Number(record.points[player.id]||0)}))
+    .sort((a,b)=>b.pts-a.pts)
+    .slice(0,3);
+}
+function mandatoryStatus(md){
+  const record=mdRecord(md);
+  const mvpName=String(record.mvp||'').trim().toLocaleLowerCase('de-DE');
+  const mvpOwned=mvpName
+    ? activePlayers().find(p=>String(p.name||'').trim().toLocaleLowerCase('de-DE')===mvpName)
+    : null;
+  const top=top3(md);
+  if(!record.mvp)return{state:'waiting',text:'Bundesliga-MVP fehlt'};
+  if(mvpOwned){
+    const valid=record.soldPlayer===mvpOwned.name;
+    return{state:valid?'done':'open',text:valid?'Erledigt':mvpOwned.name,mvpOwned:true};
+  }
+  const valid=top.some(x=>x.p.name===record.soldPlayer);
+  return{
+    state:valid?'done':'open',
+    text:valid?'Erledigt':'Wahl aus: '+top.map(x=>x.p.name).filter(Boolean).join(', '),
+    mvpOwned:false
+  };
+}
+
+function load(){try{const raw=localStorage.getItem('kickbaseCoachV07')||localStorage.getItem('kickbaseCoachV06')||localStorage.getItem('kickbaseCoachV05')||localStorage.getItem('kickbaseCoachV04')||localStorage.getItem('kickbaseCoachV03')||localStorage.getItem('kickbaseCoachV2');return raw?mergeData(JSON.parse(raw)):mergeData(SEEDED_DATA)}catch{return mergeData(SEEDED_DATA)}}function save(){syncTransferSingleSource();localStorage.setItem('kickbaseCoachV07',JSON.stringify(data));if(window.cloudQueueSave)window.cloudQueueSave();toast('Gespeichert')}function touch(){save();render()}function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1300)}
+const activePlayers=()=>data.players.filter(p=>!p.soldDate);const soldPlayers=()=>data.players.filter(p=>p.soldDate);const financeTotal=()=>data.finances.reduce((a,x)=>a+(+x.amount||0),0);const squadValue=()=>activePlayers().reduce((a,p)=>a+(+p.marketValue||0),0);const wealth=()=>financeTotal()+squadValue();const realized=()=>soldPlayers().reduce((a,p)=>a+(+p.salePrice||0)-(+p.buyPrice||0),0);const unrealized=()=>activePlayers().reduce((a,p)=>a+(+p.marketValue||0)-(+p.buyPrice||0),0);
+function fixture(team,md=data.settings.currentMd){const f=FIXTURES.find(x=>x.md===md&&(x.home===team||x.away===team));if(!f)return null;return{opp:f.home===team?f.away:f.home,ha:f.home===team?'H':'A',date:f.date}}function strength(t){return +data.teamStrength[t]||5}function matchup(p,md=data.settings.currentMd){const f=fixture(p.team,md);if(!f)return 5;return Math.max(1,Math.min(10,5+strength(p.team)-strength(f.opp)+(f.ha==='H'?+data.settings.homeBonus:0)))}function score(p){return (+p.avgPoints||0)+matchup(p)*10+(LI_SCORE[p.liStatus||'Unbekannt']||0)}function rankPlayers(){return [...activePlayers()].sort((a,b)=>score(b)-score(a))}function mdRecord(md){let x=data.matchdays.find(x=>x.md===md);if(!x){x={id:id(),md,mvp:'',points:{},lineup:[],soldPlayer:'',soldDate:'',soldPrice:0};data.matchdays.push(x)}return x}function top3(md){const r=mdRecord(md);return activePlayers().map(p=>({p,pts:+r.points[p.id]||0})).sort((a,b)=>b.pts-a.pts).slice(0,3)}function mandatoryStatus(md){const r=mdRecord(md),mvpOwned=activePlayers().find(p=>p.name.trim().toLowerCase()===r.mvp.trim().toLowerCase());const top=top3(md);let valid=false,required='';if(!r.mvp)return{state:'waiting',text:'Bundesliga-MVP fehlt'};if(mvpOwned){required=mvpOwned.name;valid=r.soldPlayer===required}else{required='Wahl aus: '+top.map(x=>x.p.name).filter(Boolean).join(', ');valid=top.some(x=>x.p.name===r.soldPlayer)}return{state:valid?'done':'open',text:valid?'Erledigt':required,mvpOwned:!!mvpOwned}}
+const NAV_GROUPS=[
+  {id:'coach',label:'Coach',icon:'🟢',items:[
+    ['dashboard','Übersicht','⌂'],
+    ['squad','Aufstellung','⚽'],
+    ['scout','Scout Center','⌕'],
+    ['news','News Intelligence','📰'],
+    ['matchday','Spieltag','◷']
+  ]},
+  {id:'league',label:'Liga',icon:'🔵',items:[
+    ['competition','H2H Liga','🏆'],
+    ['bundesliga','Bundesliga','🇩🇪'],
+    ['lineupintel','LigaInsider','🩺'],
+    ['rules','Regelwerk','§']
+  ]},
+  {id:'office',label:'Managerbüro',icon:'🟠',items:[
+    ['transfers','Transfers','⇄'],
+    ['finances','Finanzen','€'],
+    ['analysis','Intelligence','▥'],
+    ['settings','Einstellungen','⚙']
+  ]}
+];
+const nav=NAV_GROUPS.flatMap(group=>group.items.map(([key,label,icon])=>[key,`${icon} ${label}`]));
+function navHtml(){
+  return NAV_GROUPS.map(group=>`<section class="nav-group" data-nav-group="${group.id}">
+    <div class="nav-group-title"><span>${group.icon}</span>${group.label}</div>
+    ${group.items.map(([key,label,icon])=>`<button class="nav-btn" data-page="${key}"><span>${icon}</span><b>${label}</b></button>`).join('')}
+  </section>`).join('');
+}
+function bottomNavHtml(){
+  return `<nav class="bottom-nav">
+    <button data-page="dashboard" data-zone="coach"><span>⌂</span><b>Coach</b></button>
+    <button data-page="squad"><span>⚽</span><b>Elf</b></button>
+    <button data-page="competition" data-zone="league"><span>🏆</span><b>Liga</b></button>
+    <button data-page="transfers" data-zone="office"><span>⇄</span><b>Büro</b></button>
+    <button id="bottomMore"><span>☰</span><b>Mehr</b></button>
+  </nav>`;
+}
+function goPage(next){
+  page=next;
+  render();
+  $('#sidebar')?.classList.remove('open');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function bindGlobalNavigation(){
+  $$('[data-page]').forEach(button=>button.onclick=()=>goPage(button.dataset.page));
+  const more=$('#bottomMore');
+  if(more)more.onclick=()=>$('#sidebar')?.classList.toggle('open');
+}
+function init(){
+  const n=$('#nav');
+  n.innerHTML=navHtml();
+  if(!$('#bottomNavigation')){
+    const holder=document.createElement('div');
+    holder.id='bottomNavigation';
+    holder.innerHTML=bottomNavHtml();
+    document.body.appendChild(holder.firstElementChild);
+  }
+  bindGlobalNavigation();
+  $('#menuBtn').onclick=()=>$('#sidebar').classList.toggle('open');
+  $('#currentMd').innerHTML=Array.from({length:34},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('');
+  $('#currentMd').value=data.settings.currentMd;
+  $('#currentMd').onchange=e=>{data.settings.currentMd=+e.target.value;touch()};
+  $$('[data-mode]').forEach(b=>b.onclick=()=>{data.settings.mode=b.dataset.mode;touch()});
+  $('#exportBtn').onclick=exportData;
+  $('#importFile').onchange=importData;
+  $('#resetBtn').onclick=()=>{
+    if(confirm('Wirklich alle Daten löschen?')){
+      ['kickbaseCoachV07','kickbaseCoachV06','kickbaseCoachV05','kickbaseCoachV04','kickbaseCoachV03','kickbaseCoachV2'].forEach(k=>localStorage.removeItem(k));
+      data=mergeData(SEEDED_DATA);touch();
+    }
+  };
+  render();
+}
+
+
+
+
+
 function canonicalDiagnosticSnapshot(){
   buildCanonicalIdentityIndex();
   const aliases=['Anton','Olise','Burke','Götze','Kohr','Schwolow','Pedersen','Lienhart','Gosens','Tape','Kristof','Beste','Deman','Conté','Pruhs','García','Erevbenagie'];
@@ -969,7 +1234,7 @@ function runV215bCanonicalCleanup(){
   window.__v215bCleanupRunning=true;
 
   try{
-    buildCanonicalIdentityIndex(true);
+    buildCanonicalIdentityIndex();
 
     let renamed=0,clubs=0,mergedTransfers=0,mergedPlayers=0,lineupRefs=0;
 
@@ -1038,7 +1303,7 @@ function runV215bCanonicalCleanup(){
     // Own player records: merge every record of the same canonical player.
     // The full/enriched player remains master; screenshot rows contribute transactions.
     data.players=Array.isArray(data.players)?data.players:[];
-    buildCanonicalIdentityIndex(true);
+    buildCanonicalIdentityIndex();
 
     const grouped=new Map();
     for(const p of data.players){
@@ -1110,7 +1375,7 @@ function runV215bCanonicalCleanup(){
     data.players=merged;
 
     // Rebuild once after merge so subsequent lineup resolution uses the clean masters.
-    buildCanonicalIdentityIndex(true);
+    buildCanonicalIdentityIndex();
     const rewriteList=(list)=>{
       if(!Array.isArray(list))return list;
       const seen=new Set(),out=[];
@@ -2901,7 +3166,7 @@ function competition(){
   const content=tab==='schedule'?scheduleContent:tab==='teams'?tableContent:tab==='managers'?managerContent:tab==='timeline'?timelineContent:currentContent;
   return `<div class="league-redesign">
     <section class="card screenshot-import-card">
-      <div class="screenshot-import-copy"><span class="eyebrow">KICKBASE 2.1.5i</span><h3>AI Screenshot Import · 2.1.5i</h3><p>Screenshot → kanonischer Spielerabgleich → Transferhistorie → aktueller Kader → Aufstellungsseite. Kurz-/Nachnamen werden mit bereits bekannten vollständigen Spielern zusammengeführt; Vereine und historische Daten werden bereinigt.</p></div>
+      <div class="screenshot-import-copy"><span class="eyebrow">KICKBASE 2.1.5j</span><h3>AI Screenshot Import · 2.1.5j</h3><p>Screenshot → kanonischer Spielerabgleich → Transferhistorie → aktueller Kader → Aufstellungsseite. Kurz-/Nachnamen werden mit bereits bekannten vollständigen Spielern zusammengeführt; Vereine und historische Daten werden bereinigt.</p></div>
       <div class="screenshot-import-actions"><label class="btn secondary">Screenshots auswählen<input id="screenshotImportFiles" type="file" accept="image/*" multiple hidden></label><button type="button" class="btn" id="analyzeScreenshotFiles">Mit AI analysieren</button></div>
       <div id="screenshotImportStatus" class="screenshot-import-status">Noch keine Screenshots ausgewählt.</div><div class="ai-import-receipt">${data.ui?.lastAiImport?`Letzter Import: ${esc(managerById(data.ui.lastAiImport.managerId)?.team||data.ui.lastAiImport.managerId)} · ${data.ui.lastAiImport.added} neu · ${data.ui.lastAiImport.updated} geändert · ${data.ui.lastAiImport.beforeCount} → ${data.ui.lastAiImport.afterCount} Transfers · ${data.ui.lastAiImport.rosterAfter??'–'} im aktuellen Kader`:''}</div>
       <div id="aiUsageBox" class="ai-usage-box"></div><div id="screenshotImportResult" class="screenshot-import-result"></div>
@@ -4481,7 +4746,7 @@ document.addEventListener('click',e=>{
   btn.disabled=true;btn.textContent='Bereinige…';
   const status=$('#canonicalCleanupStatus');
   const diag=canonicalDiagnosticSnapshot();
-  if(status)status.textContent=`Indexiert ${diag.masterCount} Master-Spieler · ${diag.matches.filter(x=>x.match!=='—').length}/${diag.matches.length} Diagnose-Nachnamen erkannt…`;
+  if(status)status.textContent=`Prüfe ${diag.masterCount} Master-Spieler · ${diag.matches.filter(x=>x.match!=='—').length}/${diag.matches.length} Diagnose-Nachnamen erkannt…`;
   setTimeout(()=>{
     const result=runV215bCanonicalCleanup();
     if(result.ok){

@@ -1,0 +1,24 @@
+VERSION 2.1.5j – STABLE BOOTSTRAP + DETERMINISTIC SURNAME INDEX
+
+Cloud/App-Unterbau:
+- Neu aufgebaut auf 2.1.5f, dem letzten Build mit vollständig intaktem Bootstrap.
+- defaults, KICKBASE_AI_ENDPOINT, data/page, mergeData(x) und load() sind wieder vollständig vorhanden.
+- cloud.js stammt unverändert aus dem stabilen 2.1.5f-Zweig.
+- Die symptomatischen 2.1.5h/i-Hotfixes wurden bewusst verworfen.
+
+Spielerbereinigung:
+- Nur der nicht-rekursive Deterministic-Surname-Index aus 2.1.5g wurde auf den stabilen Unterbau übertragen.
+- Index wird beim manuellen Bereinigungslauf einmal aufgebaut und anschließend wiederverwendet.
+- Eindeutige Nachnamen können auf vollständige lokale/Master-Spieler aufgelöst werden.
+- Mehrdeutige Namen werden nicht geraten.
+
+Build-Validierung:
+- Bootstrap-Assertions erfolgreich.
+- app.js, cloud.js und service-worker.js bestehen node --check.
+
+Testfolge:
+1. Deployen und hart aktualisieren.
+2. Nur „Jetzt synchronisieren“ testen; nicht „Lokalen Stand hochladen“.
+3. Erwartung: Cloud aktuell ohne mergeData/page ReferenceError.
+4. Danach Transfers -> Spielerdaten bereinigen.
+5. Danach den separaten Bundesliga-Vereinsdaten-Workflow reparieren.
