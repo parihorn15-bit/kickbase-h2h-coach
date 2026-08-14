@@ -52,6 +52,20 @@ const LEAGUE_CRESTS={
   'Cello Football Club':'team-logos/cello-football-club.webp',
   'FAPSE FC':'team-logos/fapse-fc.webp'
 };
+
+function mergeData(localValue, remoteValue){
+  if(window.mergeData && window.mergeData!==mergeData)return window.mergeData(localValue,remoteValue);
+  if(remoteValue===undefined || remoteValue===null)return localValue;
+  if(localValue===undefined || localValue===null)return remoteValue;
+  if(Array.isArray(localValue) || Array.isArray(remoteValue))return Array.isArray(remoteValue)?remoteValue:localValue;
+  if(typeof localValue==='object'&&localValue&&typeof remoteValue==='object'&&remoteValue){
+    const out={...localValue};
+    for(const [k,v] of Object.entries(remoteValue))out[k]=k in out?mergeData(out[k],v):v;
+    return out;
+  }
+  return remoteValue;
+}
+
 function localDateISO(date=new Date()){
   const parts=new Intl.DateTimeFormat('en-CA',{
     timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone||'Europe/Berlin',
@@ -2887,7 +2901,7 @@ function competition(){
   const content=tab==='schedule'?scheduleContent:tab==='teams'?tableContent:tab==='managers'?managerContent:tab==='timeline'?timelineContent:currentContent;
   return `<div class="league-redesign">
     <section class="card screenshot-import-card">
-      <div class="screenshot-import-copy"><span class="eyebrow">KICKBASE 2.1.5g</span><h3>AI Screenshot Import · 2.1.5g</h3><p>Screenshot → kanonischer Spielerabgleich → Transferhistorie → aktueller Kader → Aufstellungsseite. Kurz-/Nachnamen werden mit bereits bekannten vollständigen Spielern zusammengeführt; Vereine und historische Daten werden bereinigt.</p></div>
+      <div class="screenshot-import-copy"><span class="eyebrow">KICKBASE 2.1.5h</span><h3>AI Screenshot Import · 2.1.5h</h3><p>Screenshot → kanonischer Spielerabgleich → Transferhistorie → aktueller Kader → Aufstellungsseite. Kurz-/Nachnamen werden mit bereits bekannten vollständigen Spielern zusammengeführt; Vereine und historische Daten werden bereinigt.</p></div>
       <div class="screenshot-import-actions"><label class="btn secondary">Screenshots auswählen<input id="screenshotImportFiles" type="file" accept="image/*" multiple hidden></label><button type="button" class="btn" id="analyzeScreenshotFiles">Mit AI analysieren</button></div>
       <div id="screenshotImportStatus" class="screenshot-import-status">Noch keine Screenshots ausgewählt.</div><div class="ai-import-receipt">${data.ui?.lastAiImport?`Letzter Import: ${esc(managerById(data.ui.lastAiImport.managerId)?.team||data.ui.lastAiImport.managerId)} · ${data.ui.lastAiImport.added} neu · ${data.ui.lastAiImport.updated} geändert · ${data.ui.lastAiImport.beforeCount} → ${data.ui.lastAiImport.afterCount} Transfers · ${data.ui.lastAiImport.rosterAfter??'–'} im aktuellen Kader`:''}</div>
       <div id="aiUsageBox" class="ai-usage-box"></div><div id="screenshotImportResult" class="screenshot-import-result"></div>

@@ -1,0 +1,17 @@
+VERSION 2.1.5h – CLOUD MERGE HOTFIX
+
+Fix:
+- Behebt den Cloud-Fehler "mergeData is not defined".
+- Stellt mergeData defensiv in cloud.js bereit und exportiert es zusätzlich global.
+- Falls app.js den Helper direkt benötigt, steht dort ein kompatibler Fallback bereit.
+- Objektstrukturen werden rekursiv zusammengeführt.
+- Bei Arrays wird bewusst der Remote-Stand als vollständige Domänenliste übernommen, statt indexweise zu verschmelzen.
+- Die Deterministic-Surname-Logik aus 2.1.5g bleibt unverändert.
+
+Testreihenfolge:
+1. App öffnen.
+2. Prüfen, ob "Cloud aktuell" erscheint.
+3. Erst danach Transfers -> Spielerdaten bereinigen.
+4. Danach separat den fehlerhaften GitHub-Workflow "Bundesliga-Vereinsdaten aktualisieren" untersuchen.
+
+Keine Supabase-Migration erforderlich.
