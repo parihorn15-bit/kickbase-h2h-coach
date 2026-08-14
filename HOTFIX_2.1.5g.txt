@@ -1,0 +1,11 @@
+VERSION 2.1.5g – DETERMINISTIC SURNAME INDEX
+
+- Nicht-rekursiver, einmalig aufgebauter Nachnamenindex.
+- Vollständige Master-Namen werden exakt indiziert.
+- Einwort-Kickbase-Namen werden ausschließlich über den letzten Namensbestandteil aufgelöst.
+- Automatische Zuordnung nur bei genau einem eindeutigen vollständigen Namen.
+- Mehrdeutige Nachnamen bleiben unangetastet.
+- Keine wiederholten Index-Neuaufbauten innerhalb der Transfer-Schleifen.
+- Lokale vollständige Transfernamen bleiben Masterquelle.
+- Ziel: Gosens -> Robin Gosens, Kohr -> Dominik Kohr, Tape -> Axel Tape.
+- Browser-Freeze der 2.1.5f-Bereinigung beseitigt.
