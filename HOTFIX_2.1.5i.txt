@@ -1,0 +1,15 @@
+VERSION 2.1.5i – CLOUD SYNC REPAIR
+
+- Repariert den nach 2.1.5h sichtbaren Fehler "page is not defined".
+- Cloud-Sync verwendet den tatsächlichen SPA-Seitenzustand statt einer nicht definierten Variable.
+- mergeData-Hotfix aus 2.1.5h bleibt erhalten.
+- Deterministic-Surname-Index aus 2.1.5g bleibt erhalten.
+- Cache-/Service-Worker-Version angehoben, damit GitHub Pages die neuen Dateien lädt.
+- JavaScript-Syntaxchecks für app.js, cloud.js und service-worker.js bestanden.
+
+Sicherer Test:
+1. Deployment abwarten und Seite hart aktualisieren.
+2. Cloud-Synchronisierung normal starten; NICHT zuerst "Lokalen Stand hochladen".
+3. Erwartung: "Cloud aktuell" ohne ReferenceError.
+4. Danach Transfers -> Spielerdaten bereinigen testen.
+5. Erst danach den separaten GitHub-Workflow reparieren.
