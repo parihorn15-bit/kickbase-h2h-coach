@@ -1,0 +1,23 @@
+VERSION 2.1.5d – SURNAME MASTER FIX
+
+Ursache für 0/0/0 in 2.1.5c:
+- Einwort-Screenshotdatensätze wie ANTON oder OLISE wurden im Canonical-Index
+  selbst als exakte Spieler akzeptiert.
+- Dadurch validierte sich der fehlerhafte Kurzdatensatz selbst und die Suche
+  nach WALDEMAR ANTON bzw. MICHAEL OLISE wurde gar nicht mehr durchgeführt.
+- Verkaufte Kurzdatensätze wurden zudem nicht mit dem vollständigen Master
+  zusammengeführt.
+
+Fix:
+- Einwort-/Unbekannter-Verein-Datensätze aus data.players sind keine Identity-Master mehr.
+- Bei Nachnamen wird ein vorhandener Bundesliga-Datensatz immer gegenüber lokalen Aliasen bevorzugt.
+- Eindeutiger Bundesliga-Nachname löst direkt auf vollständigen Namen/Verein/Position auf.
+- Alle Records desselben kanonischen Spielers werden gruppiert, auch wenn einer verkauft ist.
+- Vollständiger/enriched Spieler bleibt Master.
+- Kauf- UND Verkaufsinformationen aus Kurz-/Screenshot-Dubletten werden in den Master gemerged.
+- Transfer-Dubletten mit gleichem Spieler, Typ und Preis können auch dann zusammengeführt werden,
+  wenn ältere Screenshotmigrationen ein abweichendes Datum gespeichert hatten.
+- Der Bereinigungsbutton meldet jetzt explizit, wenn die Bundesliga-Spielerdatenbank noch nicht geladen ist.
+
+Keine automatische Bereinigung beim Start.
+Keine Supabase-Migration erforderlich.

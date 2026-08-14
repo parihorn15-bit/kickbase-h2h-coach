@@ -1320,3 +1320,6 @@ input[list]:focus{border-color:#38bdf8;box-shadow:0 0 0 2px rgba(56,189,248,.12)
 #canonicalCleanupStatus{width:100%;font-size:8px;color:#86efac}
 
 .canonical-cleanup-status{margin:-2px 0 12px;color:#86efac;font-size:11px;min-height:14px}
+
+/* 2.1.5d surname master fix */
+#canonicalCleanupStatus{font-weight:700}
