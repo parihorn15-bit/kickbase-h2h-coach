@@ -799,6 +799,12 @@ function selectablePlayerIndex(){
 
 
 let _canonicalIdentityIndex=null;
+function canonicalFullKey(value){
+  return String(value||'').toLocaleLowerCase('de-DE')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,' ')
+    .trim().replace(/\s+/g,' ');
+}
 function canonicalIdentitySourceRows(){
   // 2.1.5m compatibility shim:
   // Older cleanup/index code still calls canonicalIdentitySourceRows().
@@ -812,7 +818,7 @@ function buildCanonicalIdentityIndex(force=false){
   const exact=new Map(), surname=new Map();
 
   for(const p of rows){
-    const norm=normalizePlayerName(p.name);
+    const norm=canonicalFullKey(p.name);
     if(!norm)continue;
     if(!exact.has(norm))exact.set(norm,p);
 
@@ -827,7 +833,7 @@ function buildCanonicalIdentityIndex(force=false){
   for(const [key,list] of surname){
     const uniq=new Map();
     for(const p of list){
-      const n=normalizePlayerName(p.name);
+      const n=canonicalFullKey(p.name);
       const old=uniq.get(n);
       if(!old || (!old.team&&p.team))uniq.set(n,p);
     }
@@ -839,7 +845,7 @@ function buildCanonicalIdentityIndex(force=false){
 
 function resolveCanonicalPlayer(name,context={}){
   const raw=String(name||'').trim();
-  const norm=normalizePlayerName(raw);
+  const norm=canonicalFullKey(raw);
   if(!norm)return {matched:false,ambiguous:false,input:raw,confidence:0,reason:'leer'};
 
   const idx=buildCanonicalIdentityIndex();
@@ -861,7 +867,7 @@ function resolveCanonicalPlayer(name,context={}){
   }
 
   // If duplicate sources represent the same full name, collapse them.
-  const uniqueNames=new Map(candidates.map(p=>[normalizePlayerName(p.name),p]));
+  const uniqueNames=new Map(candidates.map(p=>[canonicalFullKey(p.name),p]));
   if(uniqueNames.size===1){
     const p=[...uniqueNames.values()][0];
     return {...p,matched:true,ambiguous:false,input:raw,confidence:.96,reason:'eindeutiger Nachname (Quellen zusammengeführt)'};
@@ -3297,7 +3303,7 @@ function competition(){
   const content=tab==='schedule'?scheduleContent:tab==='teams'?tableContent:tab==='managers'?managerContent:tab==='timeline'?timelineContent:currentContent;
   return `<div class="league-redesign">
     <section class="card screenshot-import-card">
-      <div class="screenshot-import-copy"><span class="eyebrow">KICKBASE 2.1.5m</span><h3>AI Screenshot Import · 2.1.5m</h3><p>Screenshot → kanonischer Spielerabgleich → Transferhistorie → aktueller Kader → Aufstellungsseite. Kurz-/Nachnamen werden mit bereits bekannten vollständigen Spielern zusammengeführt; Vereine und historische Daten werden bereinigt.</p></div>
+      <div class="screenshot-import-copy"><span class="eyebrow">KICKBASE 2.1.5n</span><h3>AI Screenshot Import · 2.1.5m</h3><p>Screenshot → kanonischer Spielerabgleich → Transferhistorie → aktueller Kader → Aufstellungsseite. Kurz-/Nachnamen werden mit bereits bekannten vollständigen Spielern zusammengeführt; Vereine und historische Daten werden bereinigt.</p></div>
       <div class="screenshot-import-actions"><label class="btn secondary">Screenshots auswählen<input id="screenshotImportFiles" type="file" accept="image/*" multiple hidden></label><button type="button" class="btn" id="analyzeScreenshotFiles">Mit AI analysieren</button></div>
       <div id="screenshotImportStatus" class="screenshot-import-status">Noch keine Screenshots ausgewählt.</div><div class="ai-import-receipt">${data.ui?.lastAiImport?`Letzter Import: ${esc(managerById(data.ui.lastAiImport.managerId)?.team||data.ui.lastAiImport.managerId)} · ${data.ui.lastAiImport.added} neu · ${data.ui.lastAiImport.updated} geändert · ${data.ui.lastAiImport.beforeCount} → ${data.ui.lastAiImport.afterCount} Transfers · ${data.ui.lastAiImport.rosterAfter??'–'} im aktuellen Kader`:''}</div>
       <div id="aiUsageBox" class="ai-usage-box"></div><div id="screenshotImportResult" class="screenshot-import-result"></div>
