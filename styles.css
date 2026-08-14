@@ -1328,3 +1328,7 @@ input[list]:focus{border-color:#38bdf8;box-shadow:0 0 0 2px rgba(56,189,248,.12)
 .canonical-diagnostics{width:100%;padding:8px 10px;border:1px solid #29455f;border-radius:10px;background:#081522;font-size:8px;color:#9db0c2}
 .diag-head{margin-bottom:6px;color:#d7e4ef}.diag-matches{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px}
 .diag-matches span{padding:4px 6px;border-radius:999px;border:1px solid #315d78}.diag-matches .hit{color:#86efac;border-color:#285c45}.diag-matches .miss{color:#fca5a5;border-color:#713f46}
+
+/* 2.1.5k measurable cleanup */
+#canonicalCleanupStatus{line-height:1.45}
+#canonicalCleanupStatus span{color:#b8c8d8;font-weight:500}

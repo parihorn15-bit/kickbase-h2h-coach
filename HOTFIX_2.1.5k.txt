@@ -1,0 +1,24 @@
+VERSION 2.1.5k – MEASURABLE IDENTITY CLEANUP
+
+Nur Bereinigungs-/Matching-Fix. Cloud/Bootstrap aus 2.1.5j bleibt unangetastet.
+
+Neu:
+- Lokale vollständige Namen aus Transferhistorie, Kader und selectableBundesligaPlayers()
+  werden als Master-Namen verwendet.
+- Einwort-Kickbase-Namen werden gegen diese lokalen Master-Namen aufgelöst.
+- Transfers werden nach Transferart + vollständigem Spieler + Preis gruppiert.
+- Dubletten werden physisch zusammengeführt; die reichere/manuelle Zeile bleibt Master.
+- Spieler-Dubletten werden ebenfalls zusammengeführt, inklusive Kauf-/Verkaufsdaten.
+- Aufstellungs-/Bankreferenzen werden auf vollständige Namen umgeschrieben.
+- Unklare Nachnamen werden weiterhin nicht geraten.
+
+Messbar:
+- Vorher/Nachher-Anzahl Transfers
+- Vorher/Nachher-Anzahl Spielerdatensätze
+- Anzahl Namenskorrekturen
+- Anzahl ergänzter Vereine
+- Anzahl zusammengeführter Transfer-/Spieler-Dubletten
+- Konkrete Alias-Matches werden direkt im UI angezeigt.
+
+Keine automatische Bereinigung beim Start.
+Keine Supabase-Migration.
