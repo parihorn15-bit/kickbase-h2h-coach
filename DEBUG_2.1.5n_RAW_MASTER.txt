@@ -1,0 +1,13 @@
+2.1.5n RAW MASTER DEBUG
+
+Zweck:
+- Keine Bereinigungslogik ändern.
+- Direkt prüfen, welche Rohdatensätze in window.BUNDESLIGA_PLAYERS im Browser ankommen.
+- Nach Klick auf „Spielerdaten bereinigen“ wird unter der Diagnose zusätzlich RAW MASTER DEBUG angezeigt.
+- Für Gosens, Kohr, Tape, García, Deman, Erebenagie usw. werden Trefferzahl, vollständiger Name, ID, Verein und Position angezeigt.
+
+Wichtig:
+- Dies ist nur ein Diagnose-Build.
+- Config-Datei wird nicht verändert.
+- Keine Datenmigration.
+- Keine Workflow-Änderung.

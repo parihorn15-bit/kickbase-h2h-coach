@@ -4869,6 +4869,65 @@ function addQuickBonus(kind,label,amount){const date=localDateISO(),type=kind===
 function showFinanceForm(){$('#financeForm').innerHTML=`<div class="notice" style="margin-top:14px"><div class="form-grid"><label>Datum<input id="ffDate" type="date" value="${localDateISO()}"></label><label>Typ<select id="ffType">${['Tagesanmeldebonus','Erfolgsbonus','Punktebonus','Admin-Gutschrift','Admin-Strafe','Korrektur','Sonstiges'].map(x=>`<option>${x}</option>`).join('')}</select></label><label class="wide">Beschreibung<input id="ffDesc"></label><label>Betrag (+/−) (€)<input id="ffAmount" class="money-field" inputmode="numeric" placeholder="z. B. 1.000.000 €"></label><div><button class="btn" id="saveFinance">Speichern</button></div></div></div>`;bindMoneyFields();$('#saveFinance').onclick=()=>{data.finances.push({id:id(),date:$('#ffDate').value,type:$('#ffType').value,description:$('#ffDesc').value,amount:parseMoney($('#ffAmount').value)});touch()}}
 function exportData(){const a=document.createElement('a'),blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});a.href=URL.createObjectURL(blob);a.download=`kickbase-coach-v06-${localDateISO()}.json`;a.click();URL.revokeObjectURL(a.href)}function importData(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{data=mergeData(JSON.parse(r.result));save();render();toast('Sicherung geladen')}catch{alert('Ungültige Datei')}};r.readAsText(f)}init();
 
+
+function debugNormalizeTokens(value){
+  return String(value||'').toLocaleLowerCase('de-DE')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+function rawMasterDebug(alias){
+  const target=debugNormalizeTokens(alias).at(-1)||'';
+  const rows=Array.isArray(window.BUNDESLIGA_PLAYERS)?window.BUNDESLIGA_PLAYERS:[];
+  const matches=rows.filter(p=>{
+    const lastField=debugNormalizeTokens(p.last_name||p.lastName||'').at(-1)||'';
+    const lastName=debugNormalizeTokens(p.name||'').at(-1)||'';
+    return target && (lastField===target || lastName===target);
+  }).map(p=>({
+    id:p.external_id ?? p.id ?? null,
+    name:p.name||'',
+    first_name:p.first_name||p.firstName||'',
+    last_name:p.last_name||p.lastName||'',
+    team:p.team||'',
+    position:p.position||''
+  }));
+  return {alias,target,count:matches.length,matches};
+}
+
+function renderRawMasterDebug(){
+  const host=document.querySelector('#canonicalDiagnostics') || document.querySelector('#canonicalCleanupStatus');
+  if(!host)return;
+
+  const aliases=['Gosens','Kohr','Tape','García','Deman','Erebenagie','Anton','Olise','Götze','Pedersen','Lienhart','Kristof','Beste','Conté','Pruhs','Schwolow','Burke'];
+  const results=aliases.map(rawMasterDebug);
+  const total=(window.BUNDESLIGA_PLAYERS||[]).length;
+
+  host.innerHTML=`
+    <div style="margin-top:10px;padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:10px">
+      <b>RAW MASTER DEBUG 2.1.5n-debug</b><br>
+      <span>${total} rohe BUNDESLIGA_PLAYERS im Browser</span>
+      <div style="margin-top:8px;display:grid;gap:6px">
+        ${results.map(r=>`
+          <div>
+            <b>${esc(r.alias)}</b> → ${r.count} Treffer
+            ${r.count ? `<span> · ${r.matches.map(x=>`${esc(x.name)} [${esc(String(x.id??'—'))}] · ${esc(x.team||'—')} · ${esc(x.position||'—')}`).join(' | ')}</span>` : ''}
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+window.rawMasterDebug=rawMasterDebug;
+window.renderRawMasterDebug=renderRawMasterDebug;
+
+document.addEventListener('click',e=>{
+  const btn=e.target?.closest?.('#runCanonicalCleanup');
+  if(!btn)return;
+  setTimeout(()=>renderRawMasterDebug(),80);
+});
+
 document.addEventListener('click',e=>{
   const btn=e.target?.closest?.('#runCanonicalCleanup');
   if(!btn)return;

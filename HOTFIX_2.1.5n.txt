@@ -1,0 +1,21 @@
+VERSION 2.1.5n – kanonischer Namensindex
+
+Minimaler Hotfix auf Basis des frisch synchronisierten main-Stands.
+
+Behoben:
+- Der kanonische Identitätsindex verwendete normalizePlayerName(), das Leerzeichen entfernt.
+- Dadurch konnte die Nachnamenlogik den vollständigen Namen nicht mehr in Bestandteile zerlegen.
+
+Umsetzung:
+- canonicalFullKey() ergänzt: Akzente/Sonderzeichen werden normalisiert, Wortgrenzen bleiben erhalten.
+- Canonical-Identity-Index und Resolver verwenden denselben Schlüssel.
+- 2.1.5m-Kompatibilitätsshims bleiben erhalten.
+- config.js unverändert übernommen.
+- Keine Änderung an Cloud-Sync, Supabase oder football-data.org Workflow.
+
+Test:
+1. Deployen und hart neu laden.
+2. Version 2.1.5n prüfen.
+3. Transfers -> Spielerdaten bereinigen.
+4. Prüfen, ob eindeutige Nachnamen wieder vollständigen Master-Spielern zugeordnet werden.
+5. Mehrdeutige Nachnamen müssen offen bleiben bzw. Kontext benötigen.
