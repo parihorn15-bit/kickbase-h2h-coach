@@ -1,0 +1,13 @@
+VERSION 2.1.5f – LOCAL MASTER MERGE
+
+Kernfix:
+- Vollständige Namen aus der bestehenden Transferhistorie werden zusätzlich als lokale Master-Identitäten verwendet.
+- Dadurch kann ein Kickbase-Nachname wie Gosens, Kohr oder Tape direkt gegen bereits vorhandene
+  Robin Gosens, Dominik Kohr bzw. Axel Tape aufgelöst werden.
+- Einwort-Datensätze ohne Verein/Position werden weiterhin niemals selbst Master.
+- Nach erfolgreicher Namensauflösung werden identische Transferereignisse physisch zusammengeführt.
+- Die reichere/manuelle Transferzeile bleibt erhalten; Screenshot-Daten ergänzen nur fehlende Felder.
+- Ein um einen Tag abweichendes Screenshot-Datum verhindert die Zusammenführung nicht, wenn
+  Spieler + Transferart + Preis eindeutig identisch sind.
+- Unklare Namen werden nicht geraten.
+- Diagnose enthält jetzt auch Tape.
