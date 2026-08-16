@@ -1,0 +1,13 @@
+2.1.5n DIRECT HANDLER TRACE
+
+Zweck:
+- Reiner Diagnose-Patch auf dem frisch synchronisierten main-Stand.
+- Vergleicht für die bekannten Problem-Nachnamen direkt den Bundesliga-Master-Resolver mit dem lokalen Fallback-Resolver.
+- Zeigt targetSurname, Bucket-Größe, Resolver-Ergebnis sowie normalizePlayerName und canonicalFullKey.
+- Läuft nach Klick auf „Spielerdaten bereinigen“ zusätzlich zum RAW MASTER DEBUG.
+
+Wichtig:
+- Keine Bereinigungslogik geändert.
+- Keine Datenmigration.
+- Keine Cloud-/Supabase-/football-data.org-Änderung.
+- config.js unverändert.

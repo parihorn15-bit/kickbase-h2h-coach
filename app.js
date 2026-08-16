@@ -1328,6 +1328,65 @@ function resolveShortNameAgainstLocalMasters(name,context={}){
   if(unique.length===1)return {...unique[0],matched:true,confidence:.85,reason:'lokaler Fallback-Nachname'};
   return {matched:false,name:raw,team:'',position:'',confidence:0,reason:master.reason||'kein Match',candidates:master.candidates||[]};
 }
+function traceCanonicalResolution(name,context={}){
+  const raw=String(name||'').trim();
+  let masterResult=null;
+  let localResult=null;
+  let masterCandidates=[];
+  let targetSurname='';
+
+  try{
+    const parts=(typeof normalizeCanonicalNameParts==='function'
+      ? normalizeCanonicalNameParts(raw)
+      : canonicalFullKey(raw).split(/\s+/).filter(Boolean));
+    targetSurname=parts.at(-1)||'';
+  }catch(e){
+    targetSurname=canonicalFullKey(raw).split(/\s+/).filter(Boolean).at(-1)||'';
+  }
+
+  try{
+    const idx=typeof buildBundesligaMasterIndex==='function' ? buildBundesligaMasterIndex() : null;
+    masterCandidates=(idx?.bySurname?.get?.(targetSurname)||[]).map(p=>({
+      id:p.external_id ?? p.id ?? null,
+      name:p.name||'',
+      team:p.team||'',
+      position:p.position||''
+    }));
+  }catch(e){}
+
+  try{masterResult=resolveAgainstBundesligaMaster(raw,context)}catch(e){masterResult={matched:false,reason:String(e)}}
+  try{localResult=resolveShortNameAgainstLocalMasters(raw,context)}catch(e){localResult={matched:false,reason:String(e)}}
+
+  return {
+    input:raw,
+    normalizePlayerName:typeof normalizePlayerName==='function'?normalizePlayerName(raw):'',
+    canonicalFullKey:canonicalFullKey(raw),
+    targetSurname,
+    masterCandidates,
+    masterResult,
+    localResult
+  };
+}
+
+function renderDirectHandlerTrace(){
+  const host=document.querySelector('#canonicalDiagnostics') || document.querySelector('#canonicalCleanupStatus');
+  if(!host)return;
+  const aliases=['Gosens','Kohr','Tape','García','Deman','Erebenagie','Anton','Olise','Götze','Pedersen','Lienhart','Kristof','Beste','Conté','Pruhs','Schwolow','Burke'];
+  const traces=aliases.map(name=>traceCanonicalResolution(name));
+  const box=document.createElement('div');
+  box.id='directHandlerTrace';
+  box.style.cssText='margin-top:10px;padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:10px;display:grid;gap:6px';
+  box.innerHTML=`<b>DIRECT HANDLER TRACE 2.1.5n</b><small>Direkter Vergleich: Master-Resolver → lokaler Resolver. Keine Daten werden verändert.</small>${traces.map(t=>{
+    const mr=t.masterResult||{}, lr=t.localResult||{};
+    const mc=mr.matched?`${mr.name||'—'} · ${mr.team||'—'} · ${mr.reason||''}`:`OFFEN · ${mr.reason||'—'}`;
+    const lc=lr.matched?`${lr.name||'—'} · ${lr.team||'—'} · ${lr.reason||''}`:`OFFEN · ${lr.reason||'—'}`;
+    return `<div style="padding-top:5px;border-top:1px solid rgba(255,255,255,.07)"><b>${esc(t.input)}</b> · target=${esc(t.targetSurname||'—')} · bucket=${t.masterCandidates.length}<br><small>Master: ${esc(mc)}<br>Local: ${esc(lc)}<br>normalizePlayerName=${esc(t.normalizePlayerName||'—')} · canonicalFullKey=${esc(t.canonicalFullKey||'—')}</small></div>`;
+  }).join('')}`;
+  host.appendChild(box);
+}
+window.traceCanonicalResolution=traceCanonicalResolution;
+window.renderDirectHandlerTrace=renderDirectHandlerTrace;
+
 function canonicalDiagnosticSnapshot(){
   const master=buildBundesligaMasterIndex();
   const aliases=['Anton','Olise','Burke','Götze','Kohr','Schwolow','Pedersen','Lienhart','Gosens','Tape','Kristof','Beste','Deman','Conté','Pruhs','García','Erevbenagie'];
@@ -4931,7 +4990,7 @@ window.renderRawMasterDebug=renderRawMasterDebug;
 document.addEventListener('click',e=>{
   const btn=e.target?.closest?.('#runCanonicalCleanup');
   if(!btn)return;
-  setTimeout(()=>renderRawMasterDebug(),80);
+  setTimeout(()=>{renderRawMasterDebug();setTimeout(()=>renderDirectHandlerTrace(),30)},80);
 });
 
 document.addEventListener('click',e=>{
