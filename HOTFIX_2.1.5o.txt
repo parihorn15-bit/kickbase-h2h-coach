@@ -1,0 +1,12 @@
+VERSION 2.1.5o – Canonical Cleanup Resolver Fix
+
+Ziel:
+- Den bereits nachgewiesenen Bundesliga-Master-Resolver direkt für die Bereinigung nutzbar machen.
+
+Behoben:
+- Master-Index behält Wortgrenzen in vollständigen Spielernamen.
+- Vollname und Nachname werden nicht mehr durch die kompakte Suchnormalisierung vermischt.
+- Lokaler Fallback-Index verwendet dieselbe kanonische Wort-Normalisierung.
+- Eindeutige Nachnamen wie García, Gosens, Kohr und Tape können dadurch im Cleanup sauber auf den Masterspieler zeigen.
+
+Keine automatische Datenmigration beim Start. Bereinigung bleibt manuell über Transfers -> Bereinige…

@@ -1239,11 +1239,11 @@ function bundesligaMasterPlayers(){
 function buildBundesligaMasterIndex(){
   const rows=bundesligaMasterPlayers(),byId=new Map(),byFull=new Map(),bySurname=new Map();
   for(const p of rows){
-    const full=normalizePlayerName(p.name);
+    const full=canonicalFullKey(p.name);
     if(!full)continue;
     if(p.external_id!==null&&p.external_id!==undefined)byId.set(String(p.external_id),p);
     if(!byFull.has(full))byFull.set(full,p);
-    const surnameField=normalizePlayerName(p.last_name||'');
+    const surnameField=canonicalFullKey(p.last_name||'');
     const surnameName=full.split(/\s+/).filter(Boolean).at(-1)||'';
     for(const s of new Set([surnameField,surnameName].filter(Boolean))){
       if(!bySurname.has(s))bySurname.set(s,[]);
@@ -1253,7 +1253,7 @@ function buildBundesligaMasterIndex(){
   for(const [s,list] of bySurname){
     const uniq=new Map();
     for(const p of list){
-      const key=p.external_id!==null&&p.external_id!==undefined?`id:${p.external_id}`:`name:${normalizePlayerName(p.name)}`;
+      const key=p.external_id!==null&&p.external_id!==undefined?`id:${p.external_id}`:`name:${canonicalFullKey(p.name)}`;
       if(!uniq.has(key))uniq.set(key,p);
     }
     bySurname.set(s,[...uniq.values()]);
@@ -1261,7 +1261,7 @@ function buildBundesligaMasterIndex(){
   return {rows,byId,byFull,bySurname};
 }
 function resolveAgainstBundesligaMaster(name,context={}){
-  const raw=String(name||'').trim(),norm=normalizePlayerName(raw);
+  const raw=String(name||'').trim(),norm=canonicalFullKey(raw);
   if(!norm)return {matched:false,name:raw,reason:'leer',confidence:0};
   const idx=buildBundesligaMasterIndex();
   const explicitId=context.external_id ?? context.externalId ?? context.player_id ?? context.playerId;
@@ -1275,14 +1275,14 @@ function resolveAgainstBundesligaMaster(name,context={}){
     return p?{...p,matched:true,confidence:1,reason:'exakter Bundesliga-Mastername'}:{matched:false,name:raw,reason:'kein exakter Bundesliga-Master',confidence:0};
   }
   let candidates=(idx.bySurname.get(parts[0])||[]).slice();
-  const teamHint=normalizePlayerName(context.club||context.team||'');
+  const teamHint=canonicalFullKey(context.club||context.team||'');
   if(teamHint&&candidates.length>1){
-    const c=candidates.filter(p=>normalizePlayerName(p.team)===teamHint);
+    const c=candidates.filter(p=>canonicalFullKey(p.team)===teamHint);
     if(c.length===1)return {...c[0],matched:true,confidence:.995,reason:'Nachname + Verein'};
   }
-  const posHint=normalizePlayerName(context.position||'');
+  const posHint=canonicalFullKey(context.position||'');
   if(posHint&&candidates.length>1){
-    const c=candidates.filter(p=>normalizePlayerName(p.position)===posHint);
+    const c=candidates.filter(p=>canonicalFullKey(p.position)===posHint);
     if(c.length===1)return {...c[0],matched:true,confidence:.99,reason:'Nachname + Position'};
   }
   if(candidates.length===1)return {...candidates[0],matched:true,confidence:.99,reason:'eindeutiger Bundesliga-Nachname'};
@@ -1295,12 +1295,12 @@ function buildLocalSurnameMasterMap(){
   const bySurname=new Map();
   const add=(name,team='',position='',source='local')=>{
     const full=String(name||'').trim();
-    const parts=normalizePlayerName(full).split(/\s+/).filter(Boolean);
+    const parts=canonicalFullKey(full).split(/\s+/).filter(Boolean);
     if(parts.length<2)return;
     const surname=parts.at(-1);
     if(!bySurname.has(surname))bySurname.set(surname,new Map());
     const bucket=bySurname.get(surname);
-    const key=normalizePlayerName(full);
+    const key=canonicalFullKey(full);
     const old=bucket.get(key);
     const candidate={name:full,team:team||'',position:position||'',source};
     const score=x=>(x.team?4:0)+(x.position?2:0)+(String(x.name||'').split(/\s+/).length>1?3:0);
@@ -1320,11 +1320,11 @@ function buildLocalSurnameMasterMap(){
 function resolveShortNameAgainstLocalMasters(name,context={}){
   const master=resolveAgainstBundesligaMaster(name,context);
   if(master.matched)return master;
-  const raw=String(name||'').trim(),norm=normalizePlayerName(raw),parts=norm.split(/\s+/).filter(Boolean);
+  const raw=String(name||'').trim(),norm=canonicalFullKey(raw),parts=norm.split(/\s+/).filter(Boolean);
   if(!norm)return {matched:false,name:raw,reason:'leer',confidence:0};
   if(parts.length>1)return {matched:false,name:raw,reason:master.reason||'kein Master-Match',confidence:0};
   const surnameMap=buildLocalSurnameMasterMap();
-  const unique=[...new Map((surnameMap.get(parts[0])||[]).map(x=>[normalizePlayerName(x.name),x])).values()];
+  const unique=[...new Map((surnameMap.get(parts[0])||[]).map(x=>[canonicalFullKey(x.name),x])).values()];
   if(unique.length===1)return {...unique[0],matched:true,confidence:.85,reason:'lokaler Fallback-Nachname'};
   return {matched:false,name:raw,team:'',position:'',confidence:0,reason:master.reason||'kein Match',candidates:master.candidates||[]};
 }
@@ -1376,7 +1376,7 @@ function renderDirectHandlerTrace(){
   const box=document.createElement('div');
   box.id='directHandlerTrace';
   box.style.cssText='margin-top:10px;padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:10px;display:grid;gap:6px';
-  box.innerHTML=`<b>DIRECT HANDLER TRACE 2.1.5n</b><small>Direkter Vergleich: Master-Resolver → lokaler Resolver. Keine Daten werden verändert.</small>${traces.map(t=>{
+  box.innerHTML=`<b>DIRECT HANDLER TRACE 2.1.5o</b><small>Direkter Vergleich: Master-Resolver → lokaler Resolver. Keine Daten werden verändert.</small>${traces.map(t=>{
     const mr=t.masterResult||{}, lr=t.localResult||{};
     const mc=mr.matched?`${mr.name||'—'} · ${mr.team||'—'} · ${mr.reason||''}`:`OFFEN · ${mr.reason||'—'}`;
     const lc=lr.matched?`${lr.name||'—'} · ${lr.team||'—'} · ${lr.reason||''}`:`OFFEN · ${lr.reason||'—'}`;
@@ -4972,7 +4972,7 @@ function renderRawMasterDebug(){
 
   host.innerHTML=`
     <div style="margin-top:10px;padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:10px">
-      <b>RAW MASTER DEBUG 2.1.5n-debug</b><br>
+      <b>RAW MASTER DEBUG 2.1.5o-debug</b><br>
       <span>${total} rohe BUNDESLIGA_PLAYERS im Browser</span>
       <div style="margin-top:8px;display:grid;gap:6px">
         ${results.map(r=>`
