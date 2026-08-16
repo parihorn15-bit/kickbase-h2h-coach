@@ -1,0 +1,9 @@
+VERSION 2.1.5q – SAFE DEDUPE PREVIEW
+
+Ziel:
+- Spielererkennung beibehalten.
+- Legitime Kauf/Verkauf/Wiederkauf-Zyklen niemals als Dubletten zusammenführen.
+- Transfer-Dubletten nur noch bei gleicher Spieleridentität, gleichem Typ, Preis UND Datum gruppieren.
+- Eigentümer-Spielerdatensätze nur noch bei gleicher Spieleridentität, Kaufdatum UND Kaufpreis zusammenführen.
+- Vorschau bleibt sichtbar und speichert weiterhin keine Daten.
+- config.js nicht enthalten.

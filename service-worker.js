@@ -13,7 +13,7 @@ self.addEventListener('activate',event=>{
       .then(()=>self.clients.claim())
       .then(async()=>{
         const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});
-        for(const client of clients) client.postMessage({type:'APP_UPDATED',version:'2.1.5p'});
+        for(const client of clients) client.postMessage({type:'APP_UPDATED',version:'2.1.5q'});
       })
   );
 });

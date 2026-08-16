@@ -1376,7 +1376,7 @@ function renderDirectHandlerTrace(){
   const box=document.createElement('div');
   box.id='directHandlerTrace';
   box.style.cssText='margin-top:10px;padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:10px;display:grid;gap:6px';
-  box.innerHTML=`<b>DIRECT HANDLER TRACE 2.1.5p</b><small>Direkter Vergleich: Master-Resolver → lokaler Resolver. Keine Daten werden verändert.</small>${traces.map(t=>{
+  box.innerHTML=`<b>DIRECT HANDLER TRACE 2.1.5q</b><small>Direkter Vergleich: Master-Resolver → lokaler Resolver. Keine Daten werden verändert.</small>${traces.map(t=>{
     const mr=t.masterResult||{}, lr=t.localResult||{};
     const mc=mr.matched?`${mr.name||'—'} · ${mr.team||'—'} · ${mr.reason||''}`:`OFFEN · ${mr.reason||'—'}`;
     const lc=lr.matched?`${lr.name||'—'} · ${lr.team||'—'} · ${lr.reason||''}`:`OFFEN · ${lr.reason||'—'}`;
@@ -1444,7 +1444,19 @@ function runV215bCanonicalCleanup(){
       const groups=new Map();
       for(const t of row.transfers){
         const identityKey=t.externalPlayerId!==undefined&&t.externalPlayerId!==null?`id:${t.externalPlayerId}`:`name:${normalizePlayerName(t.player)}`;
-        const key=[String(t.type||'').toLowerCase(),identityKey,Math.round(Number(t.price||0))].join('|');
+        const txDate=String(t.date||'').trim();
+        const txSource=String(t.source||t.note||'').toLowerCase();
+        const screenshotLike=txSource.includes('screenshot');
+        // 2.1.5q: transaction identity must include date.
+        // This preserves legitimate buy/sell/re-buy cycles of the same player at the same price.
+        // Screenshot duplicates are only candidates when they describe the same dated transaction.
+        const key=[
+          String(t.type||'').toLowerCase(),
+          identityKey,
+          Math.round(Number(t.price||0)),
+          txDate,
+          screenshotLike?'screenshot':'regular'
+        ].join('|');
         if(!groups.has(key))groups.set(key,[]);
         groups.get(key).push(t);
       }
@@ -1501,9 +1513,16 @@ function runV215bCanonicalCleanup(){
         unresolved.push({manager:'me',player:original,type:'Spielerdatensatz',date:p.buyDate||'',price:Number(p.buyPrice||0),reason:r.reason||'nicht aufgelöst',candidates:r.candidates||[]});
       }
 
-      const key=p.externalPlayerId!==undefined&&p.externalPlayerId!==null?`id:${p.externalPlayerId}`:`name:${normalizePlayerName(p.name)}`;
-      if(!playerGroups.has(key))playerGroups.set(key,[]);
-      playerGroups.get(key).push(p);
+      const playerIdentity=p.externalPlayerId!==undefined&&p.externalPlayerId!==null
+        ?`id:${p.externalPlayerId}`
+        :`name:${normalizePlayerName(p.name)}`;
+      const ownershipKey=[
+        playerIdentity,
+        String(p.buyDate||'').trim(),
+        Math.round(Number(p.buyPrice||0))
+      ].join('|');
+      if(!playerGroups.has(ownershipKey))playerGroups.set(ownershipKey,[]);
+      playerGroups.get(ownershipKey).push(p);
     }
 
     const mergedPlayerRows=[];
@@ -4990,7 +5009,7 @@ function renderRawMasterDebug(){
 
   host.innerHTML=`
     <div style="margin-top:10px;padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:10px">
-      <b>RAW MASTER DEBUG 2.1.5p-debug</b><br>
+      <b>RAW MASTER DEBUG 2.1.5q-debug</b><br>
       <span>${total} rohe BUNDESLIGA_PLAYERS im Browser</span>
       <div style="margin-top:8px;display:grid;gap:6px">
         ${results.map(r=>`
@@ -5025,7 +5044,9 @@ document.addEventListener('click',e=>{
     if(result.ok){
       if(status)status.innerHTML=`<b>VORSCHAU – NICHT GESPEICHERT:</b> ${result.renamed} Namen · ${result.clubs} Vereine · ${result.mergedTransfers} Transfer-Dubletten · ${result.mergedPlayers} Spieler-Dubletten<br><span>${result.masterPlayers||0} Bundesliga-Masterspieler · ${result.beforeTransfers}→${result.afterTransfers} Transfers · ${result.beforePlayers}→${result.afterPlayers} Spielerdatensätze</span>${result.aliasMatches?.length?`<br><span>Matches: ${result.aliasMatches.slice(0,10).map(esc).join(' · ')}</span>`:''}${result.unresolved?.length?`<br><span>Offen zur Prüfung: ${result.unresolved.slice(0,10).map(x=>esc(x.player)).join(' · ')}</span>`:''}`;
       toast('Vorschau fertig – keine Daten gespeichert');
-      setTimeout(()=>{render();setTimeout(()=>renderCanonicalDiagnostics(),50)},100);
+      btn.disabled=false;
+      btn.textContent='Vorschau erneut prüfen';
+      // 2.1.5q: do not re-render immediately; keep the preview result visible.
     }else{
       if(status)status.textContent=`Fehler: ${result.message||'Bereinigung fehlgeschlagen'}`;
       btn.disabled=false;btn.textContent='Erneut versuchen';
