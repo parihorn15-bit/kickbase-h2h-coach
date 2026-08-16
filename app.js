@@ -1376,7 +1376,7 @@ function renderDirectHandlerTrace(){
   const box=document.createElement('div');
   box.id='directHandlerTrace';
   box.style.cssText='margin-top:10px;padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:10px;display:grid;gap:6px';
-  box.innerHTML=`<b>DIRECT HANDLER TRACE 2.1.5o</b><small>Direkter Vergleich: Master-Resolver → lokaler Resolver. Keine Daten werden verändert.</small>${traces.map(t=>{
+  box.innerHTML=`<b>DIRECT HANDLER TRACE 2.1.5p</b><small>Direkter Vergleich: Master-Resolver → lokaler Resolver. Keine Daten werden verändert.</small>${traces.map(t=>{
     const mr=t.masterResult||{}, lr=t.localResult||{};
     const mc=mr.matched?`${mr.name||'—'} · ${mr.team||'—'} · ${mr.reason||''}`:`OFFEN · ${mr.reason||'—'}`;
     const lc=lr.matched?`${lr.name||'—'} · ${lr.team||'—'} · ${lr.reason||''}`:`OFFEN · ${lr.reason||'—'}`;
@@ -1616,6 +1616,24 @@ function runV215bCanonicalCleanup(){
     window.__v215kCleanupRunning=false;
   }
 }
+function previewV215pCanonicalCleanup(){
+  const storageKey='kickbaseCoachV07';
+  const beforeData=structuredClone(data);
+  const beforeStorage=localStorage.getItem(storageKey);
+  let result;
+  try{
+    result=runV215bCanonicalCleanup();
+    if(!result?.ok)return result||{ok:false,message:'Vorschau fehlgeschlagen.'};
+    return {...result,preview:true};
+  }finally{
+    data=beforeData;
+    if(beforeStorage===null)localStorage.removeItem(storageKey);
+    else localStorage.setItem(storageKey,beforeStorage);
+    try{resetOpponentRosterCache();resetOpponentAnalysisCache();}catch(e){}
+    _canonicalIdentityIndex=null;
+  }
+}
+
 function scheduleV215aCanonicalCleanup(){
   // Disabled in 2.1.5b. No automatic cleanup at startup.
 }
@@ -4972,7 +4990,7 @@ function renderRawMasterDebug(){
 
   host.innerHTML=`
     <div style="margin-top:10px;padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:10px">
-      <b>RAW MASTER DEBUG 2.1.5o-debug</b><br>
+      <b>RAW MASTER DEBUG 2.1.5p-debug</b><br>
       <span>${total} rohe BUNDESLIGA_PLAYERS im Browser</span>
       <div style="margin-top:8px;display:grid;gap:6px">
         ${results.map(r=>`
@@ -4998,15 +5016,15 @@ document.addEventListener('click',e=>{
   if(!btn)return;
   e.preventDefault();
   if(window.__v215bCleanupRunning)return;
-  btn.disabled=true;btn.textContent='Bereinige…';
+  btn.disabled=true;btn.textContent='Prüfe Vorschau…';
   const status=$('#canonicalCleanupStatus');
   const diag=canonicalDiagnosticSnapshot();
   if(status)status.textContent=`Prüfe ${diag.masterCount} Master-Spieler · ${diag.matches.filter(x=>x.match!=='—').length}/${diag.matches.length} Diagnose-Nachnamen erkannt…`;
   setTimeout(()=>{
-    const result=runV215bCanonicalCleanup();
+    const result=previewV215pCanonicalCleanup();
     if(result.ok){
-      if(status)status.innerHTML=`<b>Fertig:</b> ${result.renamed} Namen · ${result.clubs} Vereine · ${result.mergedTransfers} Transfer-Dubletten · ${result.mergedPlayers} Spieler-Dubletten<br><span>${result.masterPlayers||0} Bundesliga-Masterspieler · ${result.beforeTransfers}→${result.afterTransfers} Transfers · ${result.beforePlayers}→${result.afterPlayers} Spielerdatensätze</span>${result.aliasMatches?.length?`<br><span>Matches: ${result.aliasMatches.slice(0,10).map(esc).join(' · ')}</span>`:''}${result.unresolved?.length?`<br><span>Offen zur Prüfung: ${result.unresolved.slice(0,10).map(x=>esc(x.player)).join(' · ')}</span>`:''}`;
-      toast('Spielerdaten bereinigt');
+      if(status)status.innerHTML=`<b>VORSCHAU – NICHT GESPEICHERT:</b> ${result.renamed} Namen · ${result.clubs} Vereine · ${result.mergedTransfers} Transfer-Dubletten · ${result.mergedPlayers} Spieler-Dubletten<br><span>${result.masterPlayers||0} Bundesliga-Masterspieler · ${result.beforeTransfers}→${result.afterTransfers} Transfers · ${result.beforePlayers}→${result.afterPlayers} Spielerdatensätze</span>${result.aliasMatches?.length?`<br><span>Matches: ${result.aliasMatches.slice(0,10).map(esc).join(' · ')}</span>`:''}${result.unresolved?.length?`<br><span>Offen zur Prüfung: ${result.unresolved.slice(0,10).map(x=>esc(x.player)).join(' · ')}</span>`:''}`;
+      toast('Vorschau fertig – keine Daten gespeichert');
       setTimeout(()=>{render();setTimeout(()=>renderCanonicalDiagnostics(),50)},100);
     }else{
       if(status)status.textContent=`Fehler: ${result.message||'Bereinigung fehlgeschlagen'}`;

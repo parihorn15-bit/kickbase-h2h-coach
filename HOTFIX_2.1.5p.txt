@@ -1,0 +1,8 @@
+VERSION 2.1.5p – SAFE PREVIEW
+
+- Spielerdaten bereinigen läuft jetzt als Dry-Run/Vorschau.
+- Der aktuelle Datenstand wird vor der Simulation geklont.
+- Nach der Simulation werden Daten und localStorage vollständig zurückgesetzt.
+- Die Ergebnisanzeige meldet ausdrücklich: VORSCHAU – NICHT GESPEICHERT.
+- Keine automatische Datenmigration.
+- config.js nicht enthalten.
