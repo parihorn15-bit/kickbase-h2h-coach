@@ -1,0 +1,25 @@
+VERSION 2.2.1f – CANONICAL MATCHDAY + LINEUP COMMIT FIX
+
+ROOT CAUSE:
+- app.js enthielt zwei mdRecord()-Definitionen.
+- Die spätere Definition überschrieb die korrekte erste Definition.
+- Sie verglich Spieltage strikt mit x.md === md.
+- Dadurch wurden Spieltag 1 (Number) und "1" (String) als zwei verschiedene Datensätze behandelt.
+- Screenshot-Import konnte 11/11 korrekt in den numerischen Datensatz schreiben,
+  während die Aufstellungsseite den String-Datensatz mit 0/11 las.
+
+FIX:
+- Es gibt effektiv nur noch eine kanonische mdRecord()-Logik.
+- Spieltag wird immer Number(md) normalisiert.
+- Vergleiche erfolgen numerisch.
+- Bereits vorhandene doppelte Spieltagsdatensätze werden einmalig sicher zusammengeführt.
+- Beim Merge gewinnt der reichhaltigere Datensatz; Aufstellung, Namen, Punkte, Formation,
+  MVP- und Verkaufsdaten werden nicht durch leere Duplikate überschrieben.
+- data.settings.currentMd wird ebenfalls auf Number normalisiert.
+- Stable-Lineup-Speicher aus 2.2.1d/e bleibt als zusätzliche Absicherung bestehen.
+- Partielle Aufstellungen 1–11 aus 2.2.1e bleiben erhalten.
+- Patch-unabhängige AI-Nutzung bleibt erhalten.
+
+Unverändert:
+- Transfers, Budget, Boni, Coach-Scoring, Screenshot-Erkennung/Kaderabgleich
+- config.js

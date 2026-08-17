@@ -1332,7 +1332,34 @@ function bindGlobalActionFeedbackV221b(){
   },true);
 }
 const activePlayers=()=>data.players.filter(p=>!p.soldDate);const soldPlayers=()=>data.players.filter(p=>p.soldDate);const financeTotal=()=>data.finances.reduce((a,x)=>a+(+x.amount||0),0);const squadValue=()=>activePlayers().reduce((a,p)=>a+(+p.marketValue||0),0);const wealth=()=>financeTotal()+squadValue();const realized=()=>soldPlayers().reduce((a,p)=>a+(+p.salePrice||0)-(+p.buyPrice||0),0);const unrealized=()=>activePlayers().reduce((a,p)=>a+(+p.marketValue||0)-(+p.buyPrice||0),0);
-function fixtureLegacyV220(team,md=data.settings.currentMd){return fixture(team,md)}function strength(t){return +data.teamStrength[t]||5}function matchup(p,md=data.settings.currentMd){const f=fixture(p.team,md);if(!f)return 5;return Math.max(1,Math.min(10,5+strength(p.team)-strength(f.opp)+(f.ha==='H'?+data.settings.homeBonus:0)))}function score(p){return (+p.avgPoints||0)+matchup(p)*10+(LI_SCORE[p.liStatus||'Unbekannt']||0)}function rankPlayers(){return [...activePlayers()].sort((a,b)=>score(b)-score(a))}function mdRecord(md){let x=data.matchdays.find(x=>x.md===md);if(!x){x={id:id(),md,mvp:'',points:{},lineup:[],soldPlayer:'',soldDate:'',soldPrice:0};data.matchdays.push(x)}return x}function top3(md){const r=mdRecord(md);return activePlayers().map(p=>({p,pts:+r.points[p.id]||0})).sort((a,b)=>b.pts-a.pts).slice(0,3)}function mandatoryStatus(md){const r=mdRecord(md),mvpOwned=activePlayers().find(p=>p.name.trim().toLowerCase()===r.mvp.trim().toLowerCase());const top=top3(md);let valid=false,required='';if(!r.mvp)return{state:'waiting',text:'Bundesliga-MVP fehlt'};if(mvpOwned){required=mvpOwned.name;valid=r.soldPlayer===required}else{required='Wahl aus: '+top.map(x=>x.p.name).filter(Boolean).join(', ');valid=top.some(x=>x.p.name===r.soldPlayer)}return{state:valid?'done':'open',text:valid?'Erledigt':required,mvpOwned:!!mvpOwned}}
+function fixtureLegacyV220(team,md=data.settings.currentMd){return fixture(team,md)}function strength(t){return +data.teamStrength[t]||5}function matchup(p,md=data.settings.currentMd){const f=fixture(p.team,md);if(!f)return 5;return Math.max(1,Math.min(10,5+strength(p.team)-strength(f.opp)+(f.ha==='H'?+data.settings.homeBonus:0)))}function score(p){return (+p.avgPoints||0)+matchup(p)*10+(LI_SCORE[p.liStatus||'Unbekannt']||0)}function rankPlayers(){return [...activePlayers()].sort((a,b)=>score(b)-score(a))}function mdRecord(md){
+  const canonicalMd=Number(md)||1;
+
+  // Always match numerically so "1" and 1 can never become two records.
+  let record=(data.matchdays||[]).find(x=>Number(x?.md)===canonicalMd);
+
+  if(!record){
+    const inherited=typeof previousSavedLineup==='function'
+      ? previousSavedLineup(canonicalMd)
+      : {lineup:[],sourceMd:null};
+    record={
+      id:id(),md:canonicalMd,mvp:'',points:{},
+      lineup:[...(inherited?.lineup||[])],
+      lineupInheritedFrom:inherited?.sourceMd||null,
+      lineupInheritedAt:inherited?.sourceMd?new Date().toISOString():null,
+      soldPlayer:'',soldDate:'',soldPrice:0
+    };
+    data.matchdays.push(record);
+  }
+
+  // Canonicalize the stored key itself.
+  record.md=canonicalMd;
+  if(!record.points||typeof record.points!=='object')record.points={};
+  if(!Array.isArray(record.lineup))record.lineup=[];
+  if(!Array.isArray(record.lineupNames))record.lineupNames=[];
+  return record;
+}
+function top3(md){const r=mdRecord(md);return activePlayers().map(p=>({p,pts:+r.points[p.id]||0})).sort((a,b)=>b.pts-a.pts).slice(0,3)}function mandatoryStatus(md){const r=mdRecord(md),mvpOwned=activePlayers().find(p=>p.name.trim().toLowerCase()===r.mvp.trim().toLowerCase());const top=top3(md);let valid=false,required='';if(!r.mvp)return{state:'waiting',text:'Bundesliga-MVP fehlt'};if(mvpOwned){required=mvpOwned.name;valid=r.soldPlayer===required}else{required='Wahl aus: '+top.map(x=>x.p.name).filter(Boolean).join(', ');valid=top.some(x=>x.p.name===r.soldPlayer)}return{state:valid?'done':'open',text:valid?'Erledigt':required,mvpOwned:!!mvpOwned}}
 const NAV_GROUPS=[
   {id:'coach',label:'Coach',icon:'🟢',items:[
     ['dashboard','Übersicht','⌂'],
@@ -2243,6 +2270,59 @@ function applyV218Migration(){
 
 
 
+
+function mergeDuplicateMatchdaysV221f(){
+  data.ui=data.ui||{};
+  if(data.ui.v221fMatchdayDedupApplied)return;
+
+  const grouped=new Map();
+  for(const rec of data.matchdays||[]){
+    if(!rec||typeof rec!=='object')continue;
+    const md=Number(rec.md)||1;
+    if(!grouped.has(md))grouped.set(md,[]);
+    grouped.get(md).push(rec);
+  }
+
+  const merged=[];
+  for(const [md,records] of grouped.entries()){
+    // Start from the richest record so existing imported lineup/points win.
+    records.sort((a,b)=>{
+      const richness=r=>
+        (Array.isArray(r.lineup)?r.lineup.length:0)*100+
+        (Array.isArray(r.lineupNames)?r.lineupNames.length:0)*80+
+        Object.keys(r.points||{}).length*10+
+        (r.mvp?5:0)+(r.soldPlayer?3:0)+(r.formation?2:0);
+      return richness(b)-richness(a);
+    });
+
+    const base={...records[0],md:Number(md)};
+    base.points={...(base.points||{})};
+
+    for(const rec of records.slice(1)){
+      // Never overwrite populated fields with empty duplicates.
+      if((!base.lineup||!base.lineup.length)&&Array.isArray(rec.lineup)&&rec.lineup.length)
+        base.lineup=[...rec.lineup];
+      if((!base.lineupNames||!base.lineupNames.length)&&Array.isArray(rec.lineupNames)&&rec.lineupNames.length)
+        base.lineupNames=[...rec.lineupNames];
+      if(!base.formation&&rec.formation)base.formation=rec.formation;
+      if(!base.mvp&&rec.mvp)base.mvp=rec.mvp;
+      if(!base.soldPlayer&&rec.soldPlayer)base.soldPlayer=rec.soldPlayer;
+      if(!base.soldDate&&rec.soldDate)base.soldDate=rec.soldDate;
+      if(!base.soldPrice&&rec.soldPrice)base.soldPrice=rec.soldPrice;
+      base.points={...(rec.points||{}),...base.points};
+    }
+
+    if(!Array.isArray(base.lineup))base.lineup=[];
+    if(!Array.isArray(base.lineupNames))base.lineupNames=[];
+    merged.push(base);
+  }
+
+  data.matchdays=merged.sort((a,b)=>Number(a.md)-Number(b.md));
+  data.ui.v221fMatchdayDedupApplied=true;
+  data.ui.v221fMatchdayDedupAt=new Date().toISOString();
+  localStorage.setItem('kickbaseCoachV07',JSON.stringify(data));
+}
+
 function applyV221bLineupPersistenceMigration(){
   data.ui=data.ui||{};
   if(data.ui.v221bLineupPersistenceApplied)return;
@@ -2378,6 +2458,7 @@ function applyV219LineupMigration(){
 function render(){
   resetCoachAssessmentCache();
   resetFixtureCache();
+  mergeDuplicateMatchdaysV221f();
   applyV217CleanTransferRebuildSafeV221c();
   applyV221bLineupPersistenceMigration();
   applyV220CoachMigration();
@@ -2395,6 +2476,7 @@ function render(){
   applyV213SmartTransferMigration();
   applyV214CanonicalMigration();
   queueMicrotask(()=>restoreScreenshotImportUi());
+  data.settings.currentMd=Number(data.settings.currentMd)||1;
   document.body.classList.toggle('analysis',data.settings.mode==='analysis');if($('#currentMd'))$('#currentMd').value=data.settings.currentMd;$$('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===data.settings.mode));$$('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===page));const titles={dashboard:['Dashboard','Schnelle Entscheidungen und offene Aufgaben.'],squad:['Aufstellung','Deine Elf auf dem Spielfeld – ziehen oder antippen.'],scout:['Scout Center','Bundesligaspieler filtern und direkt zum Kauf vormerken.'],news:['News Intelligence','Offizielle Meldungen, gefiltert auf deine Kaderspieler.'],matchday:['Spieltag','Punkte, Bundesliga-MVP und Pflichtverkauf.'],bundesliga:['Bundesliga','Alle 34 Spieltage und die Matchups deines Kaders.'],transfers:['Transfers','Hier kaufst und verkaufst du Spieler. Der Kader aktualisiert sich automatisch.'],finances:['Finanzen','Startkapital, Boni und sämtliche Geldbewegungen.'],analysis:['H2H Intelligence','Was funktioniert bei deinen Transfers und Entscheidungen wirklich?'],lineupintel:['LigaInsider-Abgleich','Voraussichtliche Aufstellungen halbautomatisch prüfen und übernehmen.'],competition:['Liga','Dein aktuelles Duell, Spielplan und Tabelle.'],rules:['Regelwerk','Interaktive Regeln und dein aktueller Status.'],settings:['Einstellungen','Teamstärken, Matchups und Grundwerte.']};$('#pageTitle').textContent=titles[page][0];$('#pageSub').textContent=titles[page][1];try{
   const renderer=({dashboard,squad,scout,news,matchday,bundesliga,transfers,finances,analysis,lineupintel,competition,rules,settings}[page]);
   if(typeof renderer!=='function')throw new Error(`Seite ${page} ist nicht verfügbar.`);
@@ -2926,6 +3008,10 @@ function squad(){
   syncTransferSingleSource();
   const stableApplied=applyStableOwnLineupV1(+data.settings.currentMd||1);
   if(!stableApplied.ok)restoreOwnLineupFromNamesV221b(+data.settings.currentMd||1);
+  else if(stableApplied.count>0){
+    data.ui=data.ui||{};
+    data.ui.lastStableLineupApply={md:+data.settings.currentMd||1,count:stableApplied.count,at:new Date().toISOString()};
+  }
   let lineupOwner=data.ui?.lineupOwner||'me';
   if(lineupOwner!=='me'&&!managerById(lineupOwner)){
     lineupOwner='me';
