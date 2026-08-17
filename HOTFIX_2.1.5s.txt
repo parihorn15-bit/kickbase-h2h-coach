@@ -1,0 +1,9 @@
+VERSION 2.1.5s – ISOLATED SAFE PREVIEW
+
+- Die Vorschau läuft ausschließlich auf einer tiefen Kopie des Live-Datenstands.
+- Der echte Live-Datenstand wird nach der Simulation unverändert wieder eingesetzt.
+- localStorage wird nach der Simulation exakt auf den vorherigen Stand zurückgesetzt.
+- Die konservative Dublettenlogik aus 2.1.5q bleibt aktiv.
+- Das Ergebnis bleibt in einem festen Diagnosekasten sichtbar.
+- Keine echte Bereinigung und keine automatische Migration.
+- config.js ist nicht enthalten.
