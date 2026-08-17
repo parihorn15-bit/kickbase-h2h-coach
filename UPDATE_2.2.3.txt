@@ -1,0 +1,21 @@
+VERSION 2.2.3 – DIRECT LIVE LINEUP COMMIT
+
+Entscheidende Änderung:
+- Reine Aufstellungsscreenshots umgehen den alten generischen Import-/Transferpfad vollständig.
+- Klick auf „Aufstellung übernehmen“ schreibt direkt in kickbaseCoachLiveLineupsV1.
+- Danach wird exakt derselbe LIVE-Speicher gelesen und verifiziert.
+- Bei Erfolg springt die App direkt auf die Aufstellungsseite.
+- Die Aufstellungsseite rendert die Startelf direkt aus LIVE; mdRecord ist nur noch Spiegel/Snapshot.
+- Ein fehlerhafter Matchday-/Legacy-Sync kann die sichtbare Aufstellung nicht mehr verhindern.
+- Manuelle Aufstellungsänderungen verwenden denselben zentralen LIVE-Setter.
+- Dashboard und aktueller Spieltags-Check lesen in Vorbereitungs-/Livephase ebenfalls den LIVE-Stand.
+- Historische Matchday-Snapshots bleiben für Statistik und Analyse erhalten.
+- Partielle Aufstellungen 1–11 bleiben möglich.
+- Patch-unabhängige AI-Nutzung bleibt erhalten.
+
+Diagnose:
+- Erfolgreicher Import zeigt „LIVE-Aufstellung übernommen · X/11“.
+- Falls der unabhängige LIVE-Speicher nicht exakt dieselbe Anzahl enthält, wird der Import sichtbar abgebrochen.
+
+Unverändert:
+- Transfers, Budget, Boni, Coach-Scoring, Screenshot-Erkennung/Kaderabgleich, config.js.
