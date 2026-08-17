@@ -1,0 +1,19 @@
+VERSION 2.1.6 – SCREENSHOT ENGINE V2
+
+Kern:
+- Gemeinsamer Screenshot-Resolver gegen den aktuellen Bundesliga-Master.
+- Exakte, abgeschnittene und typische OCR-Namen werden bewertet.
+- 1-Zeichen-OCR-Fehler bei ausreichend langen Namen werden toleriert (z.B. Erebenagie -> Erevbenagie).
+- Mehrdeutige/unsichere Spieler werden NICHT automatisch ausgewählt.
+- Screenshot-Typ wird aus dem AI-Ergebnis als Transfers/Aufstellung/Gemischt erkannt.
+- Aufstellungen erhalten eine eigene Spieler-für-Spieler-Prüfung.
+- Aufstellung kann nur automatisch übernommen werden, wenn alle erkannten Plätze ausreichend sicher aufgelöst sind.
+- Transfer-Vorschau zeigt zusätzlich die Identitäts-Confidence und Kandidaten.
+- Backend erhält Schema-/Typ-Hinweise, bleibt aber rückwärtskompatibel.
+- Diagnose-Schreibweise Erevbenagie korrigiert.
+- Punkte/Ergebnisse sind im Schema vorbereitet; finale Zuordnung folgt erst mit echtem Spieltagsscreenshot.
+
+Sicherheit:
+- Kein automatischer Import unsicherer Transferzeilen.
+- Bestehende Commit-/Review-Stufe bleibt erhalten.
+- config.js ist nicht enthalten.

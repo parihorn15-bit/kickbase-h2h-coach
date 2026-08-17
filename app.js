@@ -1371,12 +1371,12 @@ function traceCanonicalResolution(name,context={}){
 function renderDirectHandlerTrace(){
   const host=document.querySelector('#canonicalDiagnostics') || document.querySelector('#canonicalCleanupStatus');
   if(!host)return;
-  const aliases=['Gosens','Kohr','Tape','García','Deman','Erebenagie','Anton','Olise','Götze','Pedersen','Lienhart','Kristof','Beste','Conté','Pruhs','Schwolow','Burke'];
+  const aliases=['Gosens','Kohr','Tape','García','Deman','Erevbenagie','Anton','Olise','Götze','Pedersen','Lienhart','Kristof','Beste','Conté','Pruhs','Schwolow','Burke'];
   const traces=aliases.map(name=>traceCanonicalResolution(name));
   const box=document.createElement('div');
   box.id='directHandlerTrace';
   box.style.cssText='margin-top:10px;padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:10px;display:grid;gap:6px';
-  box.innerHTML=`<b>DIRECT HANDLER TRACE 2.1.5s</b><small>Direkter Vergleich: Master-Resolver → lokaler Resolver. Keine Daten werden verändert.</small>${traces.map(t=>{
+  box.innerHTML=`<b>DIRECT HANDLER TRACE 2.1.6</b><small>Direkter Vergleich: Master-Resolver → lokaler Resolver. Keine Daten werden verändert.</small>${traces.map(t=>{
     const mr=t.masterResult||{}, lr=t.localResult||{};
     const mc=mr.matched?`${mr.name||'—'} · ${mr.team||'—'} · ${mr.reason||''}`:`OFFEN · ${mr.reason||'—'}`;
     const lc=lr.matched?`${lr.name||'—'} · ${lr.team||'—'} · ${lr.reason||''}`:`OFFEN · ${lr.reason||'—'}`;
@@ -1645,7 +1645,7 @@ function previewV215sCanonicalCleanup(){
     if(!result?.ok)return result||{ok:false,message:'Vorschau fehlgeschlagen.'};
     return {...result,preview:true,isolated:true};
   }catch(e){
-    console.error('2.1.5s isolated preview failed',e);
+    console.error('2.1.6 isolated preview failed',e);
     return {ok:false,message:String(e?.message||e)};
   }finally{
     data=liveData;
@@ -4261,17 +4261,103 @@ function backfillTransferClubs(){
   }
 }
 
+
+/* 2.1.6 Screenshot Engine v2
+   Vision extracts visible text/rows; this client performs deterministic Bundesliga identity resolution.
+   Uncertain identities are never auto-selected. */
+function v216Words(value){
+  return String(value||'').toLocaleLowerCase('de-DE')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,' ').trim().split(/\s+/).filter(Boolean);
+}
+function v216Compact(value){return v216Words(value).join('')}
+function v216EditDistance(a,b){
+  a=String(a||'');b=String(b||'');
+  const row=Array.from({length:b.length+1},(_,i)=>i);
+  for(let i=1;i<=a.length;i++){
+    let prev=row[0];row[0]=i;
+    for(let j=1;j<=b.length;j++){
+      const old=row[j];
+      row[j]=Math.min(row[j]+1,row[j-1]+1,prev+(a[i-1]===b[j-1]?0:1));
+      prev=old;
+    }
+  }
+  return row[b.length];
+}
+function v216PlayerCandidates(){
+  const seen=new Map();
+  for(const p of bundesligaMasterPlayers()){
+    const id=String(p.external_id??p.id??'');
+    const key=id?`id:${id}`:`name:${canonicalFullKey(p.name)}`;
+    if(!seen.has(key))seen.set(key,p);
+  }
+  return [...seen.values()];
+}
+function resolveScreenshotPlayerV216(input,context={}){
+  const raw=String(input||'').trim();
+  if(!raw)return {matched:false,confidence:0,reason:'Kein Spielername'};
+  const exact=resolveShortNameAgainstLocalMasters(raw,context);
+  if(exact.matched)return {...exact,confidence:Math.max(.96,Number(exact.confidence)||0),reason:`Master: ${exact.reason||'eindeutig'}`};
+
+  const needle=v216Compact(raw.replace(/\.{2,}$/,''));
+  if(needle.length<3)return {matched:false,confidence:0,reason:'Name zu kurz'};
+
+  const scored=[];
+  for(const p of v216PlayerCandidates()){
+    const full=v216Compact(p.name),words=v216Words(p.name),surname=words.at(-1)||'';
+    if(!full)continue;
+    let score=0,method='';
+    if(full===needle||surname===needle){score=1;method='exakt'}
+    else if(full.startsWith(needle)||surname.startsWith(needle)){
+      score=needle.length>=6?.95:needle.length>=4?.88:.78;method='abgeschnittener Name';
+    }else{
+      const target=surname||full;
+      const d=v216EditDistance(needle,target);
+      const ratio=1-d/Math.max(needle.length,target.length,1);
+      if(d===1&&Math.min(needle.length,target.length)>=6){score=.93;method='1 OCR-Zeichen'}
+      else if(d<=2&&Math.min(needle.length,target.length)>=8&&ratio>=.78){score=.84;method='OCR-Toleranz'}
+    }
+    if(score)scored.push({p,score,method});
+  }
+  scored.sort((x,y)=>y.score-x.score);
+  const best=scored[0],second=scored[1];
+  if(!best)return {matched:false,confidence:0,reason:'Kein Bundesliga-Match'};
+  if(second&&second.score>=best.score-.04){
+    return {matched:false,ambiguous:true,confidence:best.score,reason:'Mehrere ähnliche Bundesliga-Spieler',
+      candidates:scored.slice(0,4).map(x=>x.p.name)};
+  }
+  if(best.score<.84)return {matched:false,confidence:best.score,reason:'Treffer zu unsicher',candidates:[best.p.name]};
+  return {...best.p,matched:true,ambiguous:false,confidence:best.score,reason:`Screenshot v2: ${best.method}`};
+}
+function classifyScreenshotResultV216(d){
+  const transfers=Array.isArray(d?.transfers)?d.transfers:[];
+  const lineup=Array.isArray(d?.lineup)?d.lineup:[];
+  if(transfers.length&&lineup.length)return 'Gemischt';
+  if(transfers.length)return 'Transfers';
+  if(lineup.length)return 'Aufstellung';
+  return 'Unbekannt';
+}
+function resolveLineupV216(lineup,managerId=''){
+  return (Array.isArray(lineup)?lineup:[]).map((entry,i)=>{
+    const raw=typeof entry==='string'?entry:String(entry?.player||entry?.name||'');
+    const r=resolveScreenshotPlayerV216(raw,{managerId});
+    return {index:i,raw,resolved:r.matched?r.name:raw,matched:Boolean(r.matched),
+      confidence:Number(r.confidence)||0,reason:r.reason||'',candidates:r.candidates||[]};
+  });
+}
+
 function aiKey(t){return `${normalizePlayerName(t.player||'')}|${String(t.type||'').toLowerCase()}`}
 function renderScreenshotAiResult(result){
  const d=result?.data||{},ts=Array.isArray(d.transfers)?d.transfers:[],recognizedManagerId=v200ManagerId(d.manager||''),managerId=recognizedManagerId||'',row=managerId?managerLeagueData(managerId):null,existing=Array.isArray(row?.transfers)?row.transfers:[];
  const items=ts.map((t,i)=>{
-   const canonical=resolveCanonicalPlayer(t.player,{managerId});
+   const canonical=resolveScreenshotPlayerV216(t.player,{managerId});
    if(canonical.matched)t={...t,player:canonical.name};
    const dateInfo=deriveTransferDate(t.relative_time);
    const clubInfo=resolvePlayerClubSmart(t.player,canonical.team||'',{managerId});
    const match=smartTransferMatch(existing,t,dateInfo.date);
    let action=match.action;
-   if((Number(t.confidence)||0)<.75)action='uncertain';
+   if((Number(t.confidence)||0)<.75 || !canonical.matched || Number(canonical.confidence||0)<.84)action='uncertain';
+   t={...t,identityConfidence:Number(canonical.confidence)||0,identityReason:canonical.reason||'',identityCandidates:canonical.candidates||[]};
    return {
      id:`r${i}`,t,
      action,
@@ -4286,21 +4372,23 @@ function renderScreenshotAiResult(result){
      matchReason:match.reason
    };
  });
- screenshotImportReview={managerId,recognizedManagerId,lineup:Array.isArray(d.lineup)?d.lineup:[],items};
+ const screenshotType=classifyScreenshotResultV216(d);
+ const lineupReview=resolveLineupV216(d.lineup,managerId);
+ screenshotImportReview={managerId,recognizedManagerId,screenshotType,lineupReview,lineup:lineupReview.filter(x=>x.matched&&x.confidence>=.84).map(x=>x.resolved),items};
  const r=screenshotImportReview,target=$('#screenshotImportResult');if(!target)return;
  const label=x=>x==='new'?'NEU':x==='update'?'ÄNDERN':x==='unchanged'?'UNVERÄNDERT':'PRÜFEN';
  const ref=screenshotReferenceInfo();
- target.innerHTML=`<div class="screenshot-result-head"><div><span>AI-ABGLEICH</span><h4>${esc(d.manager||'Manager nicht erkannt')}</h4></div><strong>${r.items.length} Transfers</strong></div>
+ target.innerHTML=`<div class="screenshot-result-head"><div><span>SCREENSHOT ENGINE 2.1.6 · ${esc(r.screenshotType)}</span><h4>${esc(d.manager||'Manager nicht erkannt')}</h4></div><strong>${r.items.length} Transfers${r.lineupReview?.length?` · ${r.lineupReview.length} Aufstellungsplätze`:''}</strong></div>
  <div class="ai-reference-date ${ref.trusted?'trusted':'uncertain'}"><b>Screenshot-Referenz:</b> ${esc(localIsoDateFromDate(ref.ref)||'unbekannt')} ${ref.trusted?'· tagesaktuell erkannt':'· nicht als tagesaktuell bestätigt – Transferdaten werden nicht automatisch gesetzt'}</div>
  <div class="ai-manager-assignment ${managerId?'confirmed':'uncertain'}"><label>Ziel-Manager für diesen Import</label><select id="aiTargetManager"><option value="">Bitte Manager auswählen…</option>${aiManagerOptions(managerId)}</select><small>${managerId?`AI erkannt: ${esc(d.manager||'')} – bitte vor Übernahme prüfen.`:'AI konnte den Manager nicht eindeutig erkennen. Manuelle Auswahl ist erforderlich.'}</small></div>
  <div class="screenshot-result-list">${r.items.map(x=>`<article class="ai-review-row smart ${x.action}">
    <label><input type="checkbox" data-ai="${x.id}" ${x.selected?'checked':''} ${x.action==='unchanged'?'disabled':''}></label>
-   <div class="ai-player-main"><b>${esc(x.t.player||'Unbekannt')}</b><small>${esc(x.t.type||'')} · ${x.club?esc(x.club):'Verein unbekannt'}</small><small>${x.derivedDate?`Transferdatum ${esc(x.derivedDate)}`:'Transferdatum offen'}${x.t.relative_time?` · ${esc(x.t.relative_time)}`:''}</small><small class="ai-match-reason">${esc(x.matchReason)}</small></div>
+   <div class="ai-player-main"><b>${esc(x.t.player||'Unbekannt')}</b><small>${esc(x.t.type||'')} · ${x.club?esc(x.club):'Verein unbekannt'}</small><small>${x.derivedDate?`Transferdatum ${esc(x.derivedDate)}`:'Transferdatum offen'}${x.t.relative_time?` · ${esc(x.t.relative_time)}`:''}</small><small class="ai-match-reason">${esc(x.matchReason)}</small><small class="ai-match-reason">Spieler-ID: ${Math.round((Number(x.t.identityConfidence)||0)*100)}% · ${esc(x.t.identityReason||'nicht aufgelöst')}${x.t.identityCandidates?.length?` · Kandidaten: ${esc(x.t.identityCandidates.join(', '))}`:''}</small></div>
    <div class="ai-review-price">${Number.isFinite(Number(x.t.price))?euro(Number(x.t.price)):'–'}</div>
    <div class="ai-tag ${x.action}">${label(x.action)}</div>
    <div class="screenshot-confidence">${Math.round((Number(x.t.confidence)||0)*100)}%</div>
  </article>`).join('')}</div>
- ${r.lineup.length?`<label class="ai-lineup"><input id="aiLineup" type="checkbox"> Erkannte Aufstellung übernehmen (${r.lineup.length})</label>`:''}
+ ${r.lineupReview?.length?`<div class="ai-lineup"><b>Aufstellung erkannt (${r.lineupReview.length})</b><div style="margin-top:6px">${r.lineupReview.map(x=>`<div>${x.matched&&x.confidence>=.84?'✓':'⚠'} ${esc(x.raw)} → <b>${esc(x.resolved)}</b> · ${Math.round(x.confidence*100)}% · ${esc(x.reason)}${x.candidates?.length?` · ${esc(x.candidates.join(', '))}`:''}</div>`).join('')}</div><label style="display:block;margin-top:8px"><input id="aiLineup" type="checkbox" ${r.lineupReview.every(x=>x.matched&&x.confidence>=.84)?'':'disabled'}> Aufstellung übernehmen (${r.lineup.length}/${r.lineupReview.length} sicher erkannt)</label></div>`:''}
  <div class="ai-actions"><button class="btn" id="aiCommit" ${!managerId?'disabled':''}>Ausgewählte Änderungen übernehmen</button><button class="btn secondary" id="aiDiscard">Verwerfen</button></div>
  <div class="screenshot-result-foot">Abgleich berücksichtigt Spieler, Kauf/Verkauf, Preis und – wenn tagesaktuell ableitbar – das Transferdatum. Verein wird aus dem Bundesliga-Spielerdatensatz ergänzt.</div>`;
  $$('[data-ai]').forEach(c=>c.onchange=()=>{const x=r.items.find(i=>i.id===c.dataset.ai);if(x)x.selected=c.checked});
@@ -4357,7 +4445,7 @@ async function commitAiReview(){
 
   for(const item of selectedItems){
     const t=item.t||{};
-    const canonical=resolveCanonicalPlayer(t.player,{managerId:targetManagerId});
+    const canonical=resolveScreenshotPlayerV216(t.player,{managerId:targetManagerId});
     const player=String(canonical.matched?canonical.name:(t.player||'')).trim();
     const type=t.type==='Verkauf'?'Verkauf':'Kauf';
     const price=Number(t.price)||0;
@@ -4501,7 +4589,15 @@ async function analyzeSelectedScreenshots(){
     const res=await fetch(KICKBASE_AI_ENDPOINT,{signal:controller.signal,
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({images,managerHint,screenshotReferenceAt:screenshotImportDraft.referenceAt,screenshotReferenceTrusted:screenshotImportDraft.referenceTrusted})
+      body:JSON.stringify({
+        images,managerHint,
+        screenshotReferenceAt:screenshotImportDraft.referenceAt,
+        screenshotReferenceTrusted:screenshotImportDraft.referenceTrusted,
+        clientVersion:'2.1.6',
+        requestedSchema:'kickbase-screenshot-v2',
+        supportedScreenshotTypes:['transfers','lineup-own','lineup-manager','points-results'],
+        extractionHint:'Return visible manager/team name, transfers (player,type,price,counterparty,relative_time,confidence) and lineup names when present. Preserve truncated/OCR text; do not invent full player names.'
+      })
     });
     clearTimeout(timer);const result=await res.json().catch(()=>({}));
     if(!res.ok)throw new Error(result?.details||result?.message||result?.error||`HTTP ${res.status}`);
@@ -5009,13 +5105,13 @@ function renderRawMasterDebug(){
   const host=document.querySelector('#canonicalDiagnostics') || document.querySelector('#canonicalCleanupStatus');
   if(!host)return;
 
-  const aliases=['Gosens','Kohr','Tape','García','Deman','Erebenagie','Anton','Olise','Götze','Pedersen','Lienhart','Kristof','Beste','Conté','Pruhs','Schwolow','Burke'];
+  const aliases=['Gosens','Kohr','Tape','García','Deman','Erevbenagie','Anton','Olise','Götze','Pedersen','Lienhart','Kristof','Beste','Conté','Pruhs','Schwolow','Burke'];
   const results=aliases.map(rawMasterDebug);
   const total=(window.BUNDESLIGA_PLAYERS||[]).length;
 
   host.innerHTML=`
     <div style="margin-top:10px;padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:10px">
-      <b>RAW MASTER DEBUG 2.1.5s-debug</b><br>
+      <b>RAW MASTER DEBUG 2.1.6-debug</b><br>
       <span>${total} rohe BUNDESLIGA_PLAYERS im Browser</span>
       <div style="margin-top:8px;display:grid;gap:6px">
         ${results.map(r=>`
@@ -5051,7 +5147,7 @@ function renderPersistentCleanupPreviewV215s(result){
   const unresolved=(result.unresolved||[]).slice(0,30);
   const merged=(result.mergedDetails||[]).slice(0,30);
   box.innerHTML=`
-    <div style="font-weight:800;font-size:15px;margin-bottom:6px">2.1.5s – ISOLIERTE VORSCHAU · KEINE DATENÄNDERUNG</div>
+    <div style="font-weight:800;font-size:15px;margin-bottom:6px">2.1.6 – ISOLIERTE VORSCHAU · KEINE DATENÄNDERUNG</div>
     <div><b>Master-Spieler:</b> ${result.masterPlayers||0}</div>
     <div><b>Namen:</b> ${result.renamed||0} · <b>Vereine:</b> ${result.clubs||0}</div>
     <div><b>Transfer-Dubletten:</b> ${result.mergedTransfers||0} · <b>Spieler-Dubletten:</b> ${result.mergedPlayers||0}</div>
