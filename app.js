@@ -765,8 +765,34 @@ const V219B_KICKBASE_ROSTER_METADATA={
   leszczynski:{name:'Jan Leszczyński',team:'Borussia Mönchengladbach',position:'Abwehr'}
 };
 function v219bRosterKey(name){return v218AliasKey(name)}
+const V219C_FULLNAME_TO_ROSTER_KEY={
+  alexanderschwolow:'schwolow',
+  nicolaskristof:'kristof',
+  mariogotze:'gotze',
+  janniklasbeste:'beste',
+  michaelolise:'olise',
+  philipplienhart:'lienhart',
+  waldemaranton:'anton',
+  aleixgarcia:'garcia',
+  paulerevbenagie:'erevbenagie',
+  olivierdeman:'deman',
+  stefanposch:'posch',
+  ignaciofernandez:'fernandez',
+  rubenmuller:'rubenmuller',
+  janleszczynski:'leszczynski'
+};
 function v219bKickbaseMetadata(name){
-  return V219B_KICKBASE_ROSTER_METADATA[v219bRosterKey(name)]||null;
+  const raw=v219bRosterKey(name);
+  const direct=V219B_KICKBASE_ROSTER_METADATA[raw];
+  if(direct)return direct;
+  const mapped=V219C_FULLNAME_TO_ROSTER_KEY[raw];
+  if(mapped&&V219B_KICKBASE_ROSTER_METADATA[mapped])return V219B_KICKBASE_ROSTER_METADATA[mapped];
+  // Safe surname fallback only when it maps to exactly one confirmed roster record.
+  const hits=Object.entries(V219B_KICKBASE_ROSTER_METADATA).filter(([key,meta])=>{
+    const full=v219bRosterKey(meta.name);
+    return full.endsWith(raw)||raw.endsWith(key)||full.endsWith(key);
+  });
+  return hits.length===1?hits[0][1]:null;
 }
 
 function repairPlayerPositionV219(player){
@@ -1100,11 +1126,15 @@ let data=load(),page='dashboard';function mergeData(x){
   };
 }
 function fixture(team,md=data.settings.currentMd){
-  const f=FIXTURES.find(x=>+x.md===+md&&(x.home===team||x.away===team));
+  const target=canonicalClubName(team);
+  const f=FIXTURES.find(x=>+x.md===+md&&(
+    canonicalClubName(x.home)===target||canonicalClubName(x.away)===target
+  ));
   if(!f)return null;
+  const isHome=canonicalClubName(f.home)===target;
   return{
-    opp:f.home===team?f.away:f.home,
-    ha:f.home===team?'H':'A',
+    opp:isHome?canonicalClubName(f.away):canonicalClubName(f.home),
+    ha:isHome?'H':'A',
     date:f.date
   };
 }
@@ -1192,7 +1222,7 @@ function mandatoryStatus(md){
 
 function load(){try{const raw=localStorage.getItem('kickbaseCoachV07')||localStorage.getItem('kickbaseCoachV06')||localStorage.getItem('kickbaseCoachV05')||localStorage.getItem('kickbaseCoachV04')||localStorage.getItem('kickbaseCoachV03')||localStorage.getItem('kickbaseCoachV2');return raw?mergeData(JSON.parse(raw)):mergeData(SEEDED_DATA)}catch{return mergeData(SEEDED_DATA)}}function save(){syncTransferSingleSource();localStorage.setItem('kickbaseCoachV07',JSON.stringify(data));if(window.cloudQueueSave)window.cloudQueueSave();toast('Gespeichert')}function touch(){save();render()}function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1300)}
 const activePlayers=()=>data.players.filter(p=>!p.soldDate);const soldPlayers=()=>data.players.filter(p=>p.soldDate);const financeTotal=()=>data.finances.reduce((a,x)=>a+(+x.amount||0),0);const squadValue=()=>activePlayers().reduce((a,p)=>a+(+p.marketValue||0),0);const wealth=()=>financeTotal()+squadValue();const realized=()=>soldPlayers().reduce((a,p)=>a+(+p.salePrice||0)-(+p.buyPrice||0),0);const unrealized=()=>activePlayers().reduce((a,p)=>a+(+p.marketValue||0)-(+p.buyPrice||0),0);
-function fixture(team,md=data.settings.currentMd){const f=FIXTURES.find(x=>x.md===md&&(x.home===team||x.away===team));if(!f)return null;return{opp:f.home===team?f.away:f.home,ha:f.home===team?'H':'A',date:f.date}}function strength(t){return +data.teamStrength[t]||5}function matchup(p,md=data.settings.currentMd){const f=fixture(p.team,md);if(!f)return 5;return Math.max(1,Math.min(10,5+strength(p.team)-strength(f.opp)+(f.ha==='H'?+data.settings.homeBonus:0)))}function score(p){return (+p.avgPoints||0)+matchup(p)*10+(LI_SCORE[p.liStatus||'Unbekannt']||0)}function rankPlayers(){return [...activePlayers()].sort((a,b)=>score(b)-score(a))}function mdRecord(md){let x=data.matchdays.find(x=>x.md===md);if(!x){x={id:id(),md,mvp:'',points:{},lineup:[],soldPlayer:'',soldDate:'',soldPrice:0};data.matchdays.push(x)}return x}function top3(md){const r=mdRecord(md);return activePlayers().map(p=>({p,pts:+r.points[p.id]||0})).sort((a,b)=>b.pts-a.pts).slice(0,3)}function mandatoryStatus(md){const r=mdRecord(md),mvpOwned=activePlayers().find(p=>p.name.trim().toLowerCase()===r.mvp.trim().toLowerCase());const top=top3(md);let valid=false,required='';if(!r.mvp)return{state:'waiting',text:'Bundesliga-MVP fehlt'};if(mvpOwned){required=mvpOwned.name;valid=r.soldPlayer===required}else{required='Wahl aus: '+top.map(x=>x.p.name).filter(Boolean).join(', ');valid=top.some(x=>x.p.name===r.soldPlayer)}return{state:valid?'done':'open',text:valid?'Erledigt':required,mvpOwned:!!mvpOwned}}
+function fixture(team,md=data.settings.currentMd){const target=canonicalClubName(team);const f=FIXTURES.find(x=>+x.md===+md&&(canonicalClubName(x.home)===target||canonicalClubName(x.away)===target));if(!f)return null;const isHome=canonicalClubName(f.home)===target;return{opp:isHome?canonicalClubName(f.away):canonicalClubName(f.home),ha:isHome?'H':'A',date:f.date}}function strength(t){return +data.teamStrength[t]||5}function matchup(p,md=data.settings.currentMd){const f=fixture(p.team,md);if(!f)return 5;return Math.max(1,Math.min(10,5+strength(p.team)-strength(f.opp)+(f.ha==='H'?+data.settings.homeBonus:0)))}function score(p){return (+p.avgPoints||0)+matchup(p)*10+(LI_SCORE[p.liStatus||'Unbekannt']||0)}function rankPlayers(){return [...activePlayers()].sort((a,b)=>score(b)-score(a))}function mdRecord(md){let x=data.matchdays.find(x=>x.md===md);if(!x){x={id:id(),md,mvp:'',points:{},lineup:[],soldPlayer:'',soldDate:'',soldPrice:0};data.matchdays.push(x)}return x}function top3(md){const r=mdRecord(md);return activePlayers().map(p=>({p,pts:+r.points[p.id]||0})).sort((a,b)=>b.pts-a.pts).slice(0,3)}function mandatoryStatus(md){const r=mdRecord(md),mvpOwned=activePlayers().find(p=>p.name.trim().toLowerCase()===r.mvp.trim().toLowerCase());const top=top3(md);let valid=false,required='';if(!r.mvp)return{state:'waiting',text:'Bundesliga-MVP fehlt'};if(mvpOwned){required=mvpOwned.name;valid=r.soldPlayer===required}else{required='Wahl aus: '+top.map(x=>x.p.name).filter(Boolean).join(', ');valid=top.some(x=>x.p.name===r.soldPlayer)}return{state:valid?'done':'open',text:valid?'Erledigt':required,mvpOwned:!!mvpOwned}}
 const NAV_GROUPS=[
   {id:'coach',label:'Coach',icon:'🟢',items:[
     ['dashboard','Übersicht','⌂'],
@@ -2067,6 +2097,35 @@ function applyV218Migration(){
 
 
 
+
+function applyV219cMetadataMigration(){
+  data.ui=data.ui||{};
+  if(data.ui.v219cMetadataMigrationApplied)return;
+  let corrected=0;
+  for(const p of data.players||[]){
+    const kb=v219bKickbaseMetadata(p.name);
+    if(!kb)continue;
+    const before=[p.name,p.team,p.position,p.kickbasePosition].join('|');
+    p.name=kb.name;
+    p.team=canonicalClubName(kb.team);
+    p.position=kb.position;
+    p.kickbasePosition=kb.position;
+    const after=[p.name,p.team,p.position,p.kickbasePosition].join('|');
+    if(before!==after)corrected++;
+  }
+  const own=managerLeagueData('me');
+  for(const t of own.transfers||[]){
+    const kb=v219bKickbaseMetadata(t.player);
+    if(!kb)continue;
+    t.player=kb.name;
+    t.club=canonicalClubName(kb.team);
+    t.position=kb.position;
+  }
+  data.ui.v219cMetadataMigrationApplied=true;
+  data.ui.v219cMetadataCorrections=corrected;
+  localStorage.setItem('kickbaseCoachV07',JSON.stringify(data));
+}
+
 function applyV219bRosterMigration(){
   data.ui=data.ui||{};
   if(data.ui.v219bRosterMigrationApplied)return;
@@ -2137,6 +2196,7 @@ function applyV219LineupMigration(){
 
 function render(){
   applyV217CleanTransferRebuild();
+  applyV219cMetadataMigration();
   applyV219bRosterMigration();
   applyV219LineupMigration();
   applyV218Migration();
@@ -2611,7 +2671,7 @@ function squad(){
   const bench=active.filter(p=>!displayLineup.includes(p.id));
 
   const positionOrder=['Sturm','Mittelfeld','Abwehr','Tor'];
-  const counts=Object.fromEntries(positionOrder.map(pos=>[pos,starters.filter(p=>p.position===pos).length]));
+  const counts=Object.fromEntries(positionOrder.map(pos=>[pos,starters.filter(p=>repairPlayerPositionV219(p)===pos).length]));
   const validFormation=exactFormation(displayLineup);
   const possibleFormations=feasibleFormations(displayLineup);
   const formation=validFormation?.code||[counts.Abwehr,counts.Mittelfeld,counts.Sturm].join('-');
@@ -2629,7 +2689,7 @@ function squad(){
   };
 
   const row=position=>{
-    const list=starters.filter(p=>p.position===position);
+    const list=starters.filter(p=>repairPlayerPositionV219(p)===position);
     return `<div class="pitch-row pitch-${position.toLowerCase()}" data-position="${position}" data-count="${list.length}">
       ${list.map(fieldPlayer).join('')||`<span class="empty-position">${position}</span>`}
     </div>`;

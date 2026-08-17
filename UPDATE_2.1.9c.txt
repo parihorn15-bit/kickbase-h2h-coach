@@ -1,0 +1,14 @@
+VERSION 2.1.9c – POSITION IDENTITY + FIXTURE FIX
+
+Ursachenfix:
+- Bestätigte Kickbase-Metadaten erkennen nun sowohl Kurznamen als auch vollständige Spielernamen.
+- Michael Olise wird dadurch zuverlässig als FC Bayern München / Mittelfeld geführt.
+- Jan-Niklas Beste wird zuverlässig als Sport-Club Freiburg / Mittelfeld geführt.
+- Dasselbe gilt für die übrigen bestätigten 14 Horn-Capital-Spieler.
+- Die Feldreihen prüfen die autoritative Position beim Rendern erneut; alte stale Positionswerte können die Reihe nicht mehr bestimmen.
+- Spielplan/Gegnerzuordnung vergleicht Vereinsnamen kanonisch statt per exaktem Text.
+- Dadurch werden z.B. Sport-Club Freiburg und SC Freiburg als derselbe Verein behandelt.
+- Beide im Projekt vorhandenen fixture()-Definitionen wurden korrigiert, damit kein alter Code den Fix später überschreibt.
+- Tauschlogik aus 2.1.9b bleibt erhalten.
+- Keine Änderungen an Transfers, Budget oder Bonuslogik.
+- config.js bleibt unverändert.
