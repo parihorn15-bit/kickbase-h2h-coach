@@ -1921,6 +1921,50 @@ const V217_HORN_TRANSFER_BASELINE=[
   ['Kauf','Jan Leszczyński',4334334,'2026-08-16','Kickbase']
 ];
 
+
+function applyV217CleanTransferRebuildSafeV221c(){
+  const ownBackup=(data.matchdays||[]).map(rec=>rec&&typeof rec==='object'?{
+    md:+rec.md||0,
+    lineup:Array.isArray(rec.lineup)?[...rec.lineup]:[],
+    lineupNames:Array.isArray(rec.lineupNames)?[...rec.lineupNames]:[],
+    formation:rec.formation||'',
+    bench:Array.isArray(rec.bench)?[...rec.bench]:[],
+    lineupInheritedFrom:rec.lineupInheritedFrom??null,
+    lineupInheritedAt:rec.lineupInheritedAt??null
+  }:null).filter(Boolean);
+
+  const opponentBackup={};
+  for(const manager of LEAGUE_MANAGERS){
+    const row=managerLeagueData(manager.id);
+    opponentBackup[manager.id]=structuredClone(row.matchdays||{});
+  }
+
+  applyV217CleanTransferRebuild();
+
+  for(const backup of ownBackup){
+    const rec=mdRecord(backup.md);
+    if(backup.lineup.length)rec.lineup=[...backup.lineup];
+    if(backup.lineupNames.length)rec.lineupNames=[...backup.lineupNames];
+    if(backup.formation)rec.formation=backup.formation;
+    if(backup.bench.length)rec.bench=[...backup.bench];
+    rec.lineupInheritedFrom=backup.lineupInheritedFrom;
+    rec.lineupInheritedAt=backup.lineupInheritedAt;
+  }
+
+  for(const manager of LEAGUE_MANAGERS){
+    const current=managerLeagueData(manager.id);
+    const backed=opponentBackup[manager.id]||{};
+    for(const [md,rec] of Object.entries(backed)){
+      if(!current.matchdays[md])current.matchdays[md]={points:null,formation:'',lineup:[],bank:[],note:''};
+      const target=current.matchdays[md];
+      if(Array.isArray(rec.lineup)&&rec.lineup.length)target.lineup=[...rec.lineup];
+      if(Array.isArray(rec.bank)&&rec.bank.length)target.bank=[...rec.bank];
+      if(rec.formation)target.formation=rec.formation;
+      if(rec.note)target.note=rec.note;
+    }
+  }
+}
+
 function applyV217CleanTransferRebuild(){
   data.ui=data.ui||{};
   if(data.ui.v217CleanTransferRebuildApplied)return;
@@ -1935,28 +1979,16 @@ function applyV217CleanTransferRebuild(){
 
   const root=ensureLeagueIntel();
 
-  // Reset every manager's transfer history and every stored opponent lineup.
+  // 2.2.1c: This migration may rebuild the historic transfer baseline once,
+  // but it must NEVER clear current lineups anymore. Lineups are user/import data
+  // and are preserved across renders, migrations and deployments.
   for(const manager of LEAGUE_MANAGERS){
     const row=managerLeagueData(manager.id);
     row.transfers=[];
     row.matchdays=row.matchdays&&typeof row.matchdays==='object'?row.matchdays:{};
-    for(const rec of Object.values(row.matchdays)){
-      if(!rec||typeof rec!=='object')continue;
-      rec.lineup=[];
-      rec.bank=[];
-      rec.formation='';
-      rec.note='';
-    }
   }
 
-  // Reset own lineup/bench references as requested. Keep matchday points/rules data.
-  for(const rec of data.matchdays||[]){
-    if(!rec||typeof rec!=='object')continue;
-    rec.lineup=[];
-    rec.bench=[];
-    rec.lineupInheritedFrom=null;
-    rec.lineupInheritedAt=null;
-  }
+  // Preserve own and opponent lineup / formation / note data completely.
 
   // The current squad is rebuilt solely from the clean Horn Capital transfer baseline.
   data.players=[];
@@ -2346,7 +2378,7 @@ function applyV219LineupMigration(){
 function render(){
   resetCoachAssessmentCache();
   resetFixtureCache();
-  applyV217CleanTransferRebuild();
+  applyV217CleanTransferRebuildSafeV221c();
   applyV221bLineupPersistenceMigration();
   applyV220CoachMigration();
   applyV219cMetadataMigration();
@@ -5478,6 +5510,17 @@ async function commitAiReview(){
     return;
   }
 
+  if(wantsLineup&&targetManagerId==='me'){
+    const committedRecord=mdRecord(+data.settings.currentMd||1);
+    data.ui=data.ui||{};
+    data.ui.lastLineupCommitV221c={
+      at:new Date().toISOString(),
+      md:+data.settings.currentMd||1,
+      count:(committedRecord.lineup||[]).length,
+      names:[...(committedRecord.lineupNames||[])],
+      formation:committedRecord.formation||''
+    };
+  }
   localStorage.setItem('kickbaseCoachV07',JSON.stringify(data));
 
   let cloudSaved=false;
@@ -5516,6 +5559,14 @@ async function commitAiReview(){
     page='competition';
   }
   render();
+
+  if(wantsLineup&&targetManagerId==='me'){
+    const postRender=mdRecord(+data.settings.currentMd||1);
+    if((postRender.lineup||[]).length!==11){
+      console.error('2.2.1c post-render lineup loss',postRender);
+      toast(`✕ Aufstellung nach Render nur ${(postRender.lineup||[]).length}/11 – bitte Diagnose melden`,5000);
+    }
+  }
 
   setTimeout(()=>{
     const status=$('#screenshotImportStatus');

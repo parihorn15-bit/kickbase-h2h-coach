@@ -1,0 +1,22 @@
+VERSION 2.2.1c – LINEUP PRESERVATION + ACTION FEEDBACK
+
+Ursache gefunden:
+- Der alte 2.1.7 Clean-Rebuild setzte bei einem Lauf eigene und gegnerische Aufstellungen explizit auf [].
+- Dadurch konnte eine korrekt erkannte und gespeicherte Screenshot-Aufstellung direkt beim nächsten Render wieder verschwinden.
+
+Fix:
+- Clean-Rebuild darf ab jetzt ausschließlich Transfer-Baselines bereinigen.
+- Eigene Aufstellungen, lineupNames, Formation und Bench werden nicht mehr gelöscht.
+- Gegnerische Aufstellungen/Formation/Notizen werden ebenfalls geschützt.
+- Zusätzlich läuft der alte Rebuild über einen Preservation-Wrapper, der bestehende Lineups vor und nach der Migration sichert.
+- Nach Screenshot-Übernahme wird ein Post-Render-Check ausgeführt.
+- Falls die Elf wider Erwarten noch einmal verschwindet, erscheint eine konkrete 0–11 Diagnose statt stiller Fehler.
+
+Feedback:
+- Sofortiges „läuft…“-Feedback aus 2.2.1b bleibt erhalten.
+- Erfolgs-/Fehlermeldungen bleiben länger sichtbar.
+
+Unverändert:
+- 2.2.1 Kaderabgleich/Screenshot-Erkennung
+- Positionslogik, Transfers, Budget, Boni, Coach-Scoring
+- config.js
