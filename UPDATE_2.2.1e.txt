@@ -1,0 +1,20 @@
+VERSION 2.2.1e – PARTIAL LINEUPS + PERSISTENT AI USAGE
+
+Partielle Aufstellungen:
+- Screenshot-Aufstellungen mit 1 bis 10 Spielern werden jetzt als gültiger Zwischenstand gespeichert.
+- 11/11 bleibt die vollständige Aufstellung und wird wie bisher komplett validiert.
+- Unter 11 Spielern wird keine Formation erzwungen; Status = unvollständig.
+- Ein späterer Screenshot desselben Managers/Spieltags aktualisiert/ersetzt den bisherigen Zwischenstand.
+- Gilt für eigene und gegnerische Aufstellungen.
+- Vorschau zeigt z.B. „7/11 erkannte Plätze“ und weist auf den Zwischenstand hin.
+- Erfolgsfeedback zeigt z.B. „Aufstellung übernommen · 7/11 · unvollständig“.
+- Stabiler versionsunabhängiger Aufstellungsspeicher unterstützt jetzt ebenfalls 1–11 Spieler.
+- Manuelle Teilaufstellungen werden ebenfalls stabil gespeichert.
+
+AI-Nutzung:
+- versionsunabhängiger Sitzungszähler aus 2.2.1d bleibt unverändert erhalten.
+
+Unverändert:
+- 2.2.1 Kaderabgleich / Screenshot-Erkennung
+- Transfers, Budget, Boni, Coach-Scoring
+- config.js
