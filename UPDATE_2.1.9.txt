@@ -1,0 +1,10 @@
+VERSION 2.1.9 – LINEUP IMPORT + POSITION FIX
+
+- Zentrale Positionsnormalisierung für Tor/Abwehr/Mittelfeld/Sturm und englische Master-Bezeichnungen.
+- Bestehende Spielerpositionen werden beim ersten Start repariert, soweit eindeutig auflösbar.
+- Manuelles Aufstellen wird nicht mehr durch abweichende Positionsbezeichnungen blockiert.
+- Reine Aufstellungsscreenshots können ohne Transferzeilen übernommen werden.
+- Erkannte Spieler und Positionen sind vor der Übernahme direkt editierbar.
+- Eigene Aufstellung wird auf interne Spieler-IDs gemappt; Gegner-Aufstellungen auf den jeweiligen Manager.
+- Keine Änderung an 38-Transfer-Baseline oder Finanzstand aus 2.1.8.
+- config.js bleibt unverändert.
