@@ -1376,7 +1376,7 @@ function renderDirectHandlerTrace(){
   const box=document.createElement('div');
   box.id='directHandlerTrace';
   box.style.cssText='margin-top:10px;padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:10px;display:grid;gap:6px';
-  box.innerHTML=`<b>DIRECT HANDLER TRACE 2.1.5q</b><small>Direkter Vergleich: Master-Resolver → lokaler Resolver. Keine Daten werden verändert.</small>${traces.map(t=>{
+  box.innerHTML=`<b>DIRECT HANDLER TRACE 2.1.5r</b><small>Direkter Vergleich: Master-Resolver → lokaler Resolver. Keine Daten werden verändert.</small>${traces.map(t=>{
     const mr=t.masterResult||{}, lr=t.localResult||{};
     const mc=mr.matched?`${mr.name||'—'} · ${mr.team||'—'} · ${mr.reason||''}`:`OFFEN · ${mr.reason||'—'}`;
     const lc=lr.matched?`${lr.name||'—'} · ${lr.team||'—'} · ${lr.reason||''}`:`OFFEN · ${lr.reason||'—'}`;
@@ -1447,7 +1447,7 @@ function runV215bCanonicalCleanup(){
         const txDate=String(t.date||'').trim();
         const txSource=String(t.source||t.note||'').toLowerCase();
         const screenshotLike=txSource.includes('screenshot');
-        // 2.1.5q: transaction identity must include date.
+        // 2.1.5r: transaction identity must include date.
         // This preserves legitimate buy/sell/re-buy cycles of the same player at the same price.
         // Screenshot duplicates are only candidates when they describe the same dated transaction.
         const key=[
@@ -5009,7 +5009,7 @@ function renderRawMasterDebug(){
 
   host.innerHTML=`
     <div style="margin-top:10px;padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:10px">
-      <b>RAW MASTER DEBUG 2.1.5q-debug</b><br>
+      <b>RAW MASTER DEBUG 2.1.5r-debug</b><br>
       <span>${total} rohe BUNDESLIGA_PLAYERS im Browser</span>
       <div style="margin-top:8px;display:grid;gap:6px">
         ${results.map(r=>`
@@ -5030,6 +5030,50 @@ document.addEventListener('click',e=>{
   setTimeout(()=>{renderRawMasterDebug();setTimeout(()=>renderDirectHandlerTrace(),30)},80);
 });
 
+
+function renderPersistentCleanupPreview(result){
+  const container=document.querySelector('.transfer-history-card') ||
+                  document.querySelector('#canonicalCleanupStatus')?.closest('.card') ||
+                  document.querySelector('#canonicalDiagnostics')?.parentElement;
+  if(!container)return;
+
+  let box=document.querySelector('#persistentCleanupPreviewV215r');
+  if(!box){
+    box=document.createElement('div');
+    box.id='persistentCleanupPreviewV215r';
+    box.style.cssText=[
+      'margin:12px 0',
+      'padding:14px',
+      'border:1px solid rgba(98,209,146,.45)',
+      'border-radius:12px',
+      'background:rgba(26,60,52,.35)',
+      'line-height:1.45',
+      'font-size:13px'
+    ].join(';');
+    const status=document.querySelector('#canonicalCleanupStatus');
+    if(status?.parentElement)status.parentElement.insertBefore(box,status.nextSibling);
+    else container.prepend(box);
+  }
+
+  const aliases=(result.aliasMatches||[]).slice(0,30);
+  const unresolved=(result.unresolved||[]).slice(0,30);
+  const merged=(result.mergedDetails||[]).slice(0,30);
+
+  box.innerHTML=`
+    <div style="font-weight:800;font-size:15px;margin-bottom:6px">2.1.5r – VORSCHAU DAUERHAFT · NICHT GESPEICHERT</div>
+    <div><b>Master-Spieler:</b> ${result.masterPlayers||0}</div>
+    <div><b>Namen:</b> ${result.renamed||0} · <b>Vereine:</b> ${result.clubs||0}</div>
+    <div><b>Transfer-Dubletten:</b> ${result.mergedTransfers||0} · <b>Spieler-Dubletten:</b> ${result.mergedPlayers||0}</div>
+    <div><b>Transfers:</b> ${result.beforeTransfers||0} → ${result.afterTransfers||0}</div>
+    <div><b>Spielerdatensätze:</b> ${result.beforePlayers||0} → ${result.afterPlayers||0}</div>
+    ${aliases.length?`<div style="margin-top:8px"><b>Erkannte Zuordnungen:</b><br>${aliases.map(esc).join(' · ')}</div>`:''}
+    ${merged.length?`<div style="margin-top:8px"><b>Würde zusammenführen:</b><br>${merged.map(esc).join(' · ')}</div>`:''}
+    ${unresolved.length?`<div style="margin-top:8px"><b>Offen:</b><br>${unresolved.map(x=>esc(`${x.player}${x.reason?` – ${x.reason}`:''}`)).join(' · ')}</div>`:''}
+    <div style="margin-top:10px;opacity:.8">Dieser Kasten bleibt stehen, bis die Seite neu geladen oder die Vorschau erneut ausgeführt wird.</div>
+  `;
+  box.scrollIntoView({block:'nearest'});
+}
+
 document.addEventListener('click',e=>{
   const btn=e.target?.closest?.('#runCanonicalCleanup');
   if(!btn)return;
@@ -5042,11 +5086,12 @@ document.addEventListener('click',e=>{
   setTimeout(()=>{
     const result=previewV215pCanonicalCleanup();
     if(result.ok){
+      try{renderPersistentCleanupPreview(result);}catch(e){console.error('persistent preview',e)}
       if(status)status.innerHTML=`<b>VORSCHAU – NICHT GESPEICHERT:</b> ${result.renamed} Namen · ${result.clubs} Vereine · ${result.mergedTransfers} Transfer-Dubletten · ${result.mergedPlayers} Spieler-Dubletten<br><span>${result.masterPlayers||0} Bundesliga-Masterspieler · ${result.beforeTransfers}→${result.afterTransfers} Transfers · ${result.beforePlayers}→${result.afterPlayers} Spielerdatensätze</span>${result.aliasMatches?.length?`<br><span>Matches: ${result.aliasMatches.slice(0,10).map(esc).join(' · ')}</span>`:''}${result.unresolved?.length?`<br><span>Offen zur Prüfung: ${result.unresolved.slice(0,10).map(x=>esc(x.player)).join(' · ')}</span>`:''}`;
       toast('Vorschau fertig – keine Daten gespeichert');
       btn.disabled=false;
       btn.textContent='Vorschau erneut prüfen';
-      // 2.1.5q: do not re-render immediately; keep the preview result visible.
+      // 2.1.5r: do not re-render immediately; keep the preview result visible.
     }else{
       if(status)status.textContent=`Fehler: ${result.message||'Bereinigung fehlgeschlagen'}`;
       btn.disabled=false;btn.textContent='Erneut versuchen';

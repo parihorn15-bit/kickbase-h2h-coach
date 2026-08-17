@@ -1,0 +1,7 @@
+VERSION 2.1.5r – PERSISTENT SAFE PREVIEW
+
+- Vorschau bleibt vollständig ohne Speicherung.
+- Ergebnis wird zusätzlich in einem eigenen festen Diagnosekasten dargestellt.
+- Kasten bleibt stehen, bis die Seite neu geladen oder die Vorschau erneut ausgeführt wird.
+- Keine Änderung der 2.1.5q-Dublettenlogik.
+- config.js nicht enthalten.
