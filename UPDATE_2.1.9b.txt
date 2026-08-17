@@ -1,0 +1,21 @@
+VERSION 2.1.9b – KICKBASE POSITION + LINEUP CORE FIX
+
+Vollständige Aufstellungskonsolidierung:
+- Die letzten zwei versteckten Auto-Fill-Pfade wurden entfernt.
+- Eine leere Aufstellung bleibt auch beim Hinzufügen/Entfernen wirklich manuell.
+- Kickbase-Position hat Vorrang vor allgemeinen Provider-Kategorien.
+- Aktueller Horn-Capital-Kader wird einmalig mit bestätigtem Namen, Verein und Kickbase-Position normalisiert.
+- Michael Olise = Mittelfeld.
+- Jan-Niklas Beste = Mittelfeld.
+- Ignacio Fernández / Aleix García / Mario Götze = Mittelfeld.
+- Paul Erevbenagie = Sturm.
+- Anton / Deman / Lienhart / Posch / Leszczyński = Abwehr.
+- Schwolow / Kristof = Tor.
+- Ruben Müller = Sturm.
+- Aufstellungs- und Transfermetadaten werden synchron gehalten.
+- Feldkarte zeigt nun explizit Position und 'Gegner:'; das Vereinslogo bleibt das tatsächliche Team.
+- Drag & Drop eines Starters auf einen anderen Starter derselben Position tauscht nur deren optische Reihenfolge.
+- Positionsübergreifender optischer Tausch wird blockiert.
+- Coach-Empfehlung nutzt ebenfalls die reparierten Kickbase-Positionen.
+- 38 Transfers, Budget und Bonuslogik aus 2.1.8 bleiben unverändert.
+- config.js bleibt unverändert.

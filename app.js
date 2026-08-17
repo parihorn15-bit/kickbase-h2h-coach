@@ -418,6 +418,7 @@ function bestPlayersForPosition(players,position,count,md){
 
 function coachOptimizedLineup(md=data.settings.currentMd){
   const ranked=coachRankPlayers(md).filter(p=>effectiveLineupStatus(p).status!=='Fällt aus');
+  ranked.forEach(repairPlayerPositionV219);
   const keepers=ranked.filter(p=>p.position==='Tor');
   if(!keepers.length)return[];
 
@@ -746,20 +747,62 @@ function mapLivePosition(position){
   return '';
 }
 function canonicalLineupPosition(position){return mapLivePosition(position)}
+
+const V219B_KICKBASE_ROSTER_METADATA={
+  schwolow:{name:'Alexander Schwolow',team:'1. FSV Mainz 05',position:'Tor'},
+  kristof:{name:'Nicolas Kristof',team:'SV Elversberg',position:'Tor'},
+  gotze:{name:'Mario Götze',team:'Eintracht Frankfurt',position:'Mittelfeld'},
+  beste:{name:'Jan-Niklas Beste',team:'Sport-Club Freiburg',position:'Mittelfeld'},
+  olise:{name:'Michael Olise',team:'FC Bayern München',position:'Mittelfeld'},
+  lienhart:{name:'Philipp Lienhart',team:'Sport-Club Freiburg',position:'Abwehr'},
+  anton:{name:'Waldemar Anton',team:'Borussia Dortmund',position:'Abwehr'},
+  garcia:{name:'Aleix García',team:'Bayer 04 Leverkusen',position:'Mittelfeld'},
+  erevbenagie:{name:'Paul Erevbenagie',team:'SV Werder Bremen',position:'Sturm'},
+  deman:{name:'Olivier Deman',team:'SV Werder Bremen',position:'Abwehr'},
+  posch:{name:'Stefan Posch',team:'1. FSV Mainz 05',position:'Abwehr'},
+  fernandez:{name:'Ignacio Fernández',team:'Bayer 04 Leverkusen',position:'Mittelfeld'},
+  rubenmuller:{name:'Ruben Müller',team:'SC Paderborn 07',position:'Sturm'},
+  leszczynski:{name:'Jan Leszczyński',team:'Borussia Mönchengladbach',position:'Abwehr'}
+};
+function v219bRosterKey(name){return v218AliasKey(name)}
+function v219bKickbaseMetadata(name){
+  return V219B_KICKBASE_ROSTER_METADATA[v219bRosterKey(name)]||null;
+}
+
 function repairPlayerPositionV219(player){
   if(!player)return '';
+  // 2.1.9b: Kickbase-specific roster metadata is authoritative for lineup rules.
+  // Generic provider categories such as "Offence" must never turn a Kickbase
+  // midfielder into a striker.
+  const kb=v219bKickbaseMetadata(player.name);
+  if(kb){
+    player.name=kb.name;
+    player.team=kb.team;
+    player.position=kb.position;
+    player.kickbasePosition=kb.position;
+    return kb.position;
+  }
+
+  // Preserve an explicitly stored Kickbase position before consulting master data.
+  const stored=canonicalLineupPosition(player.kickbasePosition||player.position);
+  if(player.kickbasePosition&&stored){
+    player.position=stored;
+    return stored;
+  }
+
   const master=resolveShortNameAgainstLocalMasters(player.name,{team:player.team||''});
   const resolved=canonicalLineupPosition(master?.position);
   if(master?.matched){
-    // 2.1.9a: identity, club and position must come from the SAME resolved record.
     if(master.name)player.name=master.name;
     if(master.team)player.team=master.team;
-    if(resolved)player.position=resolved;
+    if(resolved){
+      player.position=resolved;
+      player.kickbasePosition=player.kickbasePosition||resolved;
+    }
     if(master.external_id!=null)player.externalPlayerId=master.external_id;
-    return resolved||canonicalLineupPosition(player.position);
+    return resolved||stored;
   }
-  const direct=canonicalLineupPosition(player.position);
-  if(direct){player.position=direct;return direct}
+  if(stored){player.position=stored;return stored}
   return '';
 }
 function playerVisual(player,className='player-photo'){
@@ -2023,6 +2066,46 @@ function applyV218Migration(){
 
 
 
+
+function applyV219bRosterMigration(){
+  data.ui=data.ui||{};
+  if(data.ui.v219bRosterMigrationApplied)return;
+  let corrected=0;
+
+  for(const p of data.players||[]){
+    const kb=v219bKickbaseMetadata(p.name);
+    if(!kb)continue;
+    const before=[p.name,p.team,p.position].join('|');
+    p.name=kb.name;
+    p.team=kb.team;
+    p.position=kb.position;
+    p.kickbasePosition=kb.position;
+    if(before!==[p.name,p.team,p.position].join('|'))corrected++;
+  }
+
+  // Keep the own transfer single-source metadata consistent with the same identity.
+  const own=managerLeagueData('me');
+  for(const t of own.transfers||[]){
+    const kb=v219bKickbaseMetadata(t.player);
+    if(!kb)continue;
+    t.player=kb.name;
+    t.club=kb.team;
+    t.position=kb.position;
+  }
+
+  // Never alter the chosen members of the lineup here; only metadata/order state.
+  for(const rec of data.matchdays||[]){
+    if(rec&&typeof rec==='object'){
+      rec.lineup=Array.isArray(rec.lineup)?rec.lineup:[];
+      delete rec.lineupRepairNotice;
+    }
+  }
+
+  data.ui.v219bRosterMigrationApplied=true;
+  data.ui.v219bRosterCorrections=corrected;
+  localStorage.setItem('kickbaseCoachV07',JSON.stringify(data));
+}
+
 function applyV219LineupMigration(){
   data.ui=data.ui||{};
   // 2.1.9a reruns the safe metadata repair once even if 2.1.9 already ran.
@@ -2054,6 +2137,7 @@ function applyV219LineupMigration(){
 
 function render(){
   applyV217CleanTransferRebuild();
+  applyV219bRosterMigration();
   applyV219LineupMigration();
   applyV218Migration();
   // Recalculate repeatable Kickbase transfer bonuses for transactions added after the 2.1.8 baseline.
@@ -2535,11 +2619,11 @@ function squad(){
   const fieldPlayer=p=>{
     const f=fixture(p.team);
     return `<button type="button" class="field-player drag-player" draggable="true"
-      data-drag-player="${p.id}" data-toggle-lineup="${p.id}" aria-label="${esc(p.name)} auf die Bank verschieben">
+      data-drag-player="${p.id}" data-toggle-lineup="${p.id}" data-swap-target="${p.id}" data-player-position="${esc(p.position)}" aria-label="${esc(p.name)} auf die Bank verschieben">
       ${playerVisual(p,'field-photo')}
-      <span class="field-club-logo">${bundesligaCrest(p.team,'pitch-club-crest')}</span>
+      <span class="field-club-logo" title="${esc(p.team)}">${bundesligaCrest(p.team,'pitch-club-crest')}</span>
       <b>${esc(p.name.split(' ').pop())}</b>
-      <small>${f?`${esc(f.opp)} · ${f.ha}`:'Kein Gegner'}</small>
+      <small>${esc(p.position)} · ${f?`Gegner: ${esc(f.opp)} (${f.ha})`:'Gegner: –'}</small>
       <span class="field-score ${coachPlayerScore(p,data.settings.currentMd)>=75?'good':coachPlayerScore(p,data.settings.currentMd)<45?'bad':'warn'}" title="${esc(coachPlayerExplanation(p,data.settings.currentMd))}">${coachPlayerScore(p,data.settings.currentMd).toFixed(0)}</span>
     </button>`;
   };
@@ -5206,8 +5290,7 @@ bindSquadCards();
 bindOpponentSquadCards();$$('[data-sell-player]').forEach(b=>b.onclick=()=>sellPlayer(b.dataset.sellPlayer));$$('[data-edit-transfer]').forEach(b=>b.onclick=()=>editTransfer(b.dataset.editTransfer));$$('[data-delete-transfer]').forEach(b=>b.onclick=()=>deleteTransfer(b.dataset.deleteTransfer));$$('[data-points]').forEach(e=>e.onchange=()=>{mdRecord(data.settings.currentMd).points[e.dataset.points]=e.value===''?null:+e.value;save();render()});if($('#saveMd'))$('#saveMd').onclick=()=>{const r=mdRecord(data.settings.currentMd);Object.assign(r,{mvp:$('#mdMvp').value.trim(),soldPlayer:$('#mdSold').value,soldDate:$('#mdSoldDate').value,soldPrice:+$('#mdSoldPrice').value||0});save();render()};if($('#addFinance'))$('#addFinance').onclick=showFinanceForm;$$('[data-del-fin]').forEach(b=>b.onclick=()=>{data.finances=data.finances.filter(x=>x.id!==b.dataset.delFin);touch()});if($('#addOpponent'))$('#addOpponent').onclick=()=>{const name=prompt('Name des Managers:');if(!name)return;data.opponents.push({id:id(),name,teamName:prompt('Teamname (optional):')||'',squadValue:+prompt('Bekannter Kaderwert (optional):')||0,note:prompt('Notiz (optional):')||''});touch()};$$('[data-del-opp]').forEach(b=>b.onclick=()=>{data.opponents=data.opponents.filter(x=>x.id!==b.dataset.delOpp);touch()});if($('#addH2H'))$('#addH2H').onclick=()=>{const opponent=prompt('Gegner:');if(!opponent)return;data.h2h.push({id:id(),md:data.settings.currentMd,opponent,myPoints:+prompt('Deine Punkte:')||0,oppPoints:+prompt('Gegnerpunkte:')||0});touch()};if($('#resetStrengths'))$('#resetStrengths').onclick=()=>{data.teamStrength={...TEAM_STRENGTH_BASELINE};data.teamStrengthDetails={};data.teamStrengthCloudUpdatedAt='';touch();toast('Basiswerte geladen')};if($('#saveSettings'))$('#saveSettings').onclick=()=>{data.settings.startCapital=parseMoney($('#setCapital').value);data.settings.lineupSize=11;data.settings.homeBonus=+$('#setHome').value;$$('[data-strength]').forEach(x=>data.teamStrength[x.dataset.strength]=+x.value);data.finances.find(x=>x.id==='start').amount=data.settings.startCapital;touch()};$$('[data-strength]').forEach(x=>x.onchange=()=>{data.teamStrength[x.dataset.strength]=+x.value;save()})}
 function setLineupState(pid,toLineup){
   const r=mdRecord(data.settings.currentMd);
-  if(!Array.isArray(r.lineup)||!r.lineup.length)
-    r.lineup=coachOptimizedLineup(data.settings.currentMd).map(p=>p.id);
+  if(!Array.isArray(r.lineup))r.lineup=[];
 
   const player=activePlayers().find(p=>p.id===pid);
   if(!player)return false;
@@ -5273,6 +5356,28 @@ function setLineupState(pid,toLineup){
   data.settings.lineupSize=11;
   return true;
 }
+
+function swapLineupOrderV219b(sourceId,targetId){
+  if(!sourceId||!targetId||sourceId===targetId)return false;
+  const active=activePlayers();
+  const source=active.find(p=>p.id===sourceId);
+  const target=active.find(p=>p.id===targetId);
+  if(!source||!target)return false;
+  const sp=repairPlayerPositionV219(source);
+  const tp=repairPlayerPositionV219(target);
+  if(!sp||sp!==tp){
+    toast('Optisches Tauschen ist nur innerhalb derselben Position möglich.');
+    return false;
+  }
+  const r=mdRecord(data.settings.currentMd);
+  if(!Array.isArray(r.lineup)||!r.lineup.includes(sourceId)||!r.lineup.includes(targetId))return false;
+  const a=r.lineup.indexOf(sourceId),b=r.lineup.indexOf(targetId);
+  [r.lineup[a],r.lineup[b]]=[r.lineup[b],r.lineup[a]];
+  save();render();
+  toast(`${source.name} ↔ ${target.name}`);
+  return true;
+}
+
 function finishLineupMove(pid,zone){
   if(!pid||!zone)return;
   const changed=setLineupState(pid,zone==='lineup');
@@ -5335,8 +5440,7 @@ function bindSquadCards(){
       if(event.defaultPrevented||card.dataset.dragged==='1')return;
       const pid=card.dataset.toggleLineup;
       const r=mdRecord(data.settings.currentMd);
-      if(!Array.isArray(r.lineup)||!r.lineup.length)
-        r.lineup=coachOptimizedLineup(data.settings.currentMd).map(p=>p.id);
+      if(!Array.isArray(r.lineup))r.lineup=[];
       const changed=setLineupState(pid,!r.lineup.includes(pid));
       if(changed){
         const swap=r.lastSmartSwap;
@@ -5344,6 +5448,25 @@ function bindSquadCards(){
         if(swap){toast(`${swap.incoming} für ${swap.outgoing} · Formation jetzt ${swap.formation}`);delete r.lastSmartSwap;save()}
       }
     };
+  });
+
+  // 2.1.9b: Dropping a starter directly onto another starter of the same
+  // position only changes their visual order, not the formation.
+  $$('[data-swap-target]').forEach(target=>{
+    target.addEventListener('dragover',event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      event.dataTransfer.dropEffect='move';
+      target.classList.add('drag-over');
+    });
+    target.addEventListener('dragleave',()=>target.classList.remove('drag-over'));
+    target.addEventListener('drop',event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      target.classList.remove('drag-over');
+      const sourceId=event.dataTransfer.getData('text/plain');
+      swapLineupOrderV219b(sourceId,target.dataset.swapTarget);
+    });
   });
 
   // Native drag/drop for laptop browsers.
@@ -5421,11 +5544,14 @@ function bindSquadCards(){
       clearTimeout(timer);
       if(active){
         event.preventDefault();
-        const target=document.elementFromPoint(event.clientX,event.clientY)?.closest('.drop-zone');
+        const hit=document.elementFromPoint(event.clientX,event.clientY);
+        const swapTarget=hit?.closest('[data-swap-target]');
+        const target=hit?.closest('.drop-zone');
         const pid=card.dataset.dragPlayer;
         clean();
         setTimeout(()=>delete card.dataset.dragged,120);
-        if(target)finishLineupMove(pid,target.dataset.dropZone);
+        if(swapTarget&&swapTarget.dataset.swapTarget!==pid)swapLineupOrderV219b(pid,swapTarget.dataset.swapTarget);
+        else if(target)finishLineupMove(pid,target.dataset.dropZone);
       }else clean();
     };
     card.addEventListener('pointerup',end);
