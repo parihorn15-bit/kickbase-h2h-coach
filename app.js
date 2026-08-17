@@ -380,11 +380,9 @@ function repairLegacyLineup(ids,md=data.settings.currentMd){
     });
   }
 
-  // If a complete old lineup remains invalid, rebuild it safely.
-  if(repaired.length===11&&!exactFormation(repaired)){
-    const optimized=coachOptimizedLineup(md).map(p=>p.id);
-    if(optimized.length===11&&exactFormation(optimized))repaired=optimized;
-  }
+  // 2.1.9a: Never rebuild a user's lineup automatically.
+  // Invalid/incomplete formations remain exactly as edited until the user
+  // explicitly chooses "Empfehlung" or confirms a screenshot import.
 
   return{
     ids:repaired,
@@ -750,15 +748,18 @@ function mapLivePosition(position){
 function canonicalLineupPosition(position){return mapLivePosition(position)}
 function repairPlayerPositionV219(player){
   if(!player)return '';
-  const direct=canonicalLineupPosition(player.position);
-  if(direct){player.position=direct;return direct}
   const master=resolveShortNameAgainstLocalMasters(player.name,{team:player.team||''});
   const resolved=canonicalLineupPosition(master?.position);
-  if(resolved){
-    player.position=resolved;
-    if(!player.team&&master?.team)player.team=master.team;
-    return resolved;
+  if(master?.matched){
+    // 2.1.9a: identity, club and position must come from the SAME resolved record.
+    if(master.name)player.name=master.name;
+    if(master.team)player.team=master.team;
+    if(resolved)player.position=resolved;
+    if(master.external_id!=null)player.externalPlayerId=master.external_id;
+    return resolved||canonicalLineupPosition(player.position);
   }
+  const direct=canonicalLineupPosition(player.position);
+  if(direct){player.position=direct;return direct}
   return '';
 }
 function playerVisual(player,className='player-photo'){
@@ -2024,7 +2025,8 @@ function applyV218Migration(){
 
 function applyV219LineupMigration(){
   data.ui=data.ui||{};
-  if(data.ui.v219LineupMigrationApplied)return;
+  // 2.1.9a reruns the safe metadata repair once even if 2.1.9 already ran.
+  if(data.ui.v219aLineupMigrationApplied)return;
   let repaired=0;
   for(const p of data.players||[]){
     const before=String(p.position||'');
@@ -2043,7 +2045,9 @@ function applyV219LineupMigration(){
       }
     }
   }
+  // Explicitly preserve current lineups. This migration only repairs metadata.
   data.ui.v219LineupMigrationApplied=true;
+  data.ui.v219aLineupMigrationApplied=true;
   data.ui.v219PositionRepairs=repaired;
   localStorage.setItem('kickbaseCoachV07',JSON.stringify(data));
 }
@@ -2501,6 +2505,7 @@ function squad(){
 
   const r=mdRecord(data.settings.currentMd);
   const active=activePlayers();
+  active.forEach(repairPlayerPositionV219);
   if(!Array.isArray(r.lineup))r.lineup=[];
   r.lineup=r.lineup.filter(pid=>active.some(p=>p.id===pid)).slice(0,11);
 
@@ -2515,7 +2520,9 @@ function squad(){
   }
 
   const recommended=coachOptimizedLineup(data.settings.currentMd).map(p=>p.id);
-  const displayLineup=r.lineup.length?r.lineup:recommended;
+  // 2.1.9a: A stored empty lineup is a valid state. Do not silently render
+  // the Coach recommendation as if it were the user's lineup.
+  const displayLineup=[...r.lineup];
   const starters=displayLineup.map(pid=>active.find(p=>p.id===pid)).filter(Boolean);
   const bench=active.filter(p=>!displayLineup.includes(p.id));
 
@@ -2581,7 +2588,7 @@ function squad(){
         ? `Provisorisch aus Spieltag ${r.lineupInheritedFrom} übernommen`
         : r.lineup.length
           ? 'Für diesen Spieltag gespeichert'
-          : 'Empfohlene Startelf wird angezeigt.'
+          : 'Noch keine Startelf gespeichert.'
     }</div></div>
     <div class="toolbar" style="margin-left:auto"><button type="button" class="btn secondary" id="useRecommendation">Empfehlung</button><button type="button" class="btn" id="saveLineup">Speichern</button></div>
   </div>
@@ -5162,7 +5169,6 @@ $$('[data-li-status]').forEach(s=>s.onchange=()=>{const p=data.players.find(x=>x
 $$('[data-quick-bonus]').forEach(b=>b.onclick=()=>addQuickBonus(b.dataset.quickBonus,b.dataset.label,+b.dataset.amount));if($('#buyPlayer'))$('#buyPlayer').onclick=()=>{$('#transferForm').innerHTML=playerForm();bindPlayerForm()};if($('#sellPlayerOpen'))$('#sellPlayerOpen').onclick=()=>{const active=activePlayers();if(!active.length)return toast('Kein aktiver Spieler vorhanden');$('#transferForm').innerHTML=`<div class="card" style="margin-top:16px"><h3>Spieler verkaufen</h3><div class="form-grid" style="margin-top:12px"><label class="wide">Spieler<select id="sellSelect">${active.map(p=>`<option value="${p.id}">${esc(p.name)} · Kaufpreis ${euro(p.buyPrice)}</option>`).join('')}</select></label><div class="full"><button class="btn danger" id="continueSell">Verkauf erfassen</button></div></div></div>`;$('#continueSell').onclick=()=>sellPlayer($('#sellSelect').value)};if($('#dismissLineupRepair'))$('#dismissLineupRepair').onclick=()=>{delete mdRecord(data.settings.currentMd).lineupRepairNotice;save();render()};
 if($('#saveLineup'))$('#saveLineup').onclick=()=>{
   const r=mdRecord(data.settings.currentMd);
-  if(!r.lineup.length)r.lineup=coachOptimizedLineup(data.settings.currentMd).map(p=>p.id);
   const validation=lineupValidation(r.lineup,{complete:true});
   if(!validation.ok)return toast(validation.message);
   data.settings.lineupSize=11;

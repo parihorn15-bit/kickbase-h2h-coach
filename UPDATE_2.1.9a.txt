@@ -1,0 +1,14 @@
+VERSION 2.1.9a – LINEUP STATE + METADATA FIX
+
+Behoben:
+- Eine leere Aufstellung bleibt wirklich leer.
+- Entfernte Spieler werden beim Rendern nicht automatisch wieder eingesetzt.
+- "Speichern" befüllt eine leere Aufstellung nicht mehr automatisch mit der Coach-Empfehlung.
+- Ungültige/noch unvollständige manuelle Aufstellungen werden nicht automatisch durch Coach AI ersetzt.
+- Die Coach-Empfehlung wird ausschließlich über den expliziten Button "Empfehlung" übernommen.
+- Spielername, Verein und Position werden gemeinsam aus derselben bestätigten Master-/Alias-Auflösung repariert.
+- Positionen werden strikt auf Tor / Abwehr / Mittelfeld / Sturm normalisiert.
+- Dadurch können Mittelfeldspieler wie Olise oder Beste nicht als Stürmer gezählt/platziert werden.
+- Bestehende Lineups werden durch die Metadatenmigration nicht automatisch befüllt.
+- 38 Transfers und Finanzstand aus 2.1.8 bleiben unverändert.
+- config.js bleibt unverändert.
