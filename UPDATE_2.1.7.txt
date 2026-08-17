@@ -1,0 +1,22 @@
+VERSION 2.1.7 – TRANSFER REBUILD + SCREENSHOT IMPORT V2
+
+Einmaliger sauberer Neuaufbau:
+- Sicherung des bisherigen Transfer-/Kader-/Aufstellungsstands im App-Datensatz.
+- Alle Transferhistorien aller Manager werden geleert.
+- Alle gespeicherten Aufstellungen/Bankplätze werden geleert.
+- Gegner starten mit leerer Transferhistorie und werden per Screenshot Import v2 neu aufgebaut.
+- Horn Capital FC wird aus der bestätigten eigenen Transferhistorie neu aufgebaut.
+- Der eigene aktuelle Kader wird ausschließlich aus dieser Transferhistorie rekonstruiert.
+- Alte 2.0/2.0.6 Screenshot-Seeds werden deaktiviert und können Gegnerdaten nicht erneut einspielen.
+- config.js bleibt unverändert und ist nicht Bestandteil dieses Patches.
+
+WICHTIG:
+Nach Deployment zuerst Transferzahlen und Horn-Capital-Historie prüfen.
+Danach Gegner-Screenshots einzeln über Screenshot Import v2 einlesen.
+
+KORREKTUR:
+- Horn Capital FC Baseline enthält 38 bestätigte Transferereignisse.
+- Ergänzt: Ruben Müller Kauf 3.777.777 € (17.08.2026).
+- Ergänzt: Florian Pruhs Verkauf 3.718.683 € (17.08.2026).
+- Ergänzt: Jan Leszczyński Kauf 4.334.334 € (16.08.2026).
+- Pruhs Kauf und späterer Verkauf bleiben getrennte Transaktionen.

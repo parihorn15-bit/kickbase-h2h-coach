@@ -1376,7 +1376,7 @@ function renderDirectHandlerTrace(){
   const box=document.createElement('div');
   box.id='directHandlerTrace';
   box.style.cssText='margin-top:10px;padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:10px;display:grid;gap:6px';
-  box.innerHTML=`<b>DIRECT HANDLER TRACE 2.1.6b</b><small>Direkter Vergleich: Master-Resolver → lokaler Resolver. Keine Daten werden verändert.</small>${traces.map(t=>{
+  box.innerHTML=`<b>DIRECT HANDLER TRACE 2.1.7</b><small>Direkter Vergleich: Master-Resolver → lokaler Resolver. Keine Daten werden verändert.</small>${traces.map(t=>{
     const mr=t.masterResult||{}, lr=t.localResult||{};
     const mc=mr.matched?`${mr.name||'—'} · ${mr.team||'—'} · ${mr.reason||''}`:`OFFEN · ${mr.reason||'—'}`;
     const lc=lr.matched?`${lr.name||'—'} · ${lr.team||'—'} · ${lr.reason||''}`:`OFFEN · ${lr.reason||'—'}`;
@@ -1645,7 +1645,7 @@ function previewV215sCanonicalCleanup(){
     if(!result?.ok)return result||{ok:false,message:'Vorschau fehlgeschlagen.'};
     return {...result,preview:true,isolated:true};
   }catch(e){
-    console.error('2.1.6b isolated preview failed',e);
+    console.error('2.1.7 isolated preview failed',e);
     return {ok:false,message:String(e?.message||e)};
   }finally{
     data=liveData;
@@ -1657,6 +1657,136 @@ function previewV215sCanonicalCleanup(){
       resetOpponentAnalysisCache();
     }catch(e){}
   }
+}
+
+
+const V217_HORN_TRANSFER_BASELINE=[
+  ['Kauf','Kohr',6543210,'2026-08-03','Kickbase'],
+  ['Kauf','Gosens',11445599,'2026-08-03','Kickbase'],
+  ['Kauf','Tape',5071935,'2026-08-02','Kickbase'],
+  ['Kauf','Schwolow',1000000,'2026-08-04','Kickbase'],
+  ['Kauf','Pruhs',600000,'2026-08-04','Kickbase'],
+  ['Kauf','Milosevic',4141414,'2026-08-04','Kickbase'],
+  ['Verkauf','Gosens',11407285,'2026-08-04','Kickbase'],
+  ['Kauf','Labrović',3000000,'2026-08-04','Kickbase'],
+  ['Kauf','Conté',12345678,'2026-08-04','Kickbase'],
+  ['Kauf','Pfeiffer',5000000,'2026-08-04','Kickbase'],
+  ['Kauf','Führich',26555555,'2026-08-05','Kickbase'],
+  ['Kauf','Khedira',4455667,'2026-08-06','Kickbase'],
+  ['Kauf','Kristof',12345678,'2026-08-07','Kickbase'],
+  ['Kauf','Götze',3222220,'2026-08-07','Kickbase'],
+  ['Kauf','Beste',10700005,'2026-08-07','Kickbase'],
+  ['Kauf','Burke',3566666,'2026-08-08','Kickbase'],
+  ['Verkauf','Khedira',4529355,'2026-08-08','Kickbase'],
+  ['Verkauf','Tape',5363338,'2026-08-08','Kickbase'],
+  ['Kauf','Olise',69258147,'2026-08-09','Kickbase'],
+  ['Verkauf','Pfeiffer',5334535,'2026-08-10','Kickbase'],
+  ['Verkauf','Labrović',2698542,'2026-08-10','Kickbase'],
+  ['Kauf','Lienhart',13131313,'2026-08-10','Kickbase'],
+  ['Kauf','Pedersen',3888888,'2026-08-10','Kickbase'],
+  ['Kauf','Anton',38777999,'2026-08-10','Kickbase'],
+  ['Kauf','García',44332211,'2026-08-12','Kickbase'],
+  ['Verkauf','Milosevic',5484262,'2026-08-12','Kickbase'],
+  ['Kauf','Erevbenagie',1899999,'2026-08-12','Kickbase'],
+  ['Verkauf','Burke',4451380,'2026-08-12','Kickbase'],
+  ['Kauf','Deman',10777777,'2026-08-12','Kickbase'],
+  ['Verkauf','Führich',25000000,'2026-08-12','Calcio Rom FC'],
+
+  // Latest Horn Capital screenshots supplied for the 2.1.7 rebuild.
+  ['Verkauf','Conté',11298026,'2026-08-17','Kickbase'],
+  ['Kauf','Posch',10500000,'2026-08-17','Kickbase'],
+  ['Verkauf','Kohr',8704641,'2026-08-17','Kickbase'],
+  ['Kauf','Fernández',5005555,'2026-08-17','Kickbase'],
+  ['Verkauf','Pedersen',4719156,'2026-08-17','Kickbase'],
+  ['Kauf','Ruben Müller',3777777,'2026-08-17','Kickbase'],
+  ['Verkauf','Florian Pruhs',3718683,'2026-08-17','Kickbase'],
+  ['Kauf','Jan Leszczyński',4334334,'2026-08-16','Kickbase']
+];
+
+function applyV217CleanTransferRebuild(){
+  data.ui=data.ui||{};
+  if(data.ui.v217CleanTransferRebuildApplied)return;
+
+  // Safety snapshot before any destructive reset.
+  data.ui.v217TransferRebuildBackup={
+    at:new Date().toISOString(),
+    players:structuredClone(data.players||[]),
+    matchdays:structuredClone(data.matchdays||[]),
+    leagueManagerData:structuredClone(data.leagueIntel?.managerData||{})
+  };
+
+  const root=ensureLeagueIntel();
+
+  // Reset every manager's transfer history and every stored opponent lineup.
+  for(const manager of LEAGUE_MANAGERS){
+    const row=managerLeagueData(manager.id);
+    row.transfers=[];
+    row.matchdays=row.matchdays&&typeof row.matchdays==='object'?row.matchdays:{};
+    for(const rec of Object.values(row.matchdays)){
+      if(!rec||typeof rec!=='object')continue;
+      rec.lineup=[];
+      rec.bank=[];
+      rec.formation='';
+      rec.note='';
+    }
+  }
+
+  // Reset own lineup/bench references as requested. Keep matchday points/rules data.
+  for(const rec of data.matchdays||[]){
+    if(!rec||typeof rec!=='object')continue;
+    rec.lineup=[];
+    rec.bench=[];
+    rec.lineupInheritedFrom=null;
+    rec.lineupInheritedAt=null;
+  }
+
+  // The current squad is rebuilt solely from the clean Horn Capital transfer baseline.
+  data.players=[];
+  const own=managerLeagueData('me');
+  own.transfers=V217_HORN_TRANSFER_BASELINE.map((x,i)=>{
+    const [type,player,price,date,counterparty]=x;
+    const resolved=resolveShortNameAgainstLocalMasters(player);
+    return {
+      id:`v217-me-${String(i+1).padStart(3,'0')}`,
+      type,
+      md:1,
+      player:resolved?.matched&&resolved.name?resolved.name:player,
+      externalPlayerId:resolved?.matched?resolved.external_id??null:null,
+      club:resolved?.matched?resolved.team||'':'',
+      position:resolved?.matched?resolved.position||'':'',
+      price:Number(price)||0,
+      date,
+      note:counterparty?`Gegenpartei: ${counterparty}`:'',
+      source:'2.1.7 Clean Rebuild · bestätigte Horn-Capital-Historie'
+    };
+  });
+
+  // Prevent old seed migrations from ever repopulating opponent data.
+  data.ui.v200ScreenshotSeedApplied=true;
+  data.ui.v206LeagueSnapshotApplied=true;
+  data.ui.v212TransferSingleSourceApplied=true;
+  data.ui.v213SmartTransferApplied=true;
+
+  syncMyPlayersFromLeagueTransfers();
+  try{backfillTransferClubs()}catch(e){console.warn('2.1.7 club backfill',e)}
+  resetOpponentRosterCache();
+  resetOpponentAnalysisCache();
+
+  data.ui.v217CleanTransferRebuildApplied=true;
+  data.ui.v217CleanTransferRebuildSummary={
+    at:new Date().toISOString(),
+    ownTransfers:own.transfers.length,
+    opponentTransfers:0,
+    lineupsReset:true,
+    backupAvailable:true
+  };
+
+  localStorage.setItem('kickbaseCoachV07',JSON.stringify(data));
+  clearTimeout(window.__v217SaveTimer);
+  window.__v217SaveTimer=setTimeout(()=>{
+    localStorage.setItem('kickbaseCoachV07',JSON.stringify(data));
+    if(window.cloudQueueSave)window.cloudQueueSave();
+  },1800);
 }
 
 function scheduleV215aCanonicalCleanup(){
@@ -1699,12 +1829,11 @@ function applyV212TransferSingleSourceMigration(){
 }
 
 function render(){
+  applyV217CleanTransferRebuild();
   applyV212TransferSingleSourceMigration();
   applyV213SmartTransferMigration();
   applyV214CanonicalMigration();
   queueMicrotask(()=>restoreScreenshotImportUi());
-  applyV200ScreenshotSeed();
-  applyV206LeagueSnapshot();
   resetOpponentAnalysisCache();
   resetOpponentRosterCache();document.body.classList.toggle('analysis',data.settings.mode==='analysis');if($('#currentMd'))$('#currentMd').value=data.settings.currentMd;$$('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===data.settings.mode));$$('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===page));const titles={dashboard:['Dashboard','Schnelle Entscheidungen und offene Aufgaben.'],squad:['Aufstellung','Deine Elf auf dem Spielfeld – ziehen oder antippen.'],scout:['Scout Center','Bundesligaspieler filtern und direkt zum Kauf vormerken.'],news:['News Intelligence','Offizielle Meldungen, gefiltert auf deine Kaderspieler.'],matchday:['Spieltag','Punkte, Bundesliga-MVP und Pflichtverkauf.'],bundesliga:['Bundesliga','Alle 34 Spieltage und die Matchups deines Kaders.'],transfers:['Transfers','Hier kaufst und verkaufst du Spieler. Der Kader aktualisiert sich automatisch.'],finances:['Finanzen','Startkapital, Boni und sämtliche Geldbewegungen.'],analysis:['H2H Intelligence','Was funktioniert bei deinen Transfers und Entscheidungen wirklich?'],lineupintel:['LigaInsider-Abgleich','Voraussichtliche Aufstellungen halbautomatisch prüfen und übernehmen.'],competition:['Liga','Dein aktuelles Duell, Spielplan und Tabelle.'],rules:['Regelwerk','Interaktive Regeln und dein aktueller Status.'],settings:['Einstellungen','Teamstärken, Matchups und Grundwerte.']};$('#pageTitle').textContent=titles[page][0];$('#pageSub').textContent=titles[page][1];try{
   const renderer=({dashboard,squad,scout,news,matchday,bundesliga,transfers,finances,analysis,lineupintel,competition,rules,settings}[page]);
@@ -2378,7 +2507,7 @@ function transfers(){
   }).join('');
   return `<section class="card screenshot-import-card" style="margin-bottom:17px">
     <div class="screenshot-import-copy">
-      <span class="eyebrow">SCREENSHOT ENGINE 2.1.6ba</span>
+      <span class="eyebrow">SCREENSHOT ENGINE 2.1.7</span>
       <h3>📷 Screenshot auswerten</h3>
       <p>Transfer- oder Aufstellungsscreenshot auswählen. Die App erkennt den Typ automatisch, gleicht Spielernamen mit dem Bundesliga-Master ab und zeigt zuerst eine prüfbare Vorschau. Unsichere Treffer werden nicht automatisch übernommen.</p>
     </div>
@@ -3422,7 +3551,7 @@ function competition(){
   const content=tab==='schedule'?scheduleContent:tab==='teams'?tableContent:tab==='managers'?managerContent:tab==='timeline'?timelineContent:currentContent;
   return `<div class="league-redesign">
     <section class="card screenshot-import-card">
-      <div class="screenshot-import-copy"><span class="eyebrow">SCREENSHOT ENGINE 2.1.6ba</span><h3>Screenshot Import · 2.1.6ba</h3><p>Screenshot → kanonischer Spielerabgleich → Transferhistorie → aktueller Kader → Aufstellungsseite. Kurz-/Nachnamen werden mit bereits bekannten vollständigen Spielern zusammengeführt; Vereine und historische Daten werden bereinigt.</p></div>
+      <div class="screenshot-import-copy"><span class="eyebrow">SCREENSHOT ENGINE 2.1.7</span><h3>Screenshot Import · 2.1.7</h3><p>Screenshot → kanonischer Spielerabgleich → Transferhistorie → aktueller Kader → Aufstellungsseite. Kurz-/Nachnamen werden mit bereits bekannten vollständigen Spielern zusammengeführt; Vereine und historische Daten werden bereinigt.</p></div>
       <div class="screenshot-import-actions"><label class="btn secondary">Screenshots auswählen<input id="screenshotImportFiles" type="file" accept="image/*" multiple hidden></label><button type="button" class="btn" id="analyzeScreenshotFiles">Mit AI analysieren</button></div>
       <div id="screenshotImportStatus" class="screenshot-import-status">Noch keine Screenshots ausgewählt.</div><div class="ai-import-receipt">${data.ui?.lastAiImport?`Letzter Import: ${esc(managerById(data.ui.lastAiImport.managerId)?.team||data.ui.lastAiImport.managerId)} · ${data.ui.lastAiImport.added} neu · ${data.ui.lastAiImport.updated} geändert · ${data.ui.lastAiImport.beforeCount} → ${data.ui.lastAiImport.afterCount} Transfers · ${data.ui.lastAiImport.rosterAfter??'–'} im aktuellen Kader`:''}</div>
       <div id="aiUsageBox" class="ai-usage-box"></div><div id="screenshotImportResult" class="screenshot-import-result"></div>
@@ -4279,7 +4408,7 @@ function backfillTransferClubs(){
 }
 
 
-/* 2.1.6b Screenshot Engine v2
+/* 2.1.7 Screenshot Engine v2
    Vision extracts visible text/rows; this client performs deterministic Bundesliga identity resolution.
    Uncertain identities are never auto-selected. */
 function v216Words(value){
@@ -4317,7 +4446,7 @@ const SCREENSHOT_CANONICAL_ALIASES_V216B={
 function screenshotAliasFallbackV216b(raw){
   const key=v216Compact(raw);
   const p=SCREENSHOT_CANONICAL_ALIASES_V216B[key];
-  return p?{...p,matched:true,ambiguous:false,confidence:.94,reason:'2.1.6b Alias-Fallback (Master-Sync noch offen)'}:null;
+  return p?{...p,matched:true,ambiguous:false,confidence:.94,reason:'2.1.7 Alias-Fallback (Master-Sync noch offen)'}:null;
 }
 
 function resolveScreenshotPlayerV216(input,context={}){
@@ -4426,7 +4555,7 @@ function renderScreenshotAiResult(result){
  const r=screenshotImportReview,target=$('#screenshotImportResult');if(!target)return;
  const label=x=>x==='new'?'NEU':x==='update'?'ÄNDERN':x==='unchanged'?'UNVERÄNDERT':'PRÜFEN';
  const ref=screenshotReferenceInfo();
- target.innerHTML=`<div class="screenshot-result-head"><div><span>SCREENSHOT ENGINE 2.1.6b · ${esc(r.screenshotType)}</span><h4>${esc(d.manager||'Manager nicht erkannt')}</h4></div><strong>${r.items.length} Transfers${r.lineupReview?.length?` · ${r.lineupReview.length} Aufstellungsplätze`:''}</strong></div>
+ target.innerHTML=`<div class="screenshot-result-head"><div><span>SCREENSHOT ENGINE 2.1.7 · ${esc(r.screenshotType)}</span><h4>${esc(d.manager||'Manager nicht erkannt')}</h4></div><strong>${r.items.length} Transfers${r.lineupReview?.length?` · ${r.lineupReview.length} Aufstellungsplätze`:''}</strong></div>
  <div class="ai-reference-date ${ref.trusted?'trusted':'uncertain'}"><b>Screenshot-Referenz:</b> ${esc(localIsoDateFromDate(ref.ref)||'unbekannt')} ${ref.trusted?'· tagesaktuell erkannt':'· nicht als tagesaktuell bestätigt – Transferdaten werden nicht automatisch gesetzt'}</div>
  <div class="ai-manager-assignment ${managerId?'confirmed':'uncertain'}"><label>Ziel-Manager für diesen Import</label><select id="aiTargetManager"><option value="">Bitte Manager auswählen…</option>${aiManagerOptions(managerId)}</select><small>${managerId?`AI erkannt: ${esc(d.manager||'')} – bitte vor Übernahme prüfen.`:'AI konnte den Manager nicht eindeutig erkennen. Manuelle Auswahl ist erforderlich.'}</small></div>
  <div class="screenshot-result-list">${r.items.map(x=>`<article class="ai-review-row smart ${x.action}">
@@ -4641,7 +4770,7 @@ async function analyzeSelectedScreenshots(){
         images,managerHint,
         screenshotReferenceAt:screenshotImportDraft.referenceAt,
         screenshotReferenceTrusted:screenshotImportDraft.referenceTrusted,
-        clientVersion:'2.1.6b',
+        clientVersion:'2.1.7',
         requestedSchema:'kickbase-screenshot-v2',
         supportedScreenshotTypes:['transfers','lineup-own','lineup-manager','points-results'],
         extractionHint:'Return visible manager/team name, transfers (player,type,price,counterparty,relative_time,confidence) and lineup names when present. Preserve truncated/OCR text; do not invent full player names.'
@@ -5159,7 +5288,7 @@ function renderRawMasterDebug(){
 
   host.innerHTML=`
     <div style="margin-top:10px;padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:10px">
-      <b>RAW MASTER DEBUG 2.1.6b-debug</b><br>
+      <b>RAW MASTER DEBUG 2.1.7-debug</b><br>
       <span>${total} rohe BUNDESLIGA_PLAYERS im Browser</span>
       <div style="margin-top:8px;display:grid;gap:6px">
         ${results.map(r=>`
@@ -5195,7 +5324,7 @@ function renderPersistentCleanupPreviewV215s(result){
   const unresolved=(result.unresolved||[]).slice(0,30);
   const merged=(result.mergedDetails||[]).slice(0,30);
   box.innerHTML=`
-    <div style="font-weight:800;font-size:15px;margin-bottom:6px">2.1.6b – ISOLIERTE VORSCHAU · KEINE DATENÄNDERUNG</div>
+    <div style="font-weight:800;font-size:15px;margin-bottom:6px">2.1.7 – ISOLIERTE VORSCHAU · KEINE DATENÄNDERUNG</div>
     <div><b>Master-Spieler:</b> ${result.masterPlayers||0}</div>
     <div><b>Namen:</b> ${result.renamed||0} · <b>Vereine:</b> ${result.clubs||0}</div>
     <div><b>Transfer-Dubletten:</b> ${result.mergedTransfers||0} · <b>Spieler-Dubletten:</b> ${result.mergedPlayers||0}</div>
