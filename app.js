@@ -2786,6 +2786,8 @@ function opponentSquadPage(managerId){
   const md=+data.settings.currentMd||1;
   const manager=managerById(managerId);
   const entry=managerMatchdayData(managerId,md);
+  const live=readLiveLineupV1(managerId);
+  if(live){entry.lineup=[...(live.players||[])];entry.lineupComplete=entry.lineup.length===11;if(!entry.lineupComplete)entry.formation=''}
   const roster=opponentRoster(managerId,md);
   const lineupSet=new Set(entry.lineup||[]);
   const starters=roster.filter(p=>lineupSet.has(p.name)).map(p=>({...p,position:normalizedOpponentPosition(p.position)}));
@@ -2906,6 +2908,49 @@ function bindOpponentSquadCards(){
 
 
 
+
+const LIVE_LINEUP_STORAGE_KEY='kickbaseCoachLiveLineupsV1';
+function liveLineupsV1(){try{const raw=localStorage.getItem(LIVE_LINEUP_STORAGE_KEY);const p=raw?JSON.parse(raw):{};return p&&typeof p==='object'?p:{}}catch{return{}}}
+function readLiveLineupV1(managerId='me'){return liveLineupsV1()[String(managerId||'me')]||null}
+function writeLiveLineupV1(managerId='me',players=[],meta={}){
+  const store=liveLineupsV1(),clean=[];
+  for(const value of players||[]){
+    const name=String(typeof value==='string'?value:(value?.name||value?.player||'')).trim();
+    if(name&&!clean.some(x=>normalizePlayerName(x)===normalizePlayerName(name)))clean.push(name);
+    if(clean.length>=11)break;
+  }
+  store[String(managerId||'me')]={managerId:String(managerId||'me'),players:clean,count:clean.length,complete:clean.length===11,
+    source:String(meta.source||'manual'),updatedAt:new Date().toISOString(),screenshotType:String(meta.screenshotType||''),
+    formation:clean.length===11?String(meta.formation||''):'',snapshotMd:Number(meta.snapshotMd||data.settings.currentMd)||1};
+  localStorage.setItem(LIVE_LINEUP_STORAGE_KEY,JSON.stringify(store));return store[String(managerId||'me')];
+}
+function resolveOwnLiveLineupIdsV222(){
+  const live=readLiveLineupV1('me');if(!live)return {ok:true,ids:[],players:[],count:0,complete:false};
+  const active=activePlayers(),ids=[],players=[],unresolved=[];
+  for(const name of live.players||[]){
+    const resolved=resolveScreenshotPlayerV216(name,{managerId:'me'}),canonical=String(resolved.matched?resolved.name:name).trim();
+    const p=active.find(player=>sameCanonicalIdentity(player.name,canonical,{managerId:'me'}));
+    if(p&&!ids.includes(p.id)){ids.push(p.id);players.push(p.name)}else if(!p)unresolved.push(canonical);
+  }
+  return {ok:!unresolved.length,ids,players,count:ids.length,complete:ids.length===11,unresolved};
+}
+function syncLiveOwnLineupToLegacyV222(){
+  const live=resolveOwnLiveLineupIdsV222();if(!live.ok)return live;
+  const r=mdRecord(Number(data.settings.currentMd)||1);r.lineup=[...live.ids];r.lineupNames=[...live.players];
+  r.lineupComplete=live.complete;r.formation=live.complete?(exactFormation(live.ids)?.code||''):'';
+  return live;
+}
+function snapshotLiveLineupToMatchdayV222(managerId='me',md=data.settings.currentMd){
+  const live=readLiveLineupV1(managerId);if(!live)return null;
+  if(managerId==='me'){
+    const resolved=resolveOwnLiveLineupIdsV222(),r=mdRecord(Number(md)||1);
+    r.lineup=[...resolved.ids];r.lineupNames=[...resolved.players];r.lineupComplete=resolved.complete;
+    r.formation=resolved.complete?(exactFormation(resolved.ids)?.code||''):'';r.lineupSnapshotAt=new Date().toISOString();r.lineupSnapshotSource=live.source||'live';return r;
+  }
+  const r=managerMatchdayData(managerId,Number(md)||1);r.lineup=[...(live.players||[])];r.lineupComplete=r.lineup.length===11;
+  r.formation=r.lineupComplete?(live.formation||''):'';r.lineupSnapshotAt=new Date().toISOString();r.lineupSnapshotSource=live.source||'live';return r;
+}
+
 const STABLE_LINEUP_STORAGE_KEY='kickbaseCoachStableLineupsV1';
 
 function stableLineupsV1(){
@@ -2968,7 +3013,9 @@ function persistCurrentOwnLineupStableV1(md=data.settings.currentMd){
   const names=lineupPlayers(record.lineup||[]).map(p=>p.name);
   const formation=names.length===11?(exactFormation(record.lineup||[])?.code||record.formation||''):'';
   record.lineupComplete=names.length===11;
+  writeLiveLineupV1('me',names,{source:'manual',formation,snapshotMd:+md||1});
   writeStableOwnLineupV1(md,names,formation);
+  snapshotLiveLineupToMatchdayV222('me',+md||1);
 }
 
 function syncOwnLineupNamesV221b(record=mdRecord(data.settings.currentMd)){
@@ -3006,12 +3053,18 @@ function restoreOwnLineupFromNamesV221b(md=data.settings.currentMd){
 
 function squad(){
   syncTransferSingleSource();
-  const stableApplied=applyStableOwnLineupV1(+data.settings.currentMd||1);
-  if(!stableApplied.ok)restoreOwnLineupFromNamesV221b(+data.settings.currentMd||1);
-  else if(stableApplied.count>0){
-    data.ui=data.ui||{};
-    data.ui.lastStableLineupApply={md:+data.settings.currentMd||1,count:stableApplied.count,at:new Date().toISOString()};
+  let currentLive=readLiveLineupV1('me');
+  if(!currentLive){
+    const oldStable=readStableOwnLineupV1(+data.settings.currentMd||1);
+    if(oldStable?.names?.length)currentLive=writeLiveLineupV1('me',oldStable.names,{source:'migration',formation:oldStable.formation||'',snapshotMd:+data.settings.currentMd||1});
+    else{
+      const oldRecord=mdRecord(+data.settings.currentMd||1);
+      const oldNames=(oldRecord.lineupNames||lineupPlayers(oldRecord.lineup||[]).map(p=>p.name)).filter(Boolean);
+      if(oldNames.length)currentLive=writeLiveLineupV1('me',oldNames,{source:'migration',snapshotMd:+data.settings.currentMd||1});
+    }
   }
+  const liveApplied=syncLiveOwnLineupToLegacyV222();
+  data.ui=data.ui||{};data.ui.lastLiveLineupApply={count:liveApplied.count||0,at:new Date().toISOString()};
   let lineupOwner=data.ui?.lineupOwner||'me';
   if(lineupOwner!=='me'&&!managerById(lineupOwner)){
     lineupOwner='me';
@@ -3079,7 +3132,9 @@ function squad(){
     <div class="metrics"><div class="metric"><span>Gegner</span><b>${f?`${esc(f.opp)} (${f.ha})`:'–'}</b></div><div class="metric"><span>Matchup</span><b>${matchup(p).toFixed(1)}</b></div></div>
   </article>`};
 
-  const fieldHtml=`${r.lineupRepairNotice?`<div class="lineup-repair-notice">
+  const liveState=readLiveLineupV1('me');
+  const liveStatus=liveState?`<div class="lineup-live-status"><b>LIVE-Aufstellung</b> · ${starters.length}/11 · ${liveState.source==='screenshot'?'Screenshot':'manuell'} · zuletzt ${esc(new Date(liveState.updatedAt).toLocaleString('de-DE'))}</div>`:'';
+  const fieldHtml=`${liveStatus}${r.lineupRepairNotice?`<div class="lineup-repair-notice">
       <div><b>Alte Aufstellung automatisch korrigiert</b><span>${r.lineupRepairNotice.removed.length?`${esc(r.lineupRepairNotice.removed.join(', '))} auf die Bank gesetzt.`:'Ungültige Alt-Daten wurden bereinigt.'}</span></div>
       <button type="button" id="dismissLineupRepair">Verstanden</button>
     </div>`:''}<div class="pitch-head">
@@ -5527,6 +5582,8 @@ function commitOwnScreenshotLineupV221a(corrected,md=data.settings.currentMd){
   record.formation=formation?.code||'';
   record.lineupComplete=record.lineup.length===11;
   writeStableOwnLineupV1(+md||1,record.lineupNames,record.formation);
+  writeLiveLineupV1('me',record.lineupNames,{source:'screenshot',screenshotType:'lineup',formation:record.formation,snapshotMd:+md||1});
+  snapshotLiveLineupToMatchdayV222('me',+md||1);
 
   // Verify against the exact source the squad page uses.
   const activeIds=new Set(activePlayers().map(p=>p.id));
@@ -5648,8 +5705,9 @@ async function commitAiReview(){
         return;
       }
     }else{
+      const liveOpponent=writeLiveLineupV1(targetManagerId,corrected.map(x=>x.name),{source:'screenshot',screenshotType:'lineup',snapshotMd:+data.settings.currentMd||1});
       const mdRow=managerMatchdayData(targetManagerId,+data.settings.currentMd||1);
-      mdRow.lineup=[...new Set(corrected.map(x=>x.name))].slice(0,11);
+      mdRow.lineup=[...(liveOpponent.players||[])];
       mdRow.lineupComplete=mdRow.lineup.length===11;
       if(mdRow.lineup.length<11)mdRow.formation='';
       mdRow.bank=Array.isArray(mdRow.bank)?mdRow.bank:[];
@@ -5761,11 +5819,11 @@ async function commitAiReview(){
   setTimeout(()=>{
     const status=$('#screenshotImportStatus');
     const lineupCount=r.committedOwnLineup?.ids?.length||0;
-    const lineupText=wantsLineup?` · Aufstellung ${lineupCount}/11${lineupCount<11?' · unvollständig':''}${r.committedOwnLineup?.formation?` · ${r.committedOwnLineup.formation}`:''}`:'';
+    const lineupText=wantsLineup?` · LIVE-Aufstellung ${lineupCount}/11${lineupCount<11?' · unvollständig':''}${r.committedOwnLineup?.formation?` · ${r.committedOwnLineup.formation}`:''}`:'';
     const text=`Import bestätigt: ${manager?.team||targetManagerId} · ${added} neu · ${updated} geändert · ${unchanged} bereits vorhanden · ${beforeCount} → ${afterCount} Transfers${lineupText}${cloudSaved?' · Cloud gespeichert':' · lokal gespeichert'}`;
     if(status)status.textContent=text;
     toast(wantsLineup
-      ? `✓ Aufstellung übernommen · ${r.committedOwnLineup?.ids?.length||0}/11${(r.committedOwnLineup?.ids?.length||0)<11?' · unvollständig':''}${r.committedOwnLineup?.formation?` · ${r.committedOwnLineup.formation}`:''}`
+      ? `✓ LIVE-Aufstellung übernommen · ${r.committedOwnLineup?.ids?.length||0}/11${(r.committedOwnLineup?.ids?.length||0)<11?' · unvollständig':''}${r.committedOwnLineup?.formation?` · ${r.committedOwnLineup.formation}`:''}`
       : `✓ ${added} neu · ${updated} geändert`);
   },80);
 }

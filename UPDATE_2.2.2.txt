@@ -1,0 +1,13 @@
+VERSION 2.2.2 – LIVE LINEUP STATE
+
+- Aktuelle Aufstellungen sind nicht mehr primär an einen Spieltag gebunden.
+- Jeder Manager hat einen eigenen LIVE-Aufstellungsstand (0–11 Spieler).
+- Speicher: kickbaseCoachLiveLineupsV1, versionsunabhängig.
+- Screenshot-Import schreibt direkt in diesen LIVE-Stand.
+- Manuelle Aufstellungsänderungen schreiben ebenfalls in LIVE.
+- Eigene und gegnerische Aufstellungsseiten lesen LIVE als aktuellen Stand.
+- Spieltage erhalten zusätzlich Snapshots für spätere Statistik und Analyse.
+- Historische Snapshots bestimmen nicht mehr den sichtbaren aktuellen Stand.
+- Bestehende Aufstellungen werden beim ersten Start aus Stable-/Matchday-Daten migriert.
+- Partielle Aufstellungen, Action Feedback und patch-unabhängige AI-Nutzung bleiben erhalten.
+- Transfers, Budget, Boni, Coach-Scoring und config.js bleiben unverändert.
