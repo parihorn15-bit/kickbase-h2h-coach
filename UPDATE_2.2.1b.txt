@@ -1,0 +1,20 @@
+VERSION 2.2.1b – PERSISTENT LINEUP + ACTION FEEDBACK
+
+Aufstellung:
+- Screenshot-Import speichert Spieler-IDs plus 11 kanonische Spielernamen.
+- Namen sind die stabile Referenz, falls Kadersynchronisierung interne IDs verändert.
+- Beim Öffnen der Aufstellung werden ungültige IDs automatisch aus den Namen rekonstruiert.
+- Nach eigenem Screenshot-Commit erfolgt kein unnötiger weiterer Kader-Sync.
+- Manuelles Aufstellen, Entfernen, Tauschen, Speichern und Coach-Empfehlung halten die Namensreferenz synchron.
+- Erfolgreiche Übernahme bestätigt sichtbar 11/11 und Formation.
+
+Feedback:
+- Bereinigen, Übernehmen, Speichern, Analysieren, Importieren, Exportieren,
+  Prüfen, Empfehlung und Zurücksetzen geben sofort ein sichtbares „läuft…“-Feedback.
+- Erfolgs-/Statusmeldungen bleiben länger sichtbar.
+- AI-Analyse bestätigt sichtbar, wenn die Vorschau fertig ist.
+
+Unverändert:
+- 2.2.1 Screenshot-Erkennung/Kaderabgleich
+- Transfers, Budget, Boni und Coach-Scoring
+- config.js

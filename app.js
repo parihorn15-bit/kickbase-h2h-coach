@@ -1305,7 +1305,32 @@ function mandatoryStatus(md){
   };
 }
 
-function load(){try{const raw=localStorage.getItem('kickbaseCoachV07')||localStorage.getItem('kickbaseCoachV06')||localStorage.getItem('kickbaseCoachV05')||localStorage.getItem('kickbaseCoachV04')||localStorage.getItem('kickbaseCoachV03')||localStorage.getItem('kickbaseCoachV2');return raw?mergeData(JSON.parse(raw)):mergeData(SEEDED_DATA)}catch{return mergeData(SEEDED_DATA)}}function save(){syncTransferSingleSource();localStorage.setItem('kickbaseCoachV07',JSON.stringify(data));if(window.cloudQueueSave)window.cloudQueueSave();toast('Gespeichert')}function touch(){save();render()}function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1300)}
+function load(){try{const raw=localStorage.getItem('kickbaseCoachV07')||localStorage.getItem('kickbaseCoachV06')||localStorage.getItem('kickbaseCoachV05')||localStorage.getItem('kickbaseCoachV04')||localStorage.getItem('kickbaseCoachV03')||localStorage.getItem('kickbaseCoachV2');return raw?mergeData(JSON.parse(raw)):mergeData(SEEDED_DATA)}catch{return mergeData(SEEDED_DATA)}}
+function save(){syncTransferSingleSource();localStorage.setItem('kickbaseCoachV07',JSON.stringify(data));if(window.cloudQueueSave)window.cloudQueueSave();toast('✓ Gespeichert')}
+function touch(){save();render()}
+let _toastTimer=null;
+function toast(t,duration=2800){
+  const e=$('#toast');if(!e)return;
+  if(_toastTimer)clearTimeout(_toastTimer);
+  e.textContent=t;e.classList.add('show');
+  _toastTimer=setTimeout(()=>e.classList.remove('show'),duration);
+}
+function actionFeedbackV221b(label){
+  const clean=String(label||'Aktion').replace(/\s+/g,' ').trim();
+  toast(`⏳ ${clean} …`,1800);
+}
+function bindGlobalActionFeedbackV221b(){
+  if(window.__v221bActionFeedbackBound)return;
+  window.__v221bActionFeedbackBound=true;
+  document.addEventListener('click',event=>{
+    const button=event.target?.closest?.('button');
+    if(!button||button.disabled)return;
+    const raw=String(button.textContent||button.getAttribute('aria-label')||'').replace(/\s+/g,' ').trim();
+    if(raw&&/(bereinig|übernehm|speicher|analys|import|export|zurücksetz|prüf|empfehl)/i.test(raw)){
+      actionFeedbackV221b(raw.replace(/[.…]+$/,''));
+    }
+  },true);
+}
 const activePlayers=()=>data.players.filter(p=>!p.soldDate);const soldPlayers=()=>data.players.filter(p=>p.soldDate);const financeTotal=()=>data.finances.reduce((a,x)=>a+(+x.amount||0),0);const squadValue=()=>activePlayers().reduce((a,p)=>a+(+p.marketValue||0),0);const wealth=()=>financeTotal()+squadValue();const realized=()=>soldPlayers().reduce((a,p)=>a+(+p.salePrice||0)-(+p.buyPrice||0),0);const unrealized=()=>activePlayers().reduce((a,p)=>a+(+p.marketValue||0)-(+p.buyPrice||0),0);
 function fixtureLegacyV220(team,md=data.settings.currentMd){return fixture(team,md)}function strength(t){return +data.teamStrength[t]||5}function matchup(p,md=data.settings.currentMd){const f=fixture(p.team,md);if(!f)return 5;return Math.max(1,Math.min(10,5+strength(p.team)-strength(f.opp)+(f.ha==='H'?+data.settings.homeBonus:0)))}function score(p){return (+p.avgPoints||0)+matchup(p)*10+(LI_SCORE[p.liStatus||'Unbekannt']||0)}function rankPlayers(){return [...activePlayers()].sort((a,b)=>score(b)-score(a))}function mdRecord(md){let x=data.matchdays.find(x=>x.md===md);if(!x){x={id:id(),md,mvp:'',points:{},lineup:[],soldPlayer:'',soldDate:'',soldPrice:0};data.matchdays.push(x)}return x}function top3(md){const r=mdRecord(md);return activePlayers().map(p=>({p,pts:+r.points[p.id]||0})).sort((a,b)=>b.pts-a.pts).slice(0,3)}function mandatoryStatus(md){const r=mdRecord(md),mvpOwned=activePlayers().find(p=>p.name.trim().toLowerCase()===r.mvp.trim().toLowerCase());const top=top3(md);let valid=false,required='';if(!r.mvp)return{state:'waiting',text:'Bundesliga-MVP fehlt'};if(mvpOwned){required=mvpOwned.name;valid=r.soldPlayer===required}else{required='Wahl aus: '+top.map(x=>x.p.name).filter(Boolean).join(', ');valid=top.some(x=>x.p.name===r.soldPlayer)}return{state:valid?'done':'open',text:valid?'Erledigt':required,mvpOwned:!!mvpOwned}}
 const NAV_GROUPS=[
@@ -1357,6 +1382,7 @@ function bindGlobalNavigation(){
   if(more)more.onclick=()=>$('#sidebar')?.classList.toggle('open');
 }
 function init(){
+  bindGlobalActionFeedbackV221b();
   const n=$('#nav');
   n.innerHTML=navHtml();
   if(!$('#bottomNavigation')){
@@ -2184,6 +2210,21 @@ function applyV218Migration(){
 
 
 
+
+function applyV221bLineupPersistenceMigration(){
+  data.ui=data.ui||{};
+  if(data.ui.v221bLineupPersistenceApplied)return;
+  const active=activePlayers();
+  for(const record of data.matchdays||[]){
+    if(!record||typeof record!=='object')continue;
+    if(!Array.isArray(record.lineupNames)&&Array.isArray(record.lineup)&&record.lineup.length){
+      record.lineupNames=record.lineup.map(id=>active.find(p=>p.id===id)?.name).filter(Boolean);
+    }
+  }
+  data.ui.v221bLineupPersistenceApplied=true;
+  localStorage.setItem('kickbaseCoachV07',JSON.stringify(data));
+}
+
 function applyV220CoachMigration(){
   data.ui=data.ui||{};
   if(data.ui.v220CoachMigrationApplied)return;
@@ -2306,6 +2347,7 @@ function render(){
   resetCoachAssessmentCache();
   resetFixtureCache();
   applyV217CleanTransferRebuild();
+  applyV221bLineupPersistenceMigration();
   applyV220CoachMigration();
   applyV219cMetadataMigration();
   applyV219bRosterMigration();
@@ -2748,8 +2790,43 @@ function bindOpponentSquadCards(){
   };
 }
 
+
+function syncOwnLineupNamesV221b(record=mdRecord(data.settings.currentMd)){
+  record.lineupNames=lineupPlayers(record.lineup||[]).map(p=>p.name);
+  return record.lineupNames;
+}
+function restoreOwnLineupFromNamesV221b(md=data.settings.currentMd){
+  const record=mdRecord(+md||1);
+  const names=Array.isArray(record.lineupNames)?record.lineupNames.filter(Boolean):[];
+  if(!names.length)return {changed:false,count:Array.isArray(record.lineup)?record.lineup.length:0};
+
+  const active=activePlayers();
+  const activeIds=new Set(active.map(p=>p.id));
+  const current=Array.isArray(record.lineup)?record.lineup.filter(id=>activeIds.has(id)):[];
+  if(current.length===11)return {changed:false,count:11};
+
+  const ids=[],unresolved=[];
+  for(const name of names){
+    const resolved=resolveScreenshotPlayerV216(name,{managerId:'me'});
+    const canonical=String(resolved.matched?resolved.name:name).trim();
+    const p=active.find(player=>sameCanonicalIdentity(player.name,canonical,{managerId:'me'}));
+    if(p&&!ids.includes(p.id))ids.push(p.id);
+    else if(!p)unresolved.push(canonical);
+  }
+
+  if(ids.length===11){
+    record.lineup=[...ids];
+    record.formation=exactFormation(ids)?.code||record.formation||'';
+    record.lineupRestoredFromNamesAt=new Date().toISOString();
+    localStorage.setItem('kickbaseCoachV07',JSON.stringify(data));
+    return {changed:true,count:11,unresolved:[]};
+  }
+  return {changed:false,count:ids.length,unresolved};
+}
+
 function squad(){
   syncTransferSingleSource();
+  restoreOwnLineupFromNamesV221b(+data.settings.currentMd||1);
   let lineupOwner=data.ui?.lineupOwner||'me';
   if(lineupOwner!=='me'&&!managerById(lineupOwner)){
     lineupOwner='me';
@@ -5231,6 +5308,10 @@ function commitOwnScreenshotLineupV221a(corrected,md=data.settings.currentMd){
 
   const record=mdRecord(+md||1);
   record.lineup=[...ids];
+  record.lineupNames=corrected.map(x=>{
+    const resolved=resolveScreenshotPlayerV216(x.name,{managerId:'me'});
+    return String(resolved.matched?resolved.name:x.name||'').trim();
+  }).filter(Boolean).slice(0,11);
   record.lineupInheritedFrom=null;
   record.lineupInheritedAt=null;
   record.lineupScreenshotImportedAt=new Date().toISOString();
@@ -5408,7 +5489,9 @@ async function commitAiReview(){
   }
 
   const afterCount=managerLeagueData(targetManagerId).transfers.length;
-  const rosterAfter=managerCurrentRoster(targetManagerId,+data.settings.currentMd||1).length;
+  const rosterAfter=targetManagerId==='me'
+    ? activePlayers().length
+    : managerCurrentRoster(targetManagerId,+data.settings.currentMd||1).length;
   const manager=managerById(targetManagerId);
 
   data.ui=data.ui||{};
@@ -5439,7 +5522,9 @@ async function commitAiReview(){
     const lineupText=wantsLineup?` · Aufstellung 11/11${r.committedOwnLineup?.formation?` · ${r.committedOwnLineup.formation}`:''}`:'';
     const text=`Import bestätigt: ${manager?.team||targetManagerId} · ${added} neu · ${updated} geändert · ${unchanged} bereits vorhanden · ${beforeCount} → ${afterCount} Transfers${lineupText}${cloudSaved?' · Cloud gespeichert':' · lokal gespeichert'}`;
     if(status)status.textContent=text;
-    toast(`${added} neu · ${updated} geändert`);
+    toast(wantsLineup
+      ? `✓ Aufstellung übernommen · 11/11${r.committedOwnLineup?.formation?` · ${r.committedOwnLineup.formation}`:''}`
+      : `✓ ${added} neu · ${updated} geändert`);
   },80);
 }
 async function analyzeSelectedScreenshots(){
@@ -5477,7 +5562,8 @@ async function analyzeSelectedScreenshots(){
     clearTimeout(timer);const result=await res.json().catch(()=>({}));
     if(!res.ok)throw new Error(result?.details||result?.message||result?.error||`HTTP ${res.status}`);
     aiUsageFromResult(result,images.length);screenshotImportLastResult=result;renderScreenshotAiResult(result);renderAiUsage();
-    if(status)status.textContent='Analyse abgeschlossen. Bitte Ergebnis prüfen.';
+    if(status)status.textContent='✓ Analyse abgeschlossen. Bitte Ergebnis prüfen.';
+    toast('✓ Analyse abgeschlossen – Vorschau bereit');
   }catch(e){
     console.error(e);
     screenshotImportStatusText=`Analyse fehlgeschlagen: ${e?.name==='AbortError'?'Zeitüberschreitung nach 45 Sekunden':(e?.message||String(e))}`;if(status)status.textContent=screenshotImportStatusText
@@ -5596,6 +5682,7 @@ $$('[data-li-status]').forEach(s=>s.onchange=()=>{const p=data.players.find(x=>x
 $$('[data-quick-bonus]').forEach(b=>b.onclick=()=>addQuickBonus(b.dataset.quickBonus,b.dataset.label,+b.dataset.amount));if($('#buyPlayer'))$('#buyPlayer').onclick=()=>{$('#transferForm').innerHTML=playerForm();bindPlayerForm()};if($('#sellPlayerOpen'))$('#sellPlayerOpen').onclick=()=>{const active=activePlayers();if(!active.length)return toast('Kein aktiver Spieler vorhanden');$('#transferForm').innerHTML=`<div class="card" style="margin-top:16px"><h3>Spieler verkaufen</h3><div class="form-grid" style="margin-top:12px"><label class="wide">Spieler<select id="sellSelect">${active.map(p=>`<option value="${p.id}">${esc(p.name)} · Kaufpreis ${euro(p.buyPrice)}</option>`).join('')}</select></label><div class="full"><button class="btn danger" id="continueSell">Verkauf erfassen</button></div></div></div>`;$('#continueSell').onclick=()=>sellPlayer($('#sellSelect').value)};if($('#dismissLineupRepair'))$('#dismissLineupRepair').onclick=()=>{delete mdRecord(data.settings.currentMd).lineupRepairNotice;save();render()};
 if($('#saveLineup'))$('#saveLineup').onclick=()=>{
   const r=mdRecord(data.settings.currentMd);
+  syncOwnLineupNamesV221b(r);
   const validation=lineupValidation(r.lineup,{complete:true});
   if(!validation.ok)return toast(validation.message);
   data.settings.lineupSize=11;
@@ -5607,6 +5694,7 @@ if($('#saveLineup'))$('#saveLineup').onclick=()=>{
   const recommended=coachOptimizedLineup(data.settings.currentMd);
   if(recommended.length!==11)return toast('Für keine gültige Formation sind aktuell genügend Spieler vorhanden');
   mdRecord(data.settings.currentMd).lineup=recommended.map(p=>p.id);
+  syncOwnLineupNamesV221b(mdRecord(data.settings.currentMd));
   delete mdRecord(data.settings.currentMd).lineupInheritedFrom;
   delete mdRecord(data.settings.currentMd).lineupInheritedAt;
   data.settings.lineupSize=11;
@@ -5716,6 +5804,7 @@ function swapLineupOrderV219b(sourceId,targetId){
   if(!Array.isArray(r.lineup)||!r.lineup.includes(sourceId)||!r.lineup.includes(targetId))return false;
   const a=r.lineup.indexOf(sourceId),b=r.lineup.indexOf(targetId);
   [r.lineup[a],r.lineup[b]]=[r.lineup[b],r.lineup[a]];
+  syncOwnLineupNamesV221b(r);
   save();render();
   toast(`${source.name} ↔ ${target.name}`);
   return true;
@@ -5726,6 +5815,7 @@ function finishLineupMove(pid,zone){
   const changed=setLineupState(pid,zone==='lineup');
   if(changed){
     const record=mdRecord(data.settings.currentMd);
+    syncOwnLineupNamesV221b(record);
     const swap=record.lastSmartSwap;
     save();
     render();
@@ -5786,6 +5876,7 @@ function bindSquadCards(){
       if(!Array.isArray(r.lineup))r.lineup=[];
       const changed=setLineupState(pid,!r.lineup.includes(pid));
       if(changed){
+        syncOwnLineupNamesV221b(r);
         const swap=r.lastSmartSwap;
         save();render();
         if(swap){toast(`${swap.incoming} für ${swap.outgoing} · Formation jetzt ${swap.formation}`);delete r.lastSmartSwap;save()}
