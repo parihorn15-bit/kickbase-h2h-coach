@@ -1,0 +1,26 @@
+VERSION 2.2.0 – COACH SCORING + PERFORMANCE
+
+Coach-Modell:
+- Vor Saisonstart gilt ein eigenes Preseason-Modell.
+- Fehlende aktuelle Kickbase-Ø-Punkte werden neutral statt mit 0 bewertet.
+- Matchup und Teamstärke tragen vor Saisonstart deutlich mehr.
+- Unbekannter Startelfstatus ist neutral; bestätigte Bank/Fraglich/Ausfall bleiben echte Abzüge.
+- Nach jedem ausgewerteten Spieltag blendet die App schrittweise in das Saisonmodell über.
+- Nach vier ausgewerteten Spieltagen ist das Saisonmodell vollständig aktiv.
+- Tooltips zeigen Modellphase, Matchup, Teamwert und Datenlage.
+- Bestehende persönliche Kalibrierung bleibt erhalten.
+
+Performance:
+- Coach-Bewertungen werden pro Render gecacht.
+- Fixture-Lookups werden gecacht.
+- Die zweite alte fixture()-Definition überschreibt die aktuelle Funktion nicht mehr.
+- Positionsresolver läuft nicht mehr mehrfach für jeden Spieler bei jedem Render.
+- Metadaten-Reparatur erfolgt einmalig per Migration.
+- Gegneranalyse-/Roster-Caches werden nicht mehr bei jedem Render pauschal geleert.
+
+Unverändert:
+- funktionierende 2.1.9c-Aufstellungslogik und Tauschfunktion
+- 38 Transfer-Baseline
+- Budget und Bonusautomatik
+- Screenshot-Import
+- config.js

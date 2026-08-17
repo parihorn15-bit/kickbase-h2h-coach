@@ -155,6 +155,50 @@ function lineupStatusFresh(player){
 }
 
 const BASE_COACH_WEIGHTS={average:30,matchup:25,lineup:30,team:10,home:5,news:12};
+const PRESEASON_COACH_WEIGHTS={matchup:40,team:25,lineup:20,home:5,average:10,news:12};
+
+function coachCompletedMatchdays(){
+  return (data.matchdays||[]).filter(record=>
+    Object.values(record?.points||{}).some(value=>Number.isFinite(Number(value))&&String(value).trim()!=='')
+  ).length;
+}
+function coachSeasonBlend(){
+  // 0 = pure preseason model; after four evaluated matchdays the current-season
+  // model has fully taken over.
+  return Math.max(0,Math.min(1,coachCompletedMatchdays()/4));
+}
+function coachPhaseLabel(){
+  const n=coachCompletedMatchdays();
+  return n===0?'Preseason-Modell':n<4?`Übergangsmodell · ${n}/4 Spieltage`:'Saisonmodell';
+}
+function neutralLineupRatio(status){
+  const key=String(status||'Unbekannt');
+  if(key==='Voraussichtliche Startelf')return 1;
+  if(key==='Alternative')return .63;
+  if(key==='Ersatzbank')return .22;
+  if(key==='Fraglich')return .38;
+  if(key==='Fällt aus')return 0;
+  return .58; // unknown is neutral, not a penalty
+}
+function preseasonCoachScore({avg,match,teamValue,status,fixtureData,newsImpact}){
+  let score=50;
+  // Matchup and club level carry preseason decisions while current-season
+  // Kickbase averages do not exist yet.
+  score+=(match-5)*5.5;                 // roughly -22 .. +27.5
+  score+=(teamValue-5)*2.5;             // roughly -10 .. +12.5
+  if(status==='Voraussichtliche Startelf')score+=8;
+  else if(status==='Alternative')score+=2;
+  else if(status==='Ersatzbank')score-=12;
+  else if(status==='Fraglich')score-=8;
+  else if(status==='Fällt aus')return 0;
+  // Missing average is neutral. If an actual stored prior/current average exists,
+  // use it only as a modest pedigree signal.
+  if(avg>0)score+=Math.max(-8,Math.min(12,(avg-80)/6));
+  if(fixtureData?.ha==='H')score+=3;
+  score+=newsImpact;
+  return Math.max(0,Math.min(100,score));
+}
+
 
 function pearsonCorrelation(xs,ys){
   if(xs.length<3||xs.length!==ys.length)return 0;
@@ -243,9 +287,16 @@ function calibrationSummary(){
   };
 }
 
+let _coachAssessmentCache=new Map();
+function resetCoachAssessmentCache(){_coachAssessmentCache.clear()}
+
 function coachPlayerAssessment(player,md=data.settings.currentMd,{ignoreCalibration=false}={}){
+  const cacheKey=!ignoreCalibration?`${player?.id||player?.name}|${+md}`:'';
+  if(cacheKey&&_coachAssessmentCache.has(cacheKey))return _coachAssessmentCache.get(cacheKey);
+
   const fixtureData=fixture(player.team,md);
   const status=lineupStatusMeta(player);
+  const statusKey=effectiveLineupStatus(player).status||'Unbekannt';
   const avg=Math.max(0,Number(player.avgPoints||0));
   const match=Math.max(1,Math.min(10,matchup(player,md)));
   const teamValue=Math.max(1,Math.min(10,strength(player.team)));
@@ -253,53 +304,73 @@ function coachPlayerAssessment(player,md=data.settings.currentMd,{ignoreCalibrat
 
   const calibration=ignoreCalibration?{weights:{...BASE_COACH_WEIGHTS},active:false}:coachCalibration();
   const weights=calibration.weights;
-  const lineupRatio=status.score/30;
+
+  // Regular in-season score. Crucial 2.2.0 change: missing average is neutral,
+  // and unknown lineup status is neutral rather than heavily punished.
+  const avgRatio=avg>0?Math.max(0,Math.min(1,avg/150)):.55;
+  const lineupRatio=neutralLineupRatio(statusKey);
   const factors={
-    average:Math.min(weights.average,avg/150*weights.average),
+    average:avgRatio*weights.average,
     matchup:(match-1)/9*weights.matchup,
     lineup:lineupRatio*weights.lineup,
     team:teamValue/10*weights.team,
     home:fixtureData?.ha==='H'?weights.home:0
   };
+
   const news=newsImpactForPlayer(player);
   const newsImpact=Math.max(-weights.news,Math.min(weights.news,Number(news?.impact_score||0)*.4));
   factors.news=newsImpact;
-  let score=Object.values(factors).reduce((sum,value)=>sum+value,0);
-  if(effectiveLineupStatus(player).status==='Fällt aus')score=0;
+
+  let regularScore=Object.values(factors).reduce((sum,value)=>sum+value,0);
+  regularScore=Math.max(0,Math.min(100,regularScore));
+
+  const preseasonScore=preseasonCoachScore({
+    avg,match,teamValue,status:statusKey,fixtureData,
+    newsImpact:Math.max(-12,Math.min(12,newsImpact))
+  });
+
+  const seasonBlend=coachSeasonBlend();
+  let score=preseasonScore*(1-seasonBlend)+regularScore*seasonBlend;
+  if(statusKey==='Fällt aus')score=0;
   score=Math.max(0,Math.min(100,score));
 
-  let confidence=20;
-  if(avg>0)confidence+=20;
+  let confidence=35; // preseason has usable team/fixture information even without points
+  if(avg>0)confidence+=15;
   if(fixtureData)confidence+=20;
-  if(Number.isFinite(Number(data.teamStrength?.[player.team])))confidence+=10;
-  if(effectiveLineupStatus(player).status!=='Unbekannt')confidence+=15;
-  if(fresh)confidence+=15;
-  confidence=Math.max(20,Math.min(100,confidence));
+  if(Number.isFinite(Number(data.teamStrength?.[canonicalClubName(player.team)]??data.teamStrength?.[player.team])))confidence+=10;
+  if(statusKey!=='Unbekannt')confidence+=10;
+  if(fresh)confidence+=10;
+  confidence=Math.max(25,Math.min(100,confidence));
 
   const positives=[];
   const risks=[];
   if(status.level==='good')positives.push('voraussichtliche Startelf');
   if(match>=7)positives.push(`starkes Matchup ${match.toFixed(1)}`);
   if(avg>=100)positives.push(`${avg.toFixed(0)} Ø-Punkte`);
+  if(!avg)positives.push('fehlende Saisonpunkte neutral gewertet');
   if(fixtureData?.ha==='H')positives.push('Heimspiel');
   if(teamValue>=7)positives.push('starkes Teamniveau');
 
-  if(effectiveLineupStatus(player).status==='Alternative')risks.push('Rotationsrisiko');
-  if(effectiveLineupStatus(player).status==='Ersatzbank')risks.push('Bank prognostiziert');
-  if(effectiveLineupStatus(player).status==='Fraglich')risks.push('Einsatz fraglich');
-  if(effectiveLineupStatus(player).status==='Fällt aus')risks.push('fällt aus');
-  if(effectiveLineupStatus(player).status==='Unbekannt')risks.push('Aufstellungsstatus unbekannt');
-  if(!fresh)risks.push('Status älter als vier Tage');
+  if(statusKey==='Alternative')risks.push('Rotationsrisiko');
+  if(statusKey==='Ersatzbank')risks.push('Bank prognostiziert');
+  if(statusKey==='Fraglich')risks.push('Einsatz fraglich');
+  if(statusKey==='Fällt aus')risks.push('fällt aus');
+  if(statusKey==='Unbekannt')risks.push('Startelfstatus noch ungeprüft');
+  if(statusKey!=='Unbekannt'&&!fresh)risks.push('Status älter als vier Tage');
   if(match<=4)risks.push(`schweres Matchup ${match.toFixed(1)}`);
-  if(avg<=50)risks.push('niedrige Ø-Punkte');
+  if(avg>0&&avg<=50)risks.push('niedrige Ø-Punkte');
   if(news?.impact_score>0)positives.push(`offizielle Meldung: ${news.title}`);
   if(news?.impact_score<0)risks.push(`offizielle Meldung: ${news.title}`);
 
-  return{
+  const result={
     player,md,score,confidence,factors,positives,risks,
-    status,fixture:fixtureData,matchup:match,average:avg,teamStrength:teamValue,news,calibrationActive:calibration.active,weights,
-    label:score>=82?'Top-Empfehlung':score>=68?'Starke Option':score>=52?'Solide/Risikoabwägung':score>=35?'Riskante Option':'Nicht empfehlen'
+    status,fixture:fixtureData,matchup:match,average:avg,teamStrength:teamValue,news,
+    calibrationActive:calibration.active,weights,
+    preseasonScore,regularScore,seasonBlend,phase:coachPhaseLabel(),
+    label:score>=82?'Top-Empfehlung':score>=68?'Starke Option':score>=52?'Solide Option':score>=35?'Riskante Option':'Nicht empfehlen'
   };
+  if(cacheKey)_coachAssessmentCache.set(cacheKey,result);
+  return result;
 }
 function coachPlayerScore(player,md=data.settings.currentMd){
   return coachPlayerAssessment(player,md).score;
@@ -309,8 +380,11 @@ function coachPlayerConfidence(player,md=data.settings.currentMd){
 }
 function coachPlayerExplanation(player,md=data.settings.currentMd){
   const a=coachPlayerAssessment(player,md);
-  const base=[`Coach ${a.score.toFixed(0)}/100`,`Sicherheit ${a.confidence.toFixed(0)} %`,a.status.label];
-  if(a.fixture)base.push(`${a.fixture.ha==='H'?'Heim':'Auswärts'} gegen ${a.fixture.opp}`);base.push(`Quelle ${effectiveLineupStatus(player).source}`);
+  const base=[`${a.phase}`,`Coach ${a.score.toFixed(0)}/100`,`Sicherheit ${a.confidence.toFixed(0)} %`,a.status.label];
+  if(a.fixture)base.push(`${a.fixture.ha==='H'?'Heim':'Auswärts'} gegen ${a.fixture.opp}`);
+  base.push(`Matchup ${a.matchup.toFixed(1)}`,`Team ${a.teamStrength.toFixed(1)}`);
+  if(!a.average)base.push('Saison-Ø noch neutral');
+  base.push(`Quelle ${effectiveLineupStatus(player).source}`);
   return base.join(' · ');
 }
 function coachRankPlayers(md=data.settings.currentMd){
@@ -338,7 +412,7 @@ function lineupPlayers(ids){
 function lineupPositionCounts(ids){
   const counts={Tor:0,Abwehr:0,Mittelfeld:0,Sturm:0,Andere:0};
   lineupPlayers(ids).forEach(player=>{
-    const position=repairPlayerPositionV219(player);
+    const position=lineupPositionOf(player);
     if(Object.prototype.hasOwnProperty.call(counts,position))counts[position]++;
     else counts.Andere++;
   });
@@ -411,15 +485,14 @@ function lineupValidation(ids,{complete=false}={}){
   return{ok:true,feasible};
 }
 function bestPlayersForPosition(players,position,count,md){
-  return players.filter(p=>p.position===position)
+  return players.filter(p=>lineupPositionOf(p)===position)
     .sort((a,b)=>coachPlayerScore(b,md)-coachPlayerScore(a,md))
     .slice(0,count);
 }
 
 function coachOptimizedLineup(md=data.settings.currentMd){
   const ranked=coachRankPlayers(md).filter(p=>effectiveLineupStatus(p).status!=='Fällt aus');
-  ranked.forEach(repairPlayerPositionV219);
-  const keepers=ranked.filter(p=>p.position==='Tor');
+  const keepers=ranked.filter(p=>lineupPositionOf(p)==='Tor');
   if(!keepers.length)return[];
 
   const candidates=[];
@@ -795,6 +868,12 @@ function v219bKickbaseMetadata(name){
   return hits.length===1?hits[0][1]:null;
 }
 
+
+function lineupPositionOf(player){
+  if(!player)return '';
+  return canonicalLineupPosition(player.kickbasePosition||player.position);
+}
+
 function repairPlayerPositionV219(player){
   if(!player)return '';
   // 2.1.9b: Kickbase-specific roster metadata is authoritative for lineup rules.
@@ -1125,18 +1204,24 @@ let data=load(),page='dashboard';function mergeData(x){
     teamStrengthCloudUpdatedAt:source.teamStrengthCloudUpdatedAt||''
   };
 }
+let _fixtureCache=new Map();
+function resetFixtureCache(){_fixtureCache.clear()}
 function fixture(team,md=data.settings.currentMd){
   const target=canonicalClubName(team);
+  const key=`${+md}|${target}`;
+  if(_fixtureCache.has(key))return _fixtureCache.get(key);
   const f=FIXTURES.find(x=>+x.md===+md&&(
     canonicalClubName(x.home)===target||canonicalClubName(x.away)===target
   ));
-  if(!f)return null;
+  if(!f){_fixtureCache.set(key,null);return null}
   const isHome=canonicalClubName(f.home)===target;
-  return{
+  const value={
     opp:isHome?canonicalClubName(f.away):canonicalClubName(f.home),
     ha:isHome?'H':'A',
     date:f.date
   };
+  _fixtureCache.set(key,value);
+  return value;
 }
 function strength(team){
   const value=Number(data?.teamStrength?.[team]);
@@ -1222,7 +1307,7 @@ function mandatoryStatus(md){
 
 function load(){try{const raw=localStorage.getItem('kickbaseCoachV07')||localStorage.getItem('kickbaseCoachV06')||localStorage.getItem('kickbaseCoachV05')||localStorage.getItem('kickbaseCoachV04')||localStorage.getItem('kickbaseCoachV03')||localStorage.getItem('kickbaseCoachV2');return raw?mergeData(JSON.parse(raw)):mergeData(SEEDED_DATA)}catch{return mergeData(SEEDED_DATA)}}function save(){syncTransferSingleSource();localStorage.setItem('kickbaseCoachV07',JSON.stringify(data));if(window.cloudQueueSave)window.cloudQueueSave();toast('Gespeichert')}function touch(){save();render()}function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1300)}
 const activePlayers=()=>data.players.filter(p=>!p.soldDate);const soldPlayers=()=>data.players.filter(p=>p.soldDate);const financeTotal=()=>data.finances.reduce((a,x)=>a+(+x.amount||0),0);const squadValue=()=>activePlayers().reduce((a,p)=>a+(+p.marketValue||0),0);const wealth=()=>financeTotal()+squadValue();const realized=()=>soldPlayers().reduce((a,p)=>a+(+p.salePrice||0)-(+p.buyPrice||0),0);const unrealized=()=>activePlayers().reduce((a,p)=>a+(+p.marketValue||0)-(+p.buyPrice||0),0);
-function fixture(team,md=data.settings.currentMd){const target=canonicalClubName(team);const f=FIXTURES.find(x=>+x.md===+md&&(canonicalClubName(x.home)===target||canonicalClubName(x.away)===target));if(!f)return null;const isHome=canonicalClubName(f.home)===target;return{opp:isHome?canonicalClubName(f.away):canonicalClubName(f.home),ha:isHome?'H':'A',date:f.date}}function strength(t){return +data.teamStrength[t]||5}function matchup(p,md=data.settings.currentMd){const f=fixture(p.team,md);if(!f)return 5;return Math.max(1,Math.min(10,5+strength(p.team)-strength(f.opp)+(f.ha==='H'?+data.settings.homeBonus:0)))}function score(p){return (+p.avgPoints||0)+matchup(p)*10+(LI_SCORE[p.liStatus||'Unbekannt']||0)}function rankPlayers(){return [...activePlayers()].sort((a,b)=>score(b)-score(a))}function mdRecord(md){let x=data.matchdays.find(x=>x.md===md);if(!x){x={id:id(),md,mvp:'',points:{},lineup:[],soldPlayer:'',soldDate:'',soldPrice:0};data.matchdays.push(x)}return x}function top3(md){const r=mdRecord(md);return activePlayers().map(p=>({p,pts:+r.points[p.id]||0})).sort((a,b)=>b.pts-a.pts).slice(0,3)}function mandatoryStatus(md){const r=mdRecord(md),mvpOwned=activePlayers().find(p=>p.name.trim().toLowerCase()===r.mvp.trim().toLowerCase());const top=top3(md);let valid=false,required='';if(!r.mvp)return{state:'waiting',text:'Bundesliga-MVP fehlt'};if(mvpOwned){required=mvpOwned.name;valid=r.soldPlayer===required}else{required='Wahl aus: '+top.map(x=>x.p.name).filter(Boolean).join(', ');valid=top.some(x=>x.p.name===r.soldPlayer)}return{state:valid?'done':'open',text:valid?'Erledigt':required,mvpOwned:!!mvpOwned}}
+function fixtureLegacyV220(team,md=data.settings.currentMd){return fixture(team,md)}function strength(t){return +data.teamStrength[t]||5}function matchup(p,md=data.settings.currentMd){const f=fixture(p.team,md);if(!f)return 5;return Math.max(1,Math.min(10,5+strength(p.team)-strength(f.opp)+(f.ha==='H'?+data.settings.homeBonus:0)))}function score(p){return (+p.avgPoints||0)+matchup(p)*10+(LI_SCORE[p.liStatus||'Unbekannt']||0)}function rankPlayers(){return [...activePlayers()].sort((a,b)=>score(b)-score(a))}function mdRecord(md){let x=data.matchdays.find(x=>x.md===md);if(!x){x={id:id(),md,mvp:'',points:{},lineup:[],soldPlayer:'',soldDate:'',soldPrice:0};data.matchdays.push(x)}return x}function top3(md){const r=mdRecord(md);return activePlayers().map(p=>({p,pts:+r.points[p.id]||0})).sort((a,b)=>b.pts-a.pts).slice(0,3)}function mandatoryStatus(md){const r=mdRecord(md),mvpOwned=activePlayers().find(p=>p.name.trim().toLowerCase()===r.mvp.trim().toLowerCase());const top=top3(md);let valid=false,required='';if(!r.mvp)return{state:'waiting',text:'Bundesliga-MVP fehlt'};if(mvpOwned){required=mvpOwned.name;valid=r.soldPlayer===required}else{required='Wahl aus: '+top.map(x=>x.p.name).filter(Boolean).join(', ');valid=top.some(x=>x.p.name===r.soldPlayer)}return{state:valid?'done':'open',text:valid?'Erledigt':required,mvpOwned:!!mvpOwned}}
 const NAV_GROUPS=[
   {id:'coach',label:'Coach',icon:'🟢',items:[
     ['dashboard','Übersicht','⌂'],
@@ -2098,6 +2183,29 @@ function applyV218Migration(){
 
 
 
+
+function applyV220CoachMigration(){
+  data.ui=data.ui||{};
+  if(data.ui.v220CoachMigrationApplied)return;
+
+  // Normalize club keys once so matchup/team strength lookup is stable.
+  const normalizedStrength={};
+  for(const [team,value] of Object.entries(data.teamStrength||{})){
+    const key=canonicalClubName(team);
+    const n=Number(value);
+    if(Number.isFinite(n))normalizedStrength[key]=n;
+  }
+  data.teamStrength={...TEAM_STRENGTH_BASELINE,...normalizedStrength};
+
+  // Metadata repair belongs in a migration, not every render.
+  for(const p of data.players||[])repairPlayerPositionV219(p);
+
+  data.ui.v220CoachMigrationApplied=true;
+  data.ui.v220CoachModel='preseason-transition-v1';
+  data.ui.v220PerformanceCleanup=true;
+  localStorage.setItem('kickbaseCoachV07',JSON.stringify(data));
+}
+
 function applyV219cMetadataMigration(){
   data.ui=data.ui||{};
   if(data.ui.v219cMetadataMigrationApplied)return;
@@ -2195,7 +2303,10 @@ function applyV219LineupMigration(){
 }
 
 function render(){
+  resetCoachAssessmentCache();
+  resetFixtureCache();
   applyV217CleanTransferRebuild();
+  applyV220CoachMigration();
   applyV219cMetadataMigration();
   applyV219bRosterMigration();
   applyV219LineupMigration();
@@ -2210,8 +2321,7 @@ function render(){
   applyV213SmartTransferMigration();
   applyV214CanonicalMigration();
   queueMicrotask(()=>restoreScreenshotImportUi());
-  resetOpponentAnalysisCache();
-  resetOpponentRosterCache();document.body.classList.toggle('analysis',data.settings.mode==='analysis');if($('#currentMd'))$('#currentMd').value=data.settings.currentMd;$$('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===data.settings.mode));$$('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===page));const titles={dashboard:['Dashboard','Schnelle Entscheidungen und offene Aufgaben.'],squad:['Aufstellung','Deine Elf auf dem Spielfeld – ziehen oder antippen.'],scout:['Scout Center','Bundesligaspieler filtern und direkt zum Kauf vormerken.'],news:['News Intelligence','Offizielle Meldungen, gefiltert auf deine Kaderspieler.'],matchday:['Spieltag','Punkte, Bundesliga-MVP und Pflichtverkauf.'],bundesliga:['Bundesliga','Alle 34 Spieltage und die Matchups deines Kaders.'],transfers:['Transfers','Hier kaufst und verkaufst du Spieler. Der Kader aktualisiert sich automatisch.'],finances:['Finanzen','Startkapital, Boni und sämtliche Geldbewegungen.'],analysis:['H2H Intelligence','Was funktioniert bei deinen Transfers und Entscheidungen wirklich?'],lineupintel:['LigaInsider-Abgleich','Voraussichtliche Aufstellungen halbautomatisch prüfen und übernehmen.'],competition:['Liga','Dein aktuelles Duell, Spielplan und Tabelle.'],rules:['Regelwerk','Interaktive Regeln und dein aktueller Status.'],settings:['Einstellungen','Teamstärken, Matchups und Grundwerte.']};$('#pageTitle').textContent=titles[page][0];$('#pageSub').textContent=titles[page][1];try{
+  document.body.classList.toggle('analysis',data.settings.mode==='analysis');if($('#currentMd'))$('#currentMd').value=data.settings.currentMd;$$('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===data.settings.mode));$$('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===page));const titles={dashboard:['Dashboard','Schnelle Entscheidungen und offene Aufgaben.'],squad:['Aufstellung','Deine Elf auf dem Spielfeld – ziehen oder antippen.'],scout:['Scout Center','Bundesligaspieler filtern und direkt zum Kauf vormerken.'],news:['News Intelligence','Offizielle Meldungen, gefiltert auf deine Kaderspieler.'],matchday:['Spieltag','Punkte, Bundesliga-MVP und Pflichtverkauf.'],bundesliga:['Bundesliga','Alle 34 Spieltage und die Matchups deines Kaders.'],transfers:['Transfers','Hier kaufst und verkaufst du Spieler. Der Kader aktualisiert sich automatisch.'],finances:['Finanzen','Startkapital, Boni und sämtliche Geldbewegungen.'],analysis:['H2H Intelligence','Was funktioniert bei deinen Transfers und Entscheidungen wirklich?'],lineupintel:['LigaInsider-Abgleich','Voraussichtliche Aufstellungen halbautomatisch prüfen und übernehmen.'],competition:['Liga','Dein aktuelles Duell, Spielplan und Tabelle.'],rules:['Regelwerk','Interaktive Regeln und dein aktueller Status.'],settings:['Einstellungen','Teamstärken, Matchups und Grundwerte.']};$('#pageTitle').textContent=titles[page][0];$('#pageSub').textContent=titles[page][1];try{
   const renderer=({dashboard,squad,scout,news,matchday,bundesliga,transfers,finances,analysis,lineupintel,competition,rules,settings}[page]);
   if(typeof renderer!=='function')throw new Error(`Seite ${page} ist nicht verfügbar.`);
   $('#content').innerHTML=renderer();
@@ -2649,7 +2759,6 @@ function squad(){
 
   const r=mdRecord(data.settings.currentMd);
   const active=activePlayers();
-  active.forEach(repairPlayerPositionV219);
   if(!Array.isArray(r.lineup))r.lineup=[];
   r.lineup=r.lineup.filter(pid=>active.some(p=>p.id===pid)).slice(0,11);
 
@@ -2671,7 +2780,7 @@ function squad(){
   const bench=active.filter(p=>!displayLineup.includes(p.id));
 
   const positionOrder=['Sturm','Mittelfeld','Abwehr','Tor'];
-  const counts=Object.fromEntries(positionOrder.map(pos=>[pos,starters.filter(p=>repairPlayerPositionV219(p)===pos).length]));
+  const counts=Object.fromEntries(positionOrder.map(pos=>[pos,starters.filter(p=>lineupPositionOf(p)===pos).length]));
   const validFormation=exactFormation(displayLineup);
   const possibleFormations=feasibleFormations(displayLineup);
   const formation=validFormation?.code||[counts.Abwehr,counts.Mittelfeld,counts.Sturm].join('-');
@@ -2689,7 +2798,7 @@ function squad(){
   };
 
   const row=position=>{
-    const list=starters.filter(p=>repairPlayerPositionV219(p)===position);
+    const list=starters.filter(p=>lineupPositionOf(p)===position);
     return `<div class="pitch-row pitch-${position.toLowerCase()}" data-position="${position}" data-count="${list.length}">
       ${list.map(fieldPlayer).join('')||`<span class="empty-position">${position}</span>`}
     </div>`;
@@ -2713,7 +2822,7 @@ function squad(){
       <button type="button" id="dismissLineupRepair">Verstanden</button>
     </div>`:''}<div class="pitch-head">
       <div><span>Formation</span><b class="${validFormation?'formation-valid':'formation-open'}">${formation}</b></div>
-      <small>${validFormation?'Gültige Kickbase-Formation.':`${starters.length}/11 Spieler · möglich: ${possibleFormations.map(f=>f.code).join(', ')||'keine'}`}</small>
+      <small>${validFormation?'Gültige Kickbase-Formation.':`${starters.length}/11 Spieler · möglich: ${possibleFormations.map(f=>f.code).join(', ')||'keine'}`} · ${esc(coachPhaseLabel())}</small>
     </div>
     <div class="football-pitch drop-zone" data-drop-zone="lineup">
       ${row('Sturm')}${row('Mittelfeld')}${row('Abwehr')}${row('Tor')}
@@ -3192,7 +3301,7 @@ function analysis(){
         </div>
         <div class="calibration-weights">${Object.entries(c.weights).map(([key,value])=>`
           <div><span>${labels[key]}</span><div><i style="width:${Math.min(100,value/35*100)}%"></i></div><b>${value.toFixed(1)}</b></div>`).join('')}</div>
-        <p>Die App speichert beim Sichern deiner Elf automatisch die damalige Prognose. Deine bereits vorhandene Spieltagspunkte-Eingabe liefert später das Ergebnis. Erst nach mindestens vier Spieltagen und 20 Spielerwerten werden die Basisgewichte vorsichtig zu 25 % personalisiert.</p>
+        <p>Vor dem Saisonstart bewertet der Coach vor allem Matchup, Teamniveau und Aufstellungsstatus; fehlende Saison-Ø-Punkte werden neutral behandelt. Nach jedem ausgewerteten Spieltag fließen aktuelle Daten stärker ein. Ab vier Spieltagen läuft das Saisonmodell vollständig; die persönliche Kalibrierung bleibt zusätzlich vorsichtig begrenzt.</p>
       `})()}
     </section>
 
@@ -5423,8 +5532,8 @@ function swapLineupOrderV219b(sourceId,targetId){
   const source=active.find(p=>p.id===sourceId);
   const target=active.find(p=>p.id===targetId);
   if(!source||!target)return false;
-  const sp=repairPlayerPositionV219(source);
-  const tp=repairPlayerPositionV219(target);
+  const sp=lineupPositionOf(source);
+  const tp=lineupPositionOf(target);
   if(!sp||sp!==tp){
     toast('Optisches Tauschen ist nur innerhalb derselben Position möglich.');
     return false;
