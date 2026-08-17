@@ -1,0 +1,15 @@
+VERSION 2.1.8 – FINANCE + RESOLVER + BONUS AUTOMATION
+
+- Posch/Stefan Posch, Schwolow/Alexander Schwolow und Götze/Mario Götze werden gezielt zusammengeführt.
+- Kurzname-Referenzen in Transfers werden auf die bestätigten vollständigen Spieler umgeschrieben.
+- Bereinigung löscht nur exakte Transfer-Dubletten; Kauf und Verkauf bleiben getrennte Ereignisse.
+- Finanzhistorie wird aus der sauberen Transfer-Single-Source neu aufgebaut.
+- 15 Auflaufprämien = 1.050.000 €.
+- Ungeklärte historische Kickbase-Boni bleiben transparent als Bestandsabgleich.
+- Verifizierter Kontostand zum 17.08.2026: -19.118.424 €.
+- "Glückliches Händchen" ist für Saison 2026/27 als bereits erreicht/gesperrt markiert.
+- Neue eindeutige Kickbase->Kickbase Kauf/Verkauf-Zyklen prüfen automatisch wiederholbare
+  Transferboni ab 3/5/10/25 Mio. Gewinn.
+- Manager-zu-Manager-Verkäufe lösen keinen automatischen Transferbonus aus.
+- Vor der Migration wird ein Backup im App-Datensatz abgelegt.
+- config.js bleibt unverändert und ist nicht Bestandteil dieses Mini-Patches.

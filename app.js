@@ -1318,37 +1318,22 @@ function buildLocalSurnameMasterMap(){
 }
 
 
-const V217_CONFIRMED_PLAYER_ALIASES={
-  'posch':{
-    name:'Stefan Posch',
-    team:'1. FSV Mainz 05',
-    position:'Abwehr',
-    reason:'2.1.7 bestätigte lokale Zuordnung'
-  },
-  'schwolow':{
-    name:'Alexander Schwolow',
-    team:'1. FSV Mainz 05',
-    position:'Tor',
-    reason:'2.1.7 bestätigte lokale Zuordnung'
-  },
-  'gotze':{
-    name:'Mario Götze',
-    team:'Eintracht Frankfurt',
-    position:'Mittelfeld',
-    reason:'2.1.7 manuell bestätigte Mehrdeutigkeitsauflösung'
-  }
+const V218_CONFIRMED_PLAYER_ALIASES={
+  posch:{name:'Stefan Posch',team:'1. FSV Mainz 05',position:'Abwehr'},
+  schwolow:{name:'Alexander Schwolow',team:'1. FSV Mainz 05',position:'Tor'},
+  gotze:{name:'Mario Götze',team:'Eintracht Frankfurt',position:'Mittelfeld'}
 };
-
-function resolveV217ConfirmedAlias(name){
-  const key=String(name||'').toLocaleLowerCase('de-DE')
-    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-    .replace(/[^a-z0-9]/g,'');
-  const hit=V217_CONFIRMED_PLAYER_ALIASES[key];
-  return hit?{...hit,matched:true,confidence:1,source:'v217-confirmed-alias'}:null;
+function v218AliasKey(v){
+  return String(v||'').toLocaleLowerCase('de-DE').normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');
+}
+function resolveV218ConfirmedAlias(name){
+  const hit=V218_CONFIRMED_PLAYER_ALIASES[v218AliasKey(name)];
+  return hit?{...hit,matched:true,confidence:1,source:'v218-confirmed-alias'}:null;
 }
 
 function resolveShortNameAgainstLocalMasters(name,context={}){
-  const confirmed=resolveV217ConfirmedAlias(name);
+  const confirmed=resolveV218ConfirmedAlias(name);
   if(confirmed)return confirmed;
   const master=resolveAgainstBundesligaMaster(name,context);
   if(master.matched)return master;
@@ -1860,8 +1845,175 @@ function applyV212TransferSingleSourceMigration(){
   },1800);
 }
 
+
+const V218_VERIFIED_BUDGET=-19118424;
+const V218_LOGIN_BONUS_TOTAL=1050000;
+const V218_UNEXPLAINED_BONUS_TOTAL=2800000;
+
+function v218CanonicalPlayerName(name){
+  const alias=resolveV218ConfirmedAlias(name);
+  return alias?.name||String(name||'').trim();
+}
+function v218TransferKey(t){
+  return [
+    String(t?.type||'').toLowerCase(),
+    v218AliasKey(v218CanonicalPlayerName(t?.player)),
+    Number(t?.price)||0,
+    String(t?.date||''),
+    String(t?.note||'').toLowerCase().replace(/\s+/g,' ').trim()
+  ].join('|');
+}
+function v218MergeConfirmedPlayerDuplicates(){
+  // Rewrite every transfer reference first.
+  const root=ensureLeagueIntel();
+  for(const manager of LEAGUE_MANAGERS){
+    const row=managerLeagueData(manager.id);
+    row.transfers=(row.transfers||[]).map(t=>{
+      const alias=resolveV218ConfirmedAlias(t.player);
+      if(!alias)return t;
+      return {...t,player:alias.name,club:alias.team||t.club||'',position:alias.position||t.position||''};
+    });
+    // Exact transfer duplicates only; never collapse a buy and a sale.
+    const seen=new Set();
+    row.transfers=row.transfers.filter(t=>{
+      const k=v218TransferKey(t);
+      if(seen.has(k))return false;
+      seen.add(k); return true;
+    });
+  }
+  // Player cards: collapse only the three explicitly confirmed aliases.
+  const byName=new Map();
+  const next=[];
+  for(const p of data.players||[]){
+    const alias=resolveV218ConfirmedAlias(p.name);
+    const q=alias?{...p,name:alias.name,team:alias.team||p.team||'',position:alias.position||p.position||''}:p;
+    const k=v218AliasKey(q.name);
+    if(byName.has(k)){
+      const keep=byName.get(k);
+      Object.assign(keep,{
+        team:keep.team||q.team||'',
+        position:keep.position||q.position||'',
+        marketValue:Number(keep.marketValue)||Number(q.marketValue)||0
+      });
+    }else{
+      byName.set(k,q); next.push(q);
+    }
+  }
+  data.players=next;
+}
+
+function v218BuildFinanceBaseline(){
+  // Preserve non-transfer finance entries only for audit, but rebuild the active budget baseline
+  // from the verified current Kickbase balance to avoid carrying legacy double bookings.
+  data.financeArchiveV217=structuredClone(data.finances||[]);
+  data.finances=[
+    {id:'v218-start',date:'2026-08-01',type:'Startkapital',description:'Startkapital',amount:200000000,source:'2.1.8'},
+    {id:'v218-login',date:'2026-08-17',type:'Kickbase-Bonus',description:'15 Auflaufprämien (10k…90k + 6×100k)',amount:V218_LOGIN_BONUS_TOTAL,source:'2.1.8'},
+    {id:'v218-lucky-hand',date:'2026-08-17',type:'Kickbase-Erfolg',description:'Glückliches Händchen – bereits erreicht (Saison 2026/27, gesperrt)',amount:0,source:'2.1.8',locked:true},
+    {id:'v218-unexplained',date:'2026-08-17',type:'Kickbase-Bonus',description:'Ungeklärte Kickbase-Boni/Erfolge – Bestandsabgleich',amount:V218_UNEXPLAINED_BONUS_TOTAL,source:'2.1.8'}
+  ];
+  // Recreate all own transfer cash flows from the clean single source.
+  const own=managerLeagueData('me');
+  for(const t of own.transfers||[]){
+    const amt=(String(t.type).toLowerCase()==='kauf'?-1:1)*(Number(t.price)||0);
+    data.finances.push({
+      id:`v218-transfer-${t.id}`,
+      date:t.date||'2026-08-17',
+      type:String(t.type).toLowerCase()==='kauf'?'Spielerkauf':'Spielerverkauf',
+      description:`${t.type} ${v218CanonicalPlayerName(t.player)}`,
+      amount:amt,
+      transferId:t.id,
+      source:'2.1.8 transfer single source'
+    });
+  }
+  // Final reconciliation entry is deliberately explicit/auditable.
+  const calculated=data.finances.reduce((s,x)=>s+(Number(x.amount)||0),0);
+  const delta=V218_VERIFIED_BUDGET-calculated;
+  if(delta){
+    data.finances.push({
+      id:'v218-balance-reconciliation',date:'2026-08-17',type:'Kickbase-Bonus',
+      description:'Ungeklärte Kickbase-Boni/Erfolge – verifizierter Kontostand-Abgleich',
+      amount:delta,source:'2.1.8 verified balance'
+    });
+  }
+  data.ui=data.ui||{};
+  data.ui.v218VerifiedBudget=V218_VERIFIED_BUDGET;
+  data.ui.v218LuckyHandLocked=true;
+  data.ui.v218LuckyHandSeason='2026/27';
+}
+
+function v218TransferCounterparty(t){
+  const m=String(t?.note||'').match(/Gegenpartei:\s*(.+)$/i);
+  return m?m[1].trim():'';
+}
+function v218FindLastKickbaseBuy(transfers,sale){
+  const name=v218AliasKey(v218CanonicalPlayerName(sale.player));
+  const saleDate=String(sale.date||'9999-12-31');
+  const candidates=(transfers||[]).filter(t=>
+    String(t.type).toLowerCase()==='kauf' &&
+    v218AliasKey(v218CanonicalPlayerName(t.player))===name &&
+    String(t.date||'')<=saleDate &&
+    /kickbase/i.test(v218TransferCounterparty(t)||'Kickbase')
+  ).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+  return candidates[0]||null;
+}
+function v218ExpectedRepeatableBonus(profit){
+  if(profit>=25000000)return {amount:2000000,label:'Transfererfolg ≥25 Mio. Gewinn'};
+  if(profit>=10000000)return {amount:1000000,label:'Transfererfolg ≥10 Mio. Gewinn'};
+  if(profit>=5000000)return {amount:500000,label:'Transfererfolg ≥5 Mio. Gewinn'};
+  if(profit>=3000000)return {amount:250000,label:'Transfererfolg ≥3 Mio. Gewinn'};
+  return null;
+}
+function v218SyncAutomaticTransferBonuses(){
+  const own=managerLeagueData('me');
+  data.finances=(data.finances||[]).filter(x=>x.source!=='2.1.8 automatic transfer bonus');
+  for(const sale of own.transfers||[]){
+    if(String(sale.type).toLowerCase()!=='verkauf')continue;
+    const cp=v218TransferCounterparty(sale);
+    if(cp && !/kickbase/i.test(cp))continue; // manager-to-manager does not qualify
+    const buy=v218FindLastKickbaseBuy(own.transfers,sale);
+    if(!buy)continue;
+    const profit=(Number(sale.price)||0)-(Number(buy.price)||0);
+    const bonus=v218ExpectedRepeatableBonus(profit);
+    if(!bonus)continue;
+    data.finances.push({
+      id:`v218-auto-bonus-${sale.id}`,date:sale.date||'2026-08-17',type:'Kickbase-Erfolg',
+      description:`${bonus.label}: ${v218CanonicalPlayerName(sale.player)}`,
+      amount:bonus.amount,transferId:sale.id,buyTransferId:buy.id,profit,
+      source:'2.1.8 automatic transfer bonus'
+    });
+  }
+}
+
+function applyV218Migration(){
+  data.ui=data.ui||{};
+  if(data.ui.v218Applied)return;
+  data.ui.v218Backup={
+    at:new Date().toISOString(),
+    players:structuredClone(data.players||[]),
+    finances:structuredClone(data.finances||[]),
+    leagueManagerData:structuredClone(data.leagueIntel?.managerData||{})
+  };
+  v218MergeConfirmedPlayerDuplicates();
+  v218BuildFinanceBaseline();
+  // Existing historical repeatable bonuses are intentionally not inferred twice.
+  // Automatic bonus calculation applies from the verified 2.1.8 baseline onward.
+  data.ui.v218BonusAutomationFrom='2026-08-17T20:37:00+02:00';
+  data.ui.v218Applied=true;
+  localStorage.setItem('kickbaseCoachV07',JSON.stringify(data));
+  if(window.cloudQueueSave)setTimeout(()=>window.cloudQueueSave(),1600);
+}
+
+
 function render(){
   applyV217CleanTransferRebuild();
+  applyV218Migration();
+  // Recalculate repeatable Kickbase transfer bonuses for transactions added after the 2.1.8 baseline.
+  try{
+    const own=managerLeagueData('me');
+    const hasNew=(own.transfers||[]).some(t=>!String(t.id||'').startsWith('v217-me-'));
+    if(hasNew)v218SyncAutomaticTransferBonuses();
+  }catch(e){console.warn('2.1.8 bonus sync',e)}
   applyV212TransferSingleSourceMigration();
   applyV213SmartTransferMigration();
   applyV214CanonicalMigration();
