@@ -1,0 +1,15 @@
+VERSION 2.2.1 – ROSTER-AWARE SCREENSHOT IMPORT
+
+- Aufstellungsscreenshots werden gegen die aktuellen Kader aller Manager abgeglichen.
+- Ein klarer 11er-Kaderabgleich hat Vorrang vor einem widersprüchlichen OCR/AI-Teamnamen.
+- Die Trefferquote je Manager ist in einer Diagnose aufklappbar.
+- Spieler werden zuerst im aktuellen Kader des Ziel-Managers gesucht.
+- Abgeschnittene/OCR-Namen wie „Fernán…“ können dadurch über den bekannten Kader eindeutig werden.
+- Bundesliga-Master bleibt der zweite Fallback.
+- Bestätigte Kickbase-Spielerpositionen haben im Screenshot-Import Vorrang.
+- Olise und Beste bleiben dadurch Mittelfeldspieler; Erevbenagie bleibt Stürmer.
+- Wird der Ziel-Manager manuell geändert, erfolgt beim Übernehmen eine neue Auflösung gegen genau diesen Kader.
+- Team und Position stammen anschließend aus derselben Spieleridentität.
+- Bei schwachem Kaderabgleich wird kein Manager erzwungen.
+- Keine Änderung an Transfers, Budget, Boni, Coach-Scoring oder bestehenden Aufstellungen.
+- config.js bleibt unverändert.

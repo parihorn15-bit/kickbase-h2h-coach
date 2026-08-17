@@ -4937,11 +4937,99 @@ function screenshotAliasFallbackV216b(raw){
   return p?{...p,matched:true,ambiguous:false,confidence:.94,reason:'2.1.7 Alias-Fallback (Master-Sync noch offen)'}:null;
 }
 
+
+function screenshotManagerRosterV221(managerId){
+  if(managerId==='me'){
+    return (activePlayers()||[]).map(p=>({
+      id:p.id,name:p.name,team:p.team||'',position:lineupPositionOf(p)||p.position||'',
+      source:'current-own-roster'
+    }));
+  }
+  return (opponentRoster(managerId,+data.settings.currentMd||1)||[]).map(p=>({
+    id:p.id,name:p.name,team:p.team||'',position:normalizedOpponentPosition(p.position)||p.position||'',
+    source:'current-opponent-roster'
+  }));
+}
+function v221RosterCandidateScore(raw,player){
+  const needle=v216Compact(String(raw||'').replace(/\.{2,}$/,''));
+  if(!needle)return 0;
+  const full=v216Compact(player?.name||''),words=v216Words(player?.name||''),surname=words.at(-1)||'';
+  if(!full)return 0;
+  if(full===needle||surname===needle)return 1;
+  if(full.startsWith(needle)||surname.startsWith(needle))return needle.length>=6?.98:needle.length>=4?.93:.82;
+  const target=surname||full,d=v216EditDistance(needle,target),ratio=1-d/Math.max(needle.length,target.length,1);
+  if(d===1&&Math.min(needle.length,target.length)>=5)return .95;
+  if(d<=2&&Math.min(needle.length,target.length)>=7&&ratio>=.72)return .88;
+  return 0;
+}
+function resolveScreenshotPlayerAgainstRosterV221(input,managerId){
+  if(!managerId)return null;
+  const raw=String(input||'').trim();
+  const scored=screenshotManagerRosterV221(managerId).map(p=>({p,score:v221RosterCandidateScore(raw,p)}))
+    .filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
+  const best=scored[0],second=scored[1];
+  if(!best)return null;
+  if(second&&second.score>=best.score-.035)return {matched:false,ambiguous:true,confidence:best.score,reason:'Manager-Kader: mehrere ähnliche Treffer',candidates:scored.slice(0,4).map(x=>x.p.name)};
+  if(best.score<.82)return null;
+  return {...best.p,matched:true,ambiguous:false,confidence:best.score,reason:`Manager-Kader: ${best.score>=.98?'eindeutig':'OCR/Abkürzung aufgelöst'}`};
+}
+function scoreScreenshotManagerByLineupV221(lineup,managerId){
+  const entries=Array.isArray(lineup)?lineup:[],roster=screenshotManagerRosterV221(managerId);
+  if(!entries.length||!roster.length)return {managerId,score:0,matches:0,strong:0,total:entries.length,rosterSize:roster.length,details:[],coverage:0};
+  let score=0,matches=0,strong=0;const details=[],used=new Set();
+  for(const entry of entries){
+    const raw=typeof entry==='string'?entry:String(entry?.player||entry?.name||'');
+    const ranked=roster.map((p,index)=>({p,index,s:v221RosterCandidateScore(raw,p)}))
+      .filter(x=>x.s>=.78&&!used.has(x.index)).sort((a,b)=>b.s-a.s);
+    const best=ranked[0];
+    if(!best){details.push({raw,match:'',score:0});continue}
+    used.add(best.index);matches++;if(best.s>=.93)strong++;
+    score+=best.s>=.98?12:best.s>=.93?10:7;
+    details.push({raw,match:best.p.name,score:best.s});
+  }
+  const coverage=entries.length?matches/entries.length:0;
+  score+=coverage*35;
+  if(strong>=7)score+=25;
+  if(matches>=9)score+=30;
+  return {managerId,score,matches,strong,total:entries.length,rosterSize:roster.length,details,coverage};
+}
+function inferScreenshotManagerV221(d){
+  const lineup=Array.isArray(d?.lineup)?d.lineup:[],aiManagerId=resolveScreenshotManagerV216b(d?.manager||'');
+  const ranked=LEAGUE_MANAGERS.map(m=>scoreScreenshotManagerByLineupV221(lineup,m.id)).sort((a,b)=>b.score-a.score);
+  const best=ranked[0],second=ranked[1];
+
+  if(best&&best.matches>=6&&best.coverage>=.55&&(!second||best.score-second.score>=18)){
+    return {managerId:best.managerId,method:'Kaderabgleich',confidence:Math.min(.99,.72+best.coverage*.25),rosterMatch:best,aiManagerId,ranked};
+  }
+  if(best&&best.matches>=9&&best.coverage>=.8){
+    return {managerId:best.managerId,method:'Kaderabgleich',confidence:.99,rosterMatch:best,aiManagerId,ranked};
+  }
+  if(aiManagerId){
+    const aiScore=ranked.find(x=>x.managerId===aiManagerId);
+    if(!best||best.matches<4||aiScore?.score>=best.score-10){
+      return {managerId:aiManagerId,method:'sichtbarer Managername',confidence:.9,rosterMatch:aiScore||null,aiManagerId,ranked};
+    }
+  }
+  return {managerId:'',method:'nicht eindeutig',confidence:0,rosterMatch:best||null,aiManagerId,ranked};
+}
+
 function resolveScreenshotPlayerV216(input,context={}){
   const raw=String(input||'').trim();
   if(!raw)return {matched:false,confidence:0,reason:'Kein Spielername'};
+  const rosterMatch=resolveScreenshotPlayerAgainstRosterV221(raw,context.managerId||'');
+  if(rosterMatch?.matched)return rosterMatch;
+  if(rosterMatch?.ambiguous)return rosterMatch;
+
+  const kb=v219bKickbaseMetadata(raw);
+  if(kb)return {...kb,matched:true,ambiguous:false,confidence:.99,reason:'Bestätigte Kickbase-Spielerdaten'};
+
   const exact=resolveShortNameAgainstLocalMasters(raw,context);
-  if(exact.matched)return {...exact,confidence:Math.max(.96,Number(exact.confidence)||0),reason:`Master: ${exact.reason||'eindeutig'}`};
+  if(exact.matched){
+    const confirmed=v219bKickbaseMetadata(exact.name);
+    return confirmed
+      ? {...exact,...confirmed,matched:true,confidence:Math.max(.98,Number(exact.confidence)||0),reason:'Master + bestätigte Kickbase-Position'}
+      : {...exact,confidence:Math.max(.96,Number(exact.confidence)||0),reason:`Master: ${exact.reason||'eindeutig'}`};
+  }
 
   const needle=v216Compact(raw.replace(/\.{2,}$/,''));
   if(needle.length<3)return {matched:false,confidence:0,reason:'Name zu kurz'};
@@ -4974,7 +5062,10 @@ function resolveScreenshotPlayerV216(input,context={}){
       candidates:scored.slice(0,4).map(x=>x.p.name)};
   }
   if(best.score<.84)return {matched:false,confidence:best.score,reason:'Treffer zu unsicher',candidates:[best.p.name]};
-  return {...best.p,matched:true,ambiguous:false,confidence:best.score,reason:`Screenshot v2: ${best.method}`};
+  const confirmed=v219bKickbaseMetadata(best.p.name);
+  return confirmed
+    ? {...best.p,...confirmed,matched:true,ambiguous:false,confidence:best.score,reason:`Screenshot v2 + Kickbase-Metadaten: ${best.method}`}
+    : {...best.p,matched:true,ambiguous:false,confidence:best.score,reason:`Screenshot v2: ${best.method}`};
 }
 
 function resolveScreenshotManagerV216b(value){
@@ -5006,15 +5097,19 @@ function resolveLineupV216(lineup,managerId=''){
   return (Array.isArray(lineup)?lineup:[]).map((entry,i)=>{
     const raw=typeof entry==='string'?entry:String(entry?.player||entry?.name||'');
     const r=resolveScreenshotPlayerV216(raw,{managerId});
+    const kb=r.matched?v219bKickbaseMetadata(r.name):null;
     return {index:i,raw,resolved:r.matched?r.name:raw,matched:Boolean(r.matched),
       confidence:Number(r.confidence)||0,reason:r.reason||'',candidates:r.candidates||[],
-      team:r.team||'',position:canonicalLineupPosition(r.position)||''};
+      team:canonicalClubName(kb?.team||r.team||''),
+      position:canonicalLineupPosition(kb?.position||r.position)||''};
   });
 }
 
 function aiKey(t){return `${normalizePlayerName(t.player||'')}|${String(t.type||'').toLowerCase()}`}
 function renderScreenshotAiResult(result){
- const d=result?.data||{},ts=Array.isArray(d.transfers)?d.transfers:[],recognizedManagerId=resolveScreenshotManagerV216b(d.manager||''),managerId=recognizedManagerId||'',row=managerId?managerLeagueData(managerId):null,existing=Array.isArray(row?.transfers)?row.transfers:[];
+ const d=result?.data||{},ts=Array.isArray(d.transfers)?d.transfers:[];
+ const managerInference=inferScreenshotManagerV221(d);
+ const recognizedManagerId=managerInference.managerId||'',managerId=recognizedManagerId||'',row=managerId?managerLeagueData(managerId):null,existing=Array.isArray(row?.transfers)?row.transfers:[];
  const items=ts.map((t,i)=>{
    const canonical=resolveScreenshotPlayerV216(t.player,{managerId});
    if(canonical.matched)t={...t,player:canonical.name};
@@ -5040,13 +5135,19 @@ function renderScreenshotAiResult(result){
  });
  const screenshotType=classifyScreenshotResultV216(d);
  const lineupReview=resolveLineupV216(d.lineup,managerId);
- screenshotImportReview={managerId,recognizedManagerId,screenshotType,lineupReview,lineup:lineupReview.filter(x=>x.matched&&x.confidence>=.84).map(x=>x.resolved),items};
+ screenshotImportReview={managerId,recognizedManagerId,screenshotType,managerInference,lineupReview,lineup:lineupReview.filter(x=>x.matched&&x.confidence>=.84).map(x=>x.resolved),items};
  const r=screenshotImportReview,target=$('#screenshotImportResult');if(!target)return;
  const label=x=>x==='new'?'NEU':x==='update'?'ÄNDERN':x==='unchanged'?'UNVERÄNDERT':'PRÜFEN';
  const ref=screenshotReferenceInfo();
- target.innerHTML=`<div class="screenshot-result-head"><div><span>SCREENSHOT ENGINE 2.1.9 · ${esc(r.screenshotType)}</span><h4>${esc(d.manager||'Manager nicht erkannt')}</h4></div><strong>${r.items.length} Transfers${r.lineupReview?.length?` · ${r.lineupReview.length} Aufstellungsplätze`:''}</strong></div>
+ const inferredManager=managerId?managerById(managerId):null;
+ const rosterEvidence=r.managerInference?.rosterMatch;
+ const managerDetail=managerId
+   ? `${esc(r.managerInference?.method||'Zuordnung')} · ${Math.round((r.managerInference?.confidence||0)*100)}%${rosterEvidence?.total?` · ${rosterEvidence.matches}/${rosterEvidence.total} Spieler passen zum aktuellen Kader`:''}${r.managerInference?.aiManagerId&&r.managerInference.aiManagerId!==managerId?` · Screenshot-Text "${esc(d.manager||'')}" wegen Kaderwiderspruch verworfen`:''}`
+   : `Keine eindeutige Manager-Zuordnung${rosterEvidence?.total?` · bester Kaderabgleich ${rosterEvidence.matches}/${rosterEvidence.total}`:''}`;
+ target.innerHTML=`<div class="screenshot-result-head"><div><span>SCREENSHOT ENGINE 2.2.1 · ${esc(r.screenshotType)}</span><h4>${inferredManager?esc(inferredManager.team):esc(d.manager||'Manager nicht erkannt')}</h4></div><strong>${r.items.length} Transfers${r.lineupReview?.length?` · ${r.lineupReview.length} Aufstellungsplätze`:''}</strong></div>
  <div class="ai-reference-date ${ref.trusted?'trusted':'uncertain'}"><b>Screenshot-Referenz:</b> ${esc(localIsoDateFromDate(ref.ref)||'unbekannt')} ${ref.trusted?'· tagesaktuell erkannt':'· nicht als tagesaktuell bestätigt – Transferdaten werden nicht automatisch gesetzt'}</div>
- <div class="ai-manager-assignment ${managerId?'confirmed':'uncertain'}"><label>Ziel-Manager für diesen Import</label><select id="aiTargetManager"><option value="">Bitte Manager auswählen…</option>${aiManagerOptions(managerId)}</select><small>${managerId?`AI erkannt: ${esc(d.manager||'')} – bitte vor Übernahme prüfen.`:'AI konnte den Manager nicht eindeutig erkennen. Manuelle Auswahl ist erforderlich.'}</small></div>
+ <div class="ai-manager-assignment ${managerId?'confirmed':'uncertain'}"><label>Ziel-Manager für diesen Import</label><select id="aiTargetManager"><option value="">Bitte Manager auswählen…</option>${aiManagerOptions(managerId)}</select><small>${managerDetail}</small></div>
+ ${r.managerInference?.ranked?.length?`<details class="ai-manager-diagnostics"><summary>Manager-Kaderabgleich anzeigen</summary><small>${r.managerInference.ranked.map(s=>`${esc(managerById(s.managerId)?.team||s.managerId)}: ${s.matches}/${s.total||0} Treffer · Score ${Math.round(s.score)}`).join(' · ')}</small></details>`:''}
  <div class="screenshot-result-list">${r.items.map(x=>`<article class="ai-review-row smart ${x.action}">
    <label><input type="checkbox" data-ai="${x.id}" ${x.selected?'checked':''} ${x.action==='unchanged'?'disabled':''}></label>
    <div class="ai-player-main"><b>${esc(x.t.player||'Unbekannt')}</b><small>${esc(x.t.type||'')} · ${x.club?esc(x.club):'Verein unbekannt'}</small><small>${x.derivedDate?`Transferdatum ${esc(x.derivedDate)}`:'Transferdatum offen'}${x.t.relative_time?` · ${esc(x.t.relative_time)}`:''}</small><small class="ai-match-reason">${esc(x.matchReason)}</small><small class="ai-match-reason">Spieler-ID: ${Math.round((Number(x.t.identityConfidence)||0)*100)}% · ${esc(x.t.identityReason||'nicht aufgelöst')}${x.t.identityCandidates?.length?` · Kandidaten: ${esc(x.t.identityCandidates.join(', '))}`:''}</small></div>
@@ -5176,7 +5277,8 @@ async function commitAiReview(){
       const name=String($(`[data-ai-lineup-name="${x.index}"]`)?.value||x.resolved||x.raw||'').trim();
       const manualPos=String($(`[data-ai-lineup-pos="${x.index}"]`)?.value||'').trim();
       const resolved=resolveScreenshotPlayerV216(name,{managerId:targetManagerId});
-      return {name:resolved.matched?resolved.name:name,team:resolved.team||x.team||'',position:manualPos||canonicalLineupPosition(resolved.position)||x.position||''};
+      const kb=resolved.matched?v219bKickbaseMetadata(resolved.name):null;
+      return {name:resolved.matched?resolved.name:name,team:canonicalClubName(kb?.team||resolved.team||x.team||''),position:manualPos||canonicalLineupPosition(kb?.position||resolved.position)||x.position||''};
     }).filter(x=>x.name);
     if(targetManagerId==='me'){
       const active=activePlayers(),ids=[],unresolved=[];
