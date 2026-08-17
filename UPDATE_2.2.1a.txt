@@ -1,0 +1,12 @@
+2.2.1a – LINEUP COMMIT FIX
+
+- Behebt den Fehler: Screenshot-Vorschau 11/11 korrekt, Spielfeld danach trotzdem 0/11.
+- Transfer-Single-Source wird jetzt VOR der Ermittlung der finalen Spieler-IDs synchronisiert.
+- Danach werden alle 11 Spieler erneut gegen den aktiven eigenen Kader aufgelöst.
+- Kickbase-Positionen werden beim Commit erneut autoritativ gesetzt.
+- Die komplette Formation wird vor dem Speichern validiert.
+- Es werden exakt die IDs gespeichert, die die Kader-/Spielfeldseite anschließend verwendet.
+- Nach dem Schreiben erfolgt eine zweite 11/11-In-Memory-Prüfung.
+- Bei Fehlern wird nicht still gespeichert, sondern der Import mit konkreter Meldung abgebrochen.
+- Formation (z. B. 5-4-1) wird beim Screenshot-Import mitgespeichert.
+- Die funktionierende 2.2.1 Screenshot-Erkennung/Kaderzuordnung bleibt unverändert.

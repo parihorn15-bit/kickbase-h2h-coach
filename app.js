@@ -5191,6 +5191,63 @@ function renderScreenshotAiResult(result){
    screenshotImportSelection=[];window.h2hAiImportBusy=false;target.innerHTML='';restoreScreenshotImportUi()
  };
 }
+
+function commitOwnScreenshotLineupV221a(corrected,md=data.settings.currentMd){
+  // Synchronize first. The lineup must reference the final active-player IDs,
+  // not IDs captured before the transfer single-source synchronization.
+  syncTransferSingleSource();
+
+  const active=activePlayers();
+  const ids=[];
+  const unresolved=[];
+
+  for(const x of corrected){
+    const resolved=resolveScreenshotPlayerV216(x.name,{managerId:'me'});
+    const canonicalName=String(resolved.matched?resolved.name:x.name||'').trim();
+    const player=active.find(p=>sameCanonicalIdentity(p.name,canonicalName,{managerId:'me'}));
+
+    if(!player){
+      unresolved.push(canonicalName||x.name);
+      continue;
+    }
+
+    const kb=v219bKickbaseMetadata(player.name);
+    const position=canonicalLineupPosition(kb?.position||x.position||resolved.position||player.kickbasePosition||player.position);
+    if(position){
+      player.position=position;
+      player.kickbasePosition=position;
+    }else{
+      repairPlayerPositionV219(player);
+    }
+
+    if(!ids.includes(player.id))ids.push(player.id);
+  }
+
+  if(unresolved.length)return {ok:false,ids:[],unresolved,message:`Nicht im eigenen Kader gefunden: ${unresolved.join(', ')}`};
+  if(ids.length!==11)return {ok:false,ids,unresolved:[],message:`Aufstellung enthält nach Zuordnung nur ${ids.length}/11 eindeutige Spieler.`};
+
+  const validation=lineupValidation(ids,{complete:true});
+  if(!validation.ok)return {ok:false,ids,unresolved:[],message:validation.message||'Aufstellung ist nicht gültig.'};
+
+  const record=mdRecord(+md||1);
+  record.lineup=[...ids];
+  record.lineupInheritedFrom=null;
+  record.lineupInheritedAt=null;
+  record.lineupScreenshotImportedAt=new Date().toISOString();
+
+  const formation=exactFormation(record.lineup);
+  record.formation=formation?.code||'';
+
+  // Verify against the exact source the squad page uses.
+  const activeIds=new Set(activePlayers().map(p=>p.id));
+  const persisted=record.lineup.filter(id=>activeIds.has(id));
+  if(persisted.length!==11){
+    return {ok:false,ids:persisted,unresolved:[],message:`Interne Aufstellungsprüfung fehlgeschlagen (${persisted.length}/11 aktive Spieler).`};
+  }
+
+  return {ok:true,ids:persisted,formation:record.formation};
+}
+
 async function commitAiReview(){
   const r=screenshotImportReview;
   if(!r){toast('Keine AI-Vorschau vorhanden');return}
@@ -5281,17 +5338,16 @@ async function commitAiReview(){
       return {name:resolved.matched?resolved.name:name,team:canonicalClubName(kb?.team||resolved.team||x.team||''),position:manualPos||canonicalLineupPosition(kb?.position||resolved.position)||x.position||''};
     }).filter(x=>x.name);
     if(targetManagerId==='me'){
-      const active=activePlayers(),ids=[],unresolved=[];
-      for(const x of corrected){
-        const p=active.find(p=>sameCanonicalIdentity(p.name,x.name,{managerId:'me'}));
-        if(p){if(x.position)p.position=x.position;else repairPlayerPositionV219(p);ids.push(p.id)}
-        else unresolved.push(x.name);
+      const ownLineupCommit=commitOwnScreenshotLineupV221a(corrected,+data.settings.currentMd||1);
+      if(!ownLineupCommit.ok){
+        window.h2hAiImportBusy=false;
+        if(btn){btn.disabled=false;btn.textContent='Erneut prüfen'}
+        const status=$('#screenshotImportStatus');
+        if(status)status.textContent=ownLineupCommit.message;
+        toast(ownLineupCommit.message);
+        return;
       }
-      if(unresolved.length){
-        window.h2hAiImportBusy=false;if(btn){btn.disabled=false;btn.textContent='Erneut prüfen'}
-        toast(`Nicht im eigenen Kader gefunden: ${unresolved.join(', ')}`);return;
-      }
-      mdRecord(+data.settings.currentMd||1).lineup=[...new Set(ids)].slice(0,11);
+      r.committedOwnLineup={ids:[...ownLineupCommit.ids],formation:ownLineupCommit.formation||''};
     }else{
       const mdRow=managerMatchdayData(targetManagerId,+data.settings.currentMd||1);
       mdRow.lineup=[...new Set(corrected.map(x=>x.name))].slice(0,11);
@@ -5305,7 +5361,22 @@ async function commitAiReview(){
 
   resetOpponentRosterCache();
   resetOpponentAnalysisCache();
-  syncTransferSingleSource();
+  if(targetManagerId!=='me')syncTransferSingleSource();
+
+  // Verify lineup and transfers in memory before saving.
+  if(wantsLineup&&targetManagerId==='me'){
+    const record=mdRecord(+data.settings.currentMd||1);
+    const activeIds=new Set(activePlayers().map(p=>p.id));
+    const validIds=(record.lineup||[]).filter(id=>activeIds.has(id));
+    if(validIds.length!==11){
+      window.h2hAiImportBusy=false;
+      if(btn){btn.disabled=false;btn.textContent='Erneut versuchen'}
+      const status=$('#screenshotImportStatus');
+      if(status)status.textContent=`Aufstellungsprüfung fehlgeschlagen: ${validIds.length}/11 Spieler im gespeicherten Kader gefunden.`;
+      toast('Aufstellung nicht gespeichert');
+      return;
+    }
+  }
 
   // Verify in memory before saving.
   const verification=committed.filter(c=>c.mode!=='unchanged').every(c=>
@@ -5365,7 +5436,8 @@ async function commitAiReview(){
 
   setTimeout(()=>{
     const status=$('#screenshotImportStatus');
-    const text=`Import bestätigt: ${manager?.team||targetManagerId} · ${added} neu · ${updated} geändert · ${unchanged} bereits vorhanden · ${beforeCount} → ${afterCount} Transfers${cloudSaved?' · Cloud gespeichert':' · lokal gespeichert'}`;
+    const lineupText=wantsLineup?` · Aufstellung 11/11${r.committedOwnLineup?.formation?` · ${r.committedOwnLineup.formation}`:''}`:'';
+    const text=`Import bestätigt: ${manager?.team||targetManagerId} · ${added} neu · ${updated} geändert · ${unchanged} bereits vorhanden · ${beforeCount} → ${afterCount} Transfers${lineupText}${cloudSaved?' · Cloud gespeichert':' · lokal gespeichert'}`;
     if(status)status.textContent=text;
     toast(`${added} neu · ${updated} geändert`);
   },80);
