@@ -1,0 +1,11 @@
+VERSION 2.1.6b – MANAGER + POSCH MATCHING
+
+Behoben:
+- Screenshot-Manager wird jetzt gegen ALLE Ligamanager abgeglichen, inklusive eigenem Team.
+- "HORN CAPITAL FC" kann dadurch automatisch "Horn Capital FC · Ich" zugeordnet werden.
+- Konservativer OCR/Containment-Fallback nur bei eindeutigem Manager-Kandidaten.
+- POSCH erhält einen expliziten, screenshot-bestätigten Fallback auf Stefan Posch · 1. FSV Mainz 05 · Abwehr,
+  falls der aktuelle football-data/Supabase-Master ihn vorübergehend nicht liefert.
+- Kauf-/Verkauf-Interpretation wurde NICHT verändert.
+- Keine automatische Speicherung; Review/Bestätigung bleibt bestehen.
+- config.js ist nicht enthalten.

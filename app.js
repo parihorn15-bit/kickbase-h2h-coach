@@ -1376,7 +1376,7 @@ function renderDirectHandlerTrace(){
   const box=document.createElement('div');
   box.id='directHandlerTrace';
   box.style.cssText='margin-top:10px;padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:10px;display:grid;gap:6px';
-  box.innerHTML=`<b>DIRECT HANDLER TRACE 2.1.6a</b><small>Direkter Vergleich: Master-Resolver → lokaler Resolver. Keine Daten werden verändert.</small>${traces.map(t=>{
+  box.innerHTML=`<b>DIRECT HANDLER TRACE 2.1.6b</b><small>Direkter Vergleich: Master-Resolver → lokaler Resolver. Keine Daten werden verändert.</small>${traces.map(t=>{
     const mr=t.masterResult||{}, lr=t.localResult||{};
     const mc=mr.matched?`${mr.name||'—'} · ${mr.team||'—'} · ${mr.reason||''}`:`OFFEN · ${mr.reason||'—'}`;
     const lc=lr.matched?`${lr.name||'—'} · ${lr.team||'—'} · ${lr.reason||''}`:`OFFEN · ${lr.reason||'—'}`;
@@ -1645,7 +1645,7 @@ function previewV215sCanonicalCleanup(){
     if(!result?.ok)return result||{ok:false,message:'Vorschau fehlgeschlagen.'};
     return {...result,preview:true,isolated:true};
   }catch(e){
-    console.error('2.1.6a isolated preview failed',e);
+    console.error('2.1.6b isolated preview failed',e);
     return {ok:false,message:String(e?.message||e)};
   }finally{
     data=liveData;
@@ -2378,7 +2378,7 @@ function transfers(){
   }).join('');
   return `<section class="card screenshot-import-card" style="margin-bottom:17px">
     <div class="screenshot-import-copy">
-      <span class="eyebrow">SCREENSHOT ENGINE 2.1.6aa</span>
+      <span class="eyebrow">SCREENSHOT ENGINE 2.1.6ba</span>
       <h3>📷 Screenshot auswerten</h3>
       <p>Transfer- oder Aufstellungsscreenshot auswählen. Die App erkennt den Typ automatisch, gleicht Spielernamen mit dem Bundesliga-Master ab und zeigt zuerst eine prüfbare Vorschau. Unsichere Treffer werden nicht automatisch übernommen.</p>
     </div>
@@ -3422,7 +3422,7 @@ function competition(){
   const content=tab==='schedule'?scheduleContent:tab==='teams'?tableContent:tab==='managers'?managerContent:tab==='timeline'?timelineContent:currentContent;
   return `<div class="league-redesign">
     <section class="card screenshot-import-card">
-      <div class="screenshot-import-copy"><span class="eyebrow">SCREENSHOT ENGINE 2.1.6aa</span><h3>Screenshot Import · 2.1.6aa</h3><p>Screenshot → kanonischer Spielerabgleich → Transferhistorie → aktueller Kader → Aufstellungsseite. Kurz-/Nachnamen werden mit bereits bekannten vollständigen Spielern zusammengeführt; Vereine und historische Daten werden bereinigt.</p></div>
+      <div class="screenshot-import-copy"><span class="eyebrow">SCREENSHOT ENGINE 2.1.6ba</span><h3>Screenshot Import · 2.1.6ba</h3><p>Screenshot → kanonischer Spielerabgleich → Transferhistorie → aktueller Kader → Aufstellungsseite. Kurz-/Nachnamen werden mit bereits bekannten vollständigen Spielern zusammengeführt; Vereine und historische Daten werden bereinigt.</p></div>
       <div class="screenshot-import-actions"><label class="btn secondary">Screenshots auswählen<input id="screenshotImportFiles" type="file" accept="image/*" multiple hidden></label><button type="button" class="btn" id="analyzeScreenshotFiles">Mit AI analysieren</button></div>
       <div id="screenshotImportStatus" class="screenshot-import-status">Noch keine Screenshots ausgewählt.</div><div class="ai-import-receipt">${data.ui?.lastAiImport?`Letzter Import: ${esc(managerById(data.ui.lastAiImport.managerId)?.team||data.ui.lastAiImport.managerId)} · ${data.ui.lastAiImport.added} neu · ${data.ui.lastAiImport.updated} geändert · ${data.ui.lastAiImport.beforeCount} → ${data.ui.lastAiImport.afterCount} Transfers · ${data.ui.lastAiImport.rosterAfter??'–'} im aktuellen Kader`:''}</div>
       <div id="aiUsageBox" class="ai-usage-box"></div><div id="screenshotImportResult" class="screenshot-import-result"></div>
@@ -4279,7 +4279,7 @@ function backfillTransferClubs(){
 }
 
 
-/* 2.1.6a Screenshot Engine v2
+/* 2.1.6b Screenshot Engine v2
    Vision extracts visible text/rows; this client performs deterministic Bundesliga identity resolution.
    Uncertain identities are never auto-selected. */
 function v216Words(value){
@@ -4310,6 +4310,16 @@ function v216PlayerCandidates(){
   }
   return [...seen.values()];
 }
+
+const SCREENSHOT_CANONICAL_ALIASES_V216B={
+  posch:{name:'Stefan Posch',team:'1. FSV Mainz 05',position:'Abwehr',source:'screenshot-confirmed-alias'}
+};
+function screenshotAliasFallbackV216b(raw){
+  const key=v216Compact(raw);
+  const p=SCREENSHOT_CANONICAL_ALIASES_V216B[key];
+  return p?{...p,matched:true,ambiguous:false,confidence:.94,reason:'2.1.6b Alias-Fallback (Master-Sync noch offen)'}:null;
+}
+
 function resolveScreenshotPlayerV216(input,context={}){
   const raw=String(input||'').trim();
   if(!raw)return {matched:false,confidence:0,reason:'Kein Spielername'};
@@ -4318,6 +4328,9 @@ function resolveScreenshotPlayerV216(input,context={}){
 
   const needle=v216Compact(raw.replace(/\.{2,}$/,''));
   if(needle.length<3)return {matched:false,confidence:0,reason:'Name zu kurz'};
+
+  const aliasFallback=screenshotAliasFallbackV216b(raw);
+  if(aliasFallback)return aliasFallback;
 
   const scored=[];
   for(const p of v216PlayerCandidates()){
@@ -4346,6 +4359,24 @@ function resolveScreenshotPlayerV216(input,context={}){
   if(best.score<.84)return {matched:false,confidence:best.score,reason:'Treffer zu unsicher',candidates:[best.p.name]};
   return {...best.p,matched:true,ambiguous:false,confidence:best.score,reason:`Screenshot v2: ${best.method}`};
 }
+
+function resolveScreenshotManagerV216b(value){
+  const q=v200Norm(value);
+  if(!q)return null;
+  const exact=LEAGUE_MANAGERS.find(m=>
+    [m.id,m.team,m.manager].map(v200Norm).some(x=>x===q)
+  );
+  if(exact)return exact.id;
+
+  // Conservative normalized containment fallback for OCR additions such as "Member".
+  const candidates=LEAGUE_MANAGERS.filter(m=>
+    [m.team,m.manager].map(v200Norm).some(x=>
+      x && q && x.length>=5 && q.length>=5 && (x.includes(q)||q.includes(x))
+    )
+  );
+  return candidates.length===1?candidates[0].id:null;
+}
+
 function classifyScreenshotResultV216(d){
   const transfers=Array.isArray(d?.transfers)?d.transfers:[];
   const lineup=Array.isArray(d?.lineup)?d.lineup:[];
@@ -4365,7 +4396,7 @@ function resolveLineupV216(lineup,managerId=''){
 
 function aiKey(t){return `${normalizePlayerName(t.player||'')}|${String(t.type||'').toLowerCase()}`}
 function renderScreenshotAiResult(result){
- const d=result?.data||{},ts=Array.isArray(d.transfers)?d.transfers:[],recognizedManagerId=v200ManagerId(d.manager||''),managerId=recognizedManagerId||'',row=managerId?managerLeagueData(managerId):null,existing=Array.isArray(row?.transfers)?row.transfers:[];
+ const d=result?.data||{},ts=Array.isArray(d.transfers)?d.transfers:[],recognizedManagerId=resolveScreenshotManagerV216b(d.manager||''),managerId=recognizedManagerId||'',row=managerId?managerLeagueData(managerId):null,existing=Array.isArray(row?.transfers)?row.transfers:[];
  const items=ts.map((t,i)=>{
    const canonical=resolveScreenshotPlayerV216(t.player,{managerId});
    if(canonical.matched)t={...t,player:canonical.name};
@@ -4395,7 +4426,7 @@ function renderScreenshotAiResult(result){
  const r=screenshotImportReview,target=$('#screenshotImportResult');if(!target)return;
  const label=x=>x==='new'?'NEU':x==='update'?'ÄNDERN':x==='unchanged'?'UNVERÄNDERT':'PRÜFEN';
  const ref=screenshotReferenceInfo();
- target.innerHTML=`<div class="screenshot-result-head"><div><span>SCREENSHOT ENGINE 2.1.6a · ${esc(r.screenshotType)}</span><h4>${esc(d.manager||'Manager nicht erkannt')}</h4></div><strong>${r.items.length} Transfers${r.lineupReview?.length?` · ${r.lineupReview.length} Aufstellungsplätze`:''}</strong></div>
+ target.innerHTML=`<div class="screenshot-result-head"><div><span>SCREENSHOT ENGINE 2.1.6b · ${esc(r.screenshotType)}</span><h4>${esc(d.manager||'Manager nicht erkannt')}</h4></div><strong>${r.items.length} Transfers${r.lineupReview?.length?` · ${r.lineupReview.length} Aufstellungsplätze`:''}</strong></div>
  <div class="ai-reference-date ${ref.trusted?'trusted':'uncertain'}"><b>Screenshot-Referenz:</b> ${esc(localIsoDateFromDate(ref.ref)||'unbekannt')} ${ref.trusted?'· tagesaktuell erkannt':'· nicht als tagesaktuell bestätigt – Transferdaten werden nicht automatisch gesetzt'}</div>
  <div class="ai-manager-assignment ${managerId?'confirmed':'uncertain'}"><label>Ziel-Manager für diesen Import</label><select id="aiTargetManager"><option value="">Bitte Manager auswählen…</option>${aiManagerOptions(managerId)}</select><small>${managerId?`AI erkannt: ${esc(d.manager||'')} – bitte vor Übernahme prüfen.`:'AI konnte den Manager nicht eindeutig erkennen. Manuelle Auswahl ist erforderlich.'}</small></div>
  <div class="screenshot-result-list">${r.items.map(x=>`<article class="ai-review-row smart ${x.action}">
@@ -4610,7 +4641,7 @@ async function analyzeSelectedScreenshots(){
         images,managerHint,
         screenshotReferenceAt:screenshotImportDraft.referenceAt,
         screenshotReferenceTrusted:screenshotImportDraft.referenceTrusted,
-        clientVersion:'2.1.6a',
+        clientVersion:'2.1.6b',
         requestedSchema:'kickbase-screenshot-v2',
         supportedScreenshotTypes:['transfers','lineup-own','lineup-manager','points-results'],
         extractionHint:'Return visible manager/team name, transfers (player,type,price,counterparty,relative_time,confidence) and lineup names when present. Preserve truncated/OCR text; do not invent full player names.'
@@ -5128,7 +5159,7 @@ function renderRawMasterDebug(){
 
   host.innerHTML=`
     <div style="margin-top:10px;padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:10px">
-      <b>RAW MASTER DEBUG 2.1.6a-debug</b><br>
+      <b>RAW MASTER DEBUG 2.1.6b-debug</b><br>
       <span>${total} rohe BUNDESLIGA_PLAYERS im Browser</span>
       <div style="margin-top:8px;display:grid;gap:6px">
         ${results.map(r=>`
@@ -5164,7 +5195,7 @@ function renderPersistentCleanupPreviewV215s(result){
   const unresolved=(result.unresolved||[]).slice(0,30);
   const merged=(result.mergedDetails||[]).slice(0,30);
   box.innerHTML=`
-    <div style="font-weight:800;font-size:15px;margin-bottom:6px">2.1.6a – ISOLIERTE VORSCHAU · KEINE DATENÄNDERUNG</div>
+    <div style="font-weight:800;font-size:15px;margin-bottom:6px">2.1.6b – ISOLIERTE VORSCHAU · KEINE DATENÄNDERUNG</div>
     <div><b>Master-Spieler:</b> ${result.masterPlayers||0}</div>
     <div><b>Namen:</b> ${result.renamed||0} · <b>Vereine:</b> ${result.clubs||0}</div>
     <div><b>Transfer-Dubletten:</b> ${result.mergedTransfers||0} · <b>Spieler-Dubletten:</b> ${result.mergedPlayers||0}</div>
