@@ -1,0 +1,9 @@
+VERSION 2.1.6a – SICHTBARER SCREENSHOT-WORKFLOW
+
+- Neuer sichtbarer Screenshot-Einstieg direkt auf der Transfers-Seite.
+- Screenshot auswählen → analysieren → automatische Typ-Erkennung → Vorschau.
+- Verwendet die bereits in 2.1.6 eingebaute Screenshot Engine V2.
+- Unsichere Spieler bleiben zur Prüfung markiert.
+- Kein automatisches Speichern ohne Bestätigung.
+- Bestehender Import in League Intelligence bleibt erhalten und nutzt dieselbe Engine.
+- config.js ist nicht enthalten.
