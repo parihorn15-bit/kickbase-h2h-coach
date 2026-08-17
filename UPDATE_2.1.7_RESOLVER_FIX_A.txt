@@ -1,0 +1,11 @@
+
+VERSION 2.1.7 – RESOLVER FIX A
+
+Gezielte bestätigte Spielerzuordnungen:
+- Posch -> Stefan Posch -> 1. FSV Mainz 05
+- Schwolow -> Alexander Schwolow -> 1. FSV Mainz 05
+- Götze -> Mario Götze -> Eintracht Frankfurt
+
+Die Alias-Tabelle wird vor Bundesliga-Master/Fallback geprüft.
+Keine Transferpreise, Daten, Transferanzahl oder Aufstellungen werden verändert.
+config.js ist nicht enthalten.

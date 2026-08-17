@@ -1317,7 +1317,39 @@ function buildLocalSurnameMasterMap(){
   return new Map([...bySurname].map(([k,v])=>[k,[...v.values()]]));
 }
 
+
+const V217_CONFIRMED_PLAYER_ALIASES={
+  'posch':{
+    name:'Stefan Posch',
+    team:'1. FSV Mainz 05',
+    position:'Abwehr',
+    reason:'2.1.7 bestätigte lokale Zuordnung'
+  },
+  'schwolow':{
+    name:'Alexander Schwolow',
+    team:'1. FSV Mainz 05',
+    position:'Tor',
+    reason:'2.1.7 bestätigte lokale Zuordnung'
+  },
+  'gotze':{
+    name:'Mario Götze',
+    team:'Eintracht Frankfurt',
+    position:'Mittelfeld',
+    reason:'2.1.7 manuell bestätigte Mehrdeutigkeitsauflösung'
+  }
+};
+
+function resolveV217ConfirmedAlias(name){
+  const key=String(name||'').toLocaleLowerCase('de-DE')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]/g,'');
+  const hit=V217_CONFIRMED_PLAYER_ALIASES[key];
+  return hit?{...hit,matched:true,confidence:1,source:'v217-confirmed-alias'}:null;
+}
+
 function resolveShortNameAgainstLocalMasters(name,context={}){
+  const confirmed=resolveV217ConfirmedAlias(name);
+  if(confirmed)return confirmed;
   const master=resolveAgainstBundesligaMaster(name,context);
   if(master.matched)return master;
   const raw=String(name||'').trim(),norm=canonicalFullKey(raw),parts=norm.split(/\s+/).filter(Boolean);
