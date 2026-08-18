@@ -3116,10 +3116,15 @@ function squad(){
   const active=activePlayers();
 
   // 2.2.3: visible lineup comes DIRECTLY from LIVE storage.
-  const directLive=resolveOwnLiveLineupIdsV222();
-  const displayLineup=directLive.ok?[...directLive.ids]:[];
+  const rawLive=readLiveLineupV1('me');
+  const displayLineup=[];
+  const displayNames=[];
+  for(const name of rawLive?.players||[]){
+    const p=active.find(player=>sameCanonicalIdentity(player.name,name,{managerId:'me'}));
+    if(p&&!displayLineup.includes(p.id)){displayLineup.push(p.id);displayNames.push(p.name)}
+  }
   r.lineup=[...displayLineup];
-  r.lineupNames=directLive.ok?[...directLive.players]:[];
+  r.lineupNames=[...displayNames];
 
   const recommended=coachOptimizedLineup(data.settings.currentMd).map(p=>p.id);
   const starters=displayLineup.map(pid=>active.find(p=>p.id===pid)).filter(Boolean);
@@ -5627,7 +5632,7 @@ function commitOwnScreenshotLineupV221a(corrected,md=data.settings.currentMd){
 }
 
 
-async function commitScreenshotLineupDirectV223(){
+async function commitScreenshotLineupDirectV223a(){
   const r=screenshotImportReview;
   if(!r?.lineupReview?.length)return {handled:false};
 
@@ -5644,61 +5649,89 @@ async function commitScreenshotLineupDirectV223(){
   if(!names.length)return {handled:true,ok:false,message:'Keine Aufstellungsspieler vorhanden.'};
 
   const btn=$('#aiCommit');
-  if(btn){btn.disabled=true;btn.textContent='Übernehme LIVE-Aufstellung…'}
-  toast(`⏳ LIVE-Aufstellung ${names.length}/11 wird übernommen …`,2200);
+  const status=$('#screenshotImportStatus');
+  if(btn){btn.disabled=true;btn.textContent='Speichere LIVE-Aufstellung…'}
+  if(status)status.textContent=`Schritt 1/4 · ${names.length} Spieler erkannt`;
+  toast(`⏳ Schritt 1/4 · ${names.length} Spieler erkannt`,2200);
 
-  const result=setManagerLiveLineupV223(targetManagerId,names,{source:'screenshot',snapshot:true});
-  if(!result.ok){
-    if(btn){btn.disabled=false;btn.textContent='Erneut versuchen'}
-    const status=$('#screenshotImportStatus');if(status)status.textContent=`✕ ${result.message}`;
-    toast(`✕ ${result.message}`,5000);
-    return {handled:true,...result};
+  let canonicalNames=[...names];
+  if(targetManagerId==='me'){
+    const currentActive=activePlayers(),resolvedNames=[],unresolved=[];
+    for(const raw of names){
+      const resolved=resolveScreenshotPlayerV216(raw,{managerId:'me'});
+      const canonical=String(resolved.matched?resolved.name:raw).trim();
+      const player=currentActive.find(p=>sameCanonicalIdentity(p.name,canonical,{managerId:'me'}));
+      if(player&&!resolvedNames.some(n=>sameCanonicalIdentity(n,player.name,{managerId:'me'})))resolvedNames.push(player.name);
+      else if(!player)unresolved.push(canonical);
+    }
+    if(unresolved.length){
+      const message=`Nicht im aktiven Kader: ${unresolved.join(', ')}`;
+      if(status)status.textContent=`✕ ${message}`;
+      if(btn){btn.disabled=false;btn.textContent='Erneut versuchen'}
+      toast(`✕ ${message}`,5000);
+      return {handled:true,ok:false,message};
+    }
+    canonicalNames=resolvedNames;
   }
 
-  // Hard verification from the same independent store the UI reads.
-  const stored=readLiveLineupV1(targetManagerId);
-  const storedCount=(stored?.players||[]).length;
-  if(storedCount!==result.count){
-    const message=`LIVE-Speicherprüfung fehlgeschlagen: ${storedCount}/${result.count}.`;
+  if(status)status.textContent=`Schritt 2/4 · ${canonicalNames.length} Spieler eindeutig zugeordnet`;
+  toast(`⏳ Schritt 2/4 · ${canonicalNames.length} Spieler eindeutig`,1800);
+
+  const store=liveLineupsV1();
+  store[targetManagerId]={
+    managerId:targetManagerId,
+    players:[...canonicalNames].slice(0,11),
+    count:canonicalNames.length,
+    complete:canonicalNames.length===11,
+    source:'screenshot',
+    updatedAt:new Date().toISOString(),
+    screenshotType:'lineup',
+    formation:'',
+    snapshotMd:Number(data.settings.currentMd)||1
+  };
+  localStorage.setItem(LIVE_LINEUP_STORAGE_KEY,JSON.stringify(store));
+
+  let rawStored=null;
+  try{rawStored=JSON.parse(localStorage.getItem(LIVE_LINEUP_STORAGE_KEY)||'{}')?.[targetManagerId]||null}catch{}
+  const storedNames=Array.isArray(rawStored?.players)?rawStored.players:[];
+  if(storedNames.length!==canonicalNames.length){
+    const message=`LIVE-Speicher fehlgeschlagen: ${storedNames.length}/${canonicalNames.length}`;
+    if(status)status.textContent=`✕ ${message}`;
     if(btn){btn.disabled=false;btn.textContent='Erneut versuchen'}
-    const status=$('#screenshotImportStatus');if(status)status.textContent=`✕ ${message}`;
-    toast(`✕ ${message}`,5000);
+    toast(`✕ ${message}`,6000);
     return {handled:true,ok:false,message};
   }
 
+  if(status)status.textContent=`Schritt 3/4 · LIVE-Speicher bestätigt ${storedNames.length}/11`;
+  toast(`⏳ Schritt 3/4 · LIVE-Speicher ${storedNames.length}/11 bestätigt`,1800);
+
   data.ui=data.ui||{};
-  data.ui.lastDirectLineupImportV223={managerId:targetManagerId,count:storedCount,at:new Date().toISOString(),names:[...(stored.players||[])]};
-  localStorage.setItem('kickbaseCoachV07',JSON.stringify(data));
+  data.ui.lineupOwner=targetManagerId;
+  screenshotImportReview=null;
+  screenshotImportLastResult=null;
+  screenshotImportDraft={images:[],names:[],referenceAt:null,referenceTrusted:false};
+  screenshotImportSelection=[];
+  window.h2hAiImportBusy=false;
+  page='squad';
+  render();
 
-  // If this is a pure lineup screenshot, finish here — do NOT pass through transfer commit logic.
-  if(!(r.items||[]).some(item=>$(`[data-ai="${item.id}"]`)?.checked)){
-    screenshotImportReview=null;
-    screenshotImportLastResult=null;
-    screenshotImportDraft={images:[],names:[],referenceAt:null,referenceTrusted:false};
-    screenshotImportSelection=[];
-    window.h2hAiImportBusy=false;
+  let afterRender=null;
+  try{afterRender=JSON.parse(localStorage.getItem(LIVE_LINEUP_STORAGE_KEY)||'{}')?.[targetManagerId]||null}catch{}
+  const afterCount=Array.isArray(afterRender?.players)?afterRender.players.length:0;
 
-    if(targetManagerId==='me'){
-      data.ui.lineupOwner='me';
-      page='squad';
-    }else{
-      data.ui.lineupOwner=targetManagerId;
-      page='squad';
-    }
-    render();
-
-    const verify=readLiveLineupV1(targetManagerId);
-    const finalCount=(verify?.players||[]).length;
-    setTimeout(()=>toast(`✓ LIVE-Aufstellung übernommen · ${finalCount}/11${finalCount<11?' · unvollständig':''}`,4200),50);
-    return {handled:true,ok:true,count:finalCount};
+  if(afterCount!==storedNames.length){
+    const message=`Render hat LIVE-Daten verändert: ${afterCount}/${storedNames.length}`;
+    console.error('2.2.3a live lineup mutation after render',{before:rawStored,after:afterRender});
+    toast(`✕ ${message}`,6500);
+    return {handled:true,ok:false,message,count:afterCount};
   }
 
-  // Mixed screenshot: lineup already safely committed; generic path may continue for transfers.
-  return {handled:false,ok:true,count:storedCount,lineupAlreadyCommitted:true};
+  setTimeout(()=>toast(`✓ Schritt 4/4 · LIVE-Aufstellung aktiv · ${afterCount}/11${afterCount<11?' · unvollständig':''}`,5000),80);
+  return {handled:true,ok:true,count:afterCount};
 }
 
 async function commitAiReview(){
-  const direct=await commitScreenshotLineupDirectV223();
+  const direct=await commitScreenshotLineupDirectV223a();
   if(direct?.handled)return;
 
   const r=screenshotImportReview;

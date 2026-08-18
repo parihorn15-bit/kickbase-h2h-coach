@@ -1,0 +1,21 @@
+VERSION 2.2.3a – MINIMAL LIVE COMMIT PROOF
+
+Der Screenshot-Aufstellungsimport läuft bewusst nur noch über vier Schritte:
+1. Erkannte Namen lesen.
+2. Gegen den Ziel-Kader eindeutig auflösen.
+3. Ausschließlich kickbaseCoachLiveLineupsV1 schreiben und roh zurücklesen.
+4. Aufstellungsseite rendern und denselben LIVE-Speicher erneut prüfen.
+
+Vor diesem Nachweis gibt es bewusst:
+- keinen Cloud-Save
+- keinen Matchday-Snapshot
+- kein save()
+- keine Formationsermittlung
+- keinen generischen Transfer-Commit für reine Aufstellungsscreenshots
+
+Die Aufstellungsseite rendert die eigene Elf direkt aus den Namen des LIVE-Speichers.
+Jeder Schritt zeigt eine sichtbare Rückmeldung. Damit ist exakt erkennbar, an welcher Stelle
+der Vorgang gegebenenfalls abbricht.
+
+AI-Nutzung bleibt patch-unabhängig erhalten.
+Transfers, Budget, Boni und Coach-Scoring bleiben unverändert.
