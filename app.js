@@ -5656,8 +5656,14 @@ async function commitScreenshotLineupCoreV224(){
     const confirmedNames=[];
     for(const x of r.lineupReview){
       const visible=String($(`[data-ai-lineup-name="${x.index}"]`)?.value||x.resolved||x.raw||'').trim();
-      if(visible&&!confirmedNames.some(n=>sameCanonicalIdentity(n,visible,{managerId:targetManagerId}))){
-        confirmedNames.push(visible);
+      if(visible){
+        const canonical=(value)=>String(value||'')
+          .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+          .toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+        const key=canonical(visible);
+        if(key&&!confirmedNames.some(n=>canonical(n)===key)){
+          confirmedNames.push(visible);
+        }
       }
     }
     if(!confirmedNames.length)return fail('Keine bestätigten Aufstellungsspieler vorhanden.');

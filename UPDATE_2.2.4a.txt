@@ -1,0 +1,14 @@
+2.2.4a – LINEUP CORE HOTFIX
+
+Gezielter Hotfix für:
+"Übernahme abgebrochen: sameCanonicalIdentity is not defined"
+
+Änderung:
+- Die nicht verfügbare Hilfsfunktion wurde aus dem neuen LIVE-Commit-Pfad entfernt.
+- Die dort benötigte Dublettenprüfung erfolgt lokal und ohne externe Abhängigkeit.
+- Keine Änderung an Screenshot-Erkennung, Review, Manager-Zuordnung, Positionen,
+  Transfers, Budget, Boni, Statistik, Coach, Spieltag oder AI-Nutzungsanzeige.
+- LIVE-Aufstellungen mit weniger als 11 Spielern bleiben erlaubt.
+
+Testziel:
+Denselben Aufstellungsscreenshot verwenden und "Übernehmen" klicken.
