@@ -13,6 +13,34 @@ Die Screenshot-Pipeline soll Transfers und Aufstellungen robust erfassen, auch w
 - Manager-Zuordnung: sichtbarer Teamname im Screenshot ist primäres Signal, Kaderabgleich nur Fallback.
 - Reihenfolgeunabhängig: Aufstellung vor Transfers und Transfers vor Aufstellung müssen zum selben Endzustand führen.
 
+## Dev-Stand
+### Dev1
+- sichtbarer Teamname priorisiert
+- Master-Resolver für exakte/abgeschnittene/OCR-fehlerhafte Spielernamen
+- eigenständige Aufstellungs-Snapshots mit Master-ID, Team, Position und Confidence
+
+### Dev2
+- Master-Freshness und automatisches Re-Resolving nach Master-Updates
+- Snapshot-Spieler werden in Gegnerkader für die Anzeige ergänzt, auch ohne vorherige Transfers
+- historische `teamAtImport`-Information bleibt unverändert
+
+### Dev3
+- spätere Transferimporte werden mit bestehenden Aufstellungs-Snapshots verknüpft
+- Transferdaten dürfen Snapshot-Spieler anreichern, aber nie aus der Aufstellung entfernen
+- Regression-Diagnose: Snapshot-Anzahl, gespeicherte Aufstellung und sichtbare Starter werden separat geprüft
+
+### Dev4
+- LIVE-Aufstellungen werden strikt auf ihren `snapshotMd` begrenzt
+- ein späterer Spieltag darf historische Aufstellungen nicht überschreiben
+
+## Regressionstest Calcio Rom
+1. Noch unvollständiger Gegnerkader.
+2. Bekannten Calcio-Rom-Aufstellungsscreenshot importieren.
+3. Erwartung: 9 erkannte Spieler = 9 gespeicherte Snapshot-Spieler = 9 sichtbare Starter.
+4. Danach Transfers von Calcio Rom importieren.
+5. Erwartung: dieselben 9 Starter bleiben erhalten; passende Spieler werden nachträglich mit Transfer/Master-Daten verknüpft.
+6. Wechsel auf einen anderen Spieltag und zurück: historische Aufstellung bleibt unverändert.
+
 ## Phase A – Datenbasis
 1. Täglichen Bundesliga-Kader-Sync beibehalten und Freshness in der App sichtbar machen.
 2. Historische Vereinszuordnung/Identitätsalias ergänzen.
