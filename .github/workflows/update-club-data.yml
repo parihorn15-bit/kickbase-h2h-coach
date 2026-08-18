@@ -1,14 +1,19 @@
 name: Bundesliga-Vereinsdaten aktualisieren
 on:
   schedule:
-    - cron: "35 5 * * *"
+    - cron: "35 */6 * * *"
+  push:
+    branches: ["phase-2.3.0"]
+    paths:
+      - "scripts/update-club-data.mjs"
+      - ".github/workflows/update-club-data.yml"
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v4
