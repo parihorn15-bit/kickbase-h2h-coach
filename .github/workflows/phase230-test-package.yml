@@ -22,44 +22,74 @@ jobs:
           rsync -a --exclude '.git' --exclude '.github' --exclude 'dist' ./ dist/kickbase-h2h-coach-2.3.0-test/
           cat > dist/kickbase-h2h-coach-2.3.0-test/START_2.3.0_TEST.bat <<'EOF'
           @echo off
+          setlocal
           cd /d "%~dp0"
-          echo Kickbase H2H Coach 2.3.0 TEST wird gestartet...
-          where py >nul 2>nul
-          if %errorlevel%==0 (
-            start "" http://localhost:8765
-            py -m http.server 8765
-            exit /b
-          )
-          where python >nul 2>nul
-          if %errorlevel%==0 (
-            start "" http://localhost:8765
-            python -m http.server 8765
-            exit /b
-          )
-          where npx >nul 2>nul
-          if %errorlevel%==0 (
-            start "" http://localhost:8765
-            npx --yes http-server . -p 8765 -c-1
-            exit /b
-          )
+          title Kickbase H2H Coach 2.3.0 TEST
+          echo ================================================
+          echo Kickbase H2H Coach 2.3.0 TEST
+          echo ================================================
           echo.
-          echo Weder Python noch Node.js wurden gefunden.
+          echo Suche eine funktionierende lokale Server-Laufzeit...
+
+          py -3 --version >nul 2>nul
+          if %errorlevel%==0 goto :PY
+
+          python --version >nul 2>nul
+          if %errorlevel%==0 goto :PYTHON
+
+          npx --version >nul 2>nul
+          if %errorlevel%==0 goto :NPX
+
+          echo.
+          echo FEHLER: Weder eine funktionierende Python- noch Node.js-Laufzeit wurde gefunden.
+          echo Das ist nur ein Problem des lokalen Teststarters; deine produktive App ist nicht betroffen.
+          echo.
           echo Bitte dieses Fenster offen lassen und im Chat einen Screenshot schicken.
           pause
+          exit /b 1
+
+          :PY
+          echo Gefunden: Python Launcher ^(py -3^)
+          echo Starte Server auf http://localhost:8765 ...
+          start "Kickbase 2.3.0 Test Browser" cmd /c "timeout /t 2 /nobreak >nul & start \"\" http://localhost:8765"
+          py -3 -m http.server 8765
+          goto :SERVER_ENDED
+
+          :PYTHON
+          echo Gefunden: Python
+          echo Starte Server auf http://localhost:8765 ...
+          start "Kickbase 2.3.0 Test Browser" cmd /c "timeout /t 2 /nobreak >nul & start \"\" http://localhost:8765"
+          python -m http.server 8765
+          goto :SERVER_ENDED
+
+          :NPX
+          echo Gefunden: Node.js / npx
+          echo Starte Server auf http://localhost:8765 ...
+          start "Kickbase 2.3.0 Test Browser" cmd /c "timeout /t 3 /nobreak >nul & start \"\" http://localhost:8765"
+          npx --yes http-server . -p 8765 -c-1
+          goto :SERVER_ENDED
+
+          :SERVER_ENDED
+          echo.
+          echo Der lokale Testserver wurde beendet oder konnte nicht gestartet werden.
+          echo Bitte diese Meldung im Chat zeigen.
+          pause
+          exit /b 1
           EOF
           cat > dist/kickbase-h2h-coach-2.3.0-test/TESTANLEITUNG.txt <<'EOF'
           KICKBASE H2H COACH 2.3.0 TEST
 
-          1. ZIP entpacken.
+          1. ZIP vollständig entpacken.
           2. START_2.3.0_TEST.bat doppelklicken.
-          3. Im Browser muss unten rechts "2.3.0 TEST · Dev5" erscheinen.
-          4. Calcio-Rom-Aufstellungsscreenshot importieren, bevor weitere Transfers importiert werden.
-          5. Erwartung: 9 erkannt = 9 gespeichert = 9 auf dem Spielfeld sichtbar.
-          6. Danach die zugehörigen Transfers importieren.
-          7. Erwartung: weiterhin 9 sichtbar; Namen/Vereine dürfen nur angereichert bzw. verknüpft werden.
-          8. Screenshots von Vorschau, gespeicherter Aufstellung und Ergebnis nach Transferimport im Chat senden.
+          3. Das schwarze Serverfenster MUSS während des Tests geöffnet bleiben.
+          4. Im Browser muss unten rechts "2.3.0 TEST · Cloud-Schreiben AUS" erscheinen.
+          5. Calcio-Rom-Aufstellungsscreenshot importieren, bevor weitere Transfers importiert werden.
+          6. Erwartung: 9 erkannt = 9 gespeichert = 9 auf dem Spielfeld sichtbar.
+          7. Danach die zugehörigen Transfers importieren.
+          8. Erwartung: weiterhin 9 sichtbar; Namen/Vereine dürfen nur angereichert bzw. verknüpft werden.
+          9. Screenshots von Vorschau, gespeicherter Aufstellung und Ergebnis nach Transferimport im Chat senden.
 
-          WICHTIG: Dieser Teststand ist NICHT main und wird nicht automatisch produktiv veröffentlicht.
+          WICHTIG: Dieser Teststand ist NICHT main und Cloud-Schreibzugriffe sind im Testmodus deaktiviert.
           EOF
       - name: Upload 2.3.0 test package
         uses: actions/upload-artifact@v4
