@@ -1,0 +1,69 @@
+name: Phase 2.3.0 Test Package
+
+on:
+  push:
+    branches: ["phase-2.3.0"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build isolated test package
+        shell: bash
+        run: |
+          mkdir -p dist/kickbase-h2h-coach-2.3.0-test
+          rsync -a --exclude '.git' --exclude '.github' --exclude 'dist' ./ dist/kickbase-h2h-coach-2.3.0-test/
+          cat > dist/kickbase-h2h-coach-2.3.0-test/START_2.3.0_TEST.bat <<'EOF'
+          @echo off
+          cd /d "%~dp0"
+          echo Kickbase H2H Coach 2.3.0 TEST wird gestartet...
+          where py >nul 2>nul
+          if %errorlevel%==0 (
+            start "" http://localhost:8765
+            py -m http.server 8765
+            exit /b
+          )
+          where python >nul 2>nul
+          if %errorlevel%==0 (
+            start "" http://localhost:8765
+            python -m http.server 8765
+            exit /b
+          )
+          where npx >nul 2>nul
+          if %errorlevel%==0 (
+            start "" http://localhost:8765
+            npx --yes http-server . -p 8765 -c-1
+            exit /b
+          )
+          echo.
+          echo Weder Python noch Node.js wurden gefunden.
+          echo Bitte dieses Fenster offen lassen und im Chat einen Screenshot schicken.
+          pause
+          EOF
+          cat > dist/kickbase-h2h-coach-2.3.0-test/TESTANLEITUNG.txt <<'EOF'
+          KICKBASE H2H COACH 2.3.0 TEST
+
+          1. ZIP entpacken.
+          2. START_2.3.0_TEST.bat doppelklicken.
+          3. Im Browser muss unten rechts "2.3.0 TEST · Dev5" erscheinen.
+          4. Calcio-Rom-Aufstellungsscreenshot importieren, bevor weitere Transfers importiert werden.
+          5. Erwartung: 9 erkannt = 9 gespeichert = 9 auf dem Spielfeld sichtbar.
+          6. Danach die zugehörigen Transfers importieren.
+          7. Erwartung: weiterhin 9 sichtbar; Namen/Vereine dürfen nur angereichert bzw. verknüpft werden.
+          8. Screenshots von Vorschau, gespeicherter Aufstellung und Ergebnis nach Transferimport im Chat senden.
+
+          WICHTIG: Dieser Teststand ist NICHT main und wird nicht automatisch produktiv veröffentlicht.
+          EOF
+      - name: Upload 2.3.0 test package
+        uses: actions/upload-artifact@v4
+        with:
+          name: kickbase-h2h-coach-2.3.0-test
+          path: dist/kickbase-h2h-coach-2.3.0-test
+          retention-days: 7
