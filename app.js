@@ -774,6 +774,13 @@ function coachMemory(){
 
 window.DATA_SYNC_STATUS=window.DATA_SYNC_STATUS||[];
 
+
+function sameCanonicalIdentityV224b(a,b){
+  const key=(value)=>String(value||'')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+  return key(a)===key(b);
+}
 function normalizePlayerName(value){
   return String(value||'').toLocaleLowerCase('de-DE')
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
@@ -2939,7 +2946,7 @@ function setManagerLiveLineupV223(managerId,names,{source='manual',snapshot=true
     for(const raw of clean){
       const resolved=resolveScreenshotPlayerV216(raw,{managerId:'me'});
       const canonical=String(resolved.matched?resolved.name:raw).trim();
-      const p=active.find(x=>sameCanonicalIdentity(x.name,canonical,{managerId:'me'}));
+      const p=active.find(x=>sameCanonicalIdentityV224b(x.name,canonical));
       if(!p){unresolved.push(canonical);continue}
       if(!ids.includes(p.id)){ids.push(p.id);canonicalNames.push(p.name)}
     }
@@ -2970,7 +2977,7 @@ function resolveOwnLiveLineupIdsV222(){
   const active=activePlayers(),ids=[],players=[],unresolved=[];
   for(const name of live.players||[]){
     const resolved=resolveScreenshotPlayerV216(name,{managerId:'me'}),canonical=String(resolved.matched?resolved.name:name).trim();
-    const p=active.find(player=>sameCanonicalIdentity(player.name,canonical,{managerId:'me'}));
+    const p=active.find(player=>sameCanonicalIdentityV224b(player.name,canonical));
     if(p&&!ids.includes(p.id)){ids.push(p.id);players.push(p.name)}else if(!p)unresolved.push(canonical);
   }
   return {ok:!unresolved.length,ids,players,count:ids.length,complete:ids.length===11,unresolved};
@@ -3026,7 +3033,7 @@ function applyStableOwnLineupV1(md=data.settings.currentMd){
   for(const name of saved.names){
     const resolved=resolveScreenshotPlayerV216(name,{managerId:'me'});
     const canonical=String(resolved.matched?resolved.name:name).trim();
-    const p=active.find(player=>sameCanonicalIdentity(player.name,canonical,{managerId:'me'}));
+    const p=active.find(player=>sameCanonicalIdentityV224b(player.name,canonical));
     if(p&&!ids.includes(p.id))ids.push(p.id);
     else if(!p)unresolved.push(canonical);
   }
@@ -3076,7 +3083,7 @@ function restoreOwnLineupFromNamesV221b(md=data.settings.currentMd){
   for(const name of names){
     const resolved=resolveScreenshotPlayerV216(name,{managerId:'me'});
     const canonical=String(resolved.matched?resolved.name:name).trim();
-    const p=active.find(player=>sameCanonicalIdentity(player.name,canonical,{managerId:'me'}));
+    const p=active.find(player=>sameCanonicalIdentityV224b(player.name,canonical));
     if(p&&!ids.includes(p.id))ids.push(p.id);
     else if(!p)unresolved.push(canonical);
   }
@@ -3119,8 +3126,12 @@ function squad(){
   const rawLive=readLiveLineupV1('me');
   const displayLineup=[];
   const displayNames=[];
+  const canonicalLineupKeyV224b=(value)=>String(value||'')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
   for(const name of rawLive?.players||[]){
-    const p=active.find(player=>sameCanonicalIdentity(player.name,name,{managerId:'me'}));
+    const targetKey=canonicalLineupKeyV224b(name);
+    const p=active.find(player=>canonicalLineupKeyV224b(player.name)===targetKey);
     if(p&&!displayLineup.includes(p.id)){displayLineup.push(p.id);displayNames.push(p.name)}
   }
   r.lineup=[...displayLineup];
@@ -5579,7 +5590,7 @@ function commitOwnScreenshotLineupV221a(corrected,md=data.settings.currentMd){
   for(const x of corrected){
     const resolved=resolveScreenshotPlayerV216(x.name,{managerId:'me'});
     const canonicalName=String(resolved.matched?resolved.name:x.name||'').trim();
-    const player=active.find(p=>sameCanonicalIdentity(p.name,canonicalName,{managerId:'me'}));
+    const player=active.find(p=>sameCanonicalIdentityV224b(p.name,canonicalName));
 
     if(!player){
       unresolved.push(canonicalName||x.name);
@@ -5847,7 +5858,7 @@ async function commitAiReview(){
       if(mdRow.lineup.length<11)mdRow.formation='';
       mdRow.bank=Array.isArray(mdRow.bank)?mdRow.bank:[];
       for(const x of corrected){
-        const t=(row.transfers||[]).find(t=>sameCanonicalIdentity(t.player,x.name,{managerId:targetManagerId}));
+        const t=(row.transfers||[]).find(t=>sameCanonicalIdentityV224b(t.player,x.name));
         if(t&&x.position)t.position=x.position;
       }
     }
@@ -5876,7 +5887,7 @@ async function commitAiReview(){
   // Verify in memory before saving.
   const verification=committed.filter(c=>c.mode!=='unchanged').every(c=>
     row.transfers.some(x=>
-      sameCanonicalIdentity(x.player,c.player,{managerId:targetManagerId}) &&
+      sameCanonicalIdentityV224b(x.player,c.player) &&
       String(x.type||'').toLowerCase()===c.type.toLowerCase() &&
       Number(x.price||0)===Number(c.price||0) &&
       (!c.date || !x.date || x.date===c.date)

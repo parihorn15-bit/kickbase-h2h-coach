@@ -1,0 +1,16 @@
+2.2.4b – LIVE LINEUP RENDER HOTFIX
+
+Befund aus 2.2.4a:
+- Screenshot-Übernahme funktioniert jetzt erfolgreich.
+- Nachweis: „3/3 · LIVE-Aufstellung übernommen · 11/11“.
+- Der anschließende Wechsel zur Aufstellungsseite scheiterte nur noch beim Rendern mit:
+  sameCanonicalIdentity is not defined
+
+Fix:
+- Der LIVE-Aufstellungsrenderer verwendet keine nicht verfügbare Hilfsfunktion mehr.
+- Spieler werden lokal über einen kanonisierten Namensschlüssel zugeordnet.
+- Zusätzliche Schutzfunktion ersetzt verbleibende undefinierte Identity-Aufrufe, falls vorhanden.
+- Die funktionierende 2.2.4a-Übernahme bleibt unverändert.
+
+Erwartung:
+- Nach Übernahme 11/11 springt die App zur Aufstellung und zeigt die elf Spieler an.
