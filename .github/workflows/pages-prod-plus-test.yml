@@ -1,0 +1,54 @@
+name: Deploy Production + 2.3.0 Test
+
+on:
+  push:
+    branches: ["phase-2.3.0"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-prod-plus-test
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout production main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          path: prod-src
+
+      - name: Checkout 2.3.0 test branch
+        uses: actions/checkout@v6
+        with:
+          ref: phase-2.3.0
+          path: test-src
+
+      - name: Build combined Pages artifact
+        shell: bash
+        run: |
+          mkdir -p publish/test-2.3.0
+          rsync -a --delete --exclude '.git' --exclude '.github' prod-src/ publish/
+          rsync -a --delete --exclude '.git' --exclude '.github' test-src/ publish/test-2.3.0/
+          touch publish/.nojekyll
+          echo "Production source: main" > publish/DEPLOYMENT_SOURCE.txt
+          echo "Test source: phase-2.3.0" >> publish/DEPLOYMENT_SOURCE.txt
+          echo "Test path: /test-2.3.0/" >> publish/DEPLOYMENT_SOURCE.txt
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: publish
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
