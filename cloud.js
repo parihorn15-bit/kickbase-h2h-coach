@@ -347,7 +347,7 @@
 (() => {
   if(document.querySelector('script[data-phase230]'))return;
   const script=document.createElement('script');
-  script.src='phase230.js?v=230dev1';
+  script.src='phase230.js?v=230dev6';
   script.dataset.phase230='1';
   script.async=false;
   document.head.appendChild(script);
