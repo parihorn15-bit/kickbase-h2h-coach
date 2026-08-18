@@ -11,5 +11,6 @@
   });
   load('phase230-dev1.js?v=230dev1','phase230dev1')
     .then(()=>load('phase230-dev2.js?v=230dev2','phase230dev2'))
+    .then(()=>load('phase230-dev3.js?v=230dev3','phase230dev3'))
     .catch(error=>console.error('2.3 runtime load failed',error));
 })();
