@@ -1,0 +1,20 @@
+2.2.4 – LINEUP CORE CLEANUP
+
+Alle vorhandenen Funktionen bleiben erhalten. Vereinfacht wurde nur der Hintergrundpfad
+der aktuellen Aufstellung:
+
+Review/Vorschau -> bestätigte Spieler -> LIVE-Aufstellung -> Anzeige
+
+Die beim Review bereits bestätigten oder manuell korrigierten Spieler werden beim Klick
+nicht noch einmal durch den Screenshot-Resolver geschickt. Dadurch entfällt genau der
+Schritt, an dem 2.2.3a hängen blieb.
+
+LIVE ist die führende Quelle. Legacy, Spieltags-Historie, Statistik und Cloud sind
+nachgelagerte Verbraucher und dürfen LIVE nicht ersetzen.
+
+Weiterhin enthalten:
+Screenshot-Erkennung, Manager-Kaderabgleich, editierbare Review, Aufstellungen unter 11,
+manuelle Aufstellung, Tauschen, Positions-/Formationsregeln, Spieltagshistorie,
+Statistik/Coach, Transfers, Budget/Boni und patch-unabhängige AI-Nutzung.
+
+Zusätzlich: Fehlerfang am Commit, damit ein Button nicht mehr kommentarlos hängen bleibt.
