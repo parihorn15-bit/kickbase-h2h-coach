@@ -43,6 +43,7 @@ jobs:
           echo "Production source: main" > publish/DEPLOYMENT_SOURCE.txt
           echo "Test source: phase-2.3.0" >> publish/DEPLOYMENT_SOURCE.txt
           echo "Test path: /test-2.3.0/" >> publish/DEPLOYMENT_SOURCE.txt
+          echo "Deployment trigger: 2026-08-18T11:26:00+02:00" >> publish/DEPLOYMENT_SOURCE.txt
 
       - uses: actions/configure-pages@v5
 
