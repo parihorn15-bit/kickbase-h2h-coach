@@ -1,0 +1,51 @@
+name: Phase 2.3.0 Smoke Check
+
+on:
+  push:
+    branches: ["phase-2.3.0"]
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "phase230*.js"
+      - "app.js"
+      - "cloud.js"
+      - "service-worker.js"
+      - ".github/workflows/phase230-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  syntax-and-wiring:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+      - name: JavaScript syntax
+        run: |
+          node --check app.js
+          node --check cloud.js
+          node --check service-worker.js
+          node --check phase230.js
+          node --check phase230-dev1.js
+          node --check phase230-dev2.js
+          node --check phase230-dev3.js
+          node --check phase230-dev4.js
+      - name: Runtime wiring
+        shell: bash
+        run: |
+          grep -q "phase230-dev1.js?v=230dev1" phase230.js
+          grep -q "phase230-dev2.js?v=230dev2" phase230.js
+          grep -q "phase230-dev3.js?v=230dev3" phase230.js
+          grep -q "phase230-dev4.js?v=230dev4" phase230.js
+          grep -q "h2h-coach-cloud-v230dev4" service-worker.js
+          grep -q "phase230-dev4.js?v=230dev4" service-worker.js
+      - name: No temporary development marker files
+        shell: bash
+        run: |
+          test ! -e PHASE230_DEV2_NOTE.txt
+          test ! -e phase230-dev1-copy-marker.txt
+          test ! -e phase230-loader-tmp.js
