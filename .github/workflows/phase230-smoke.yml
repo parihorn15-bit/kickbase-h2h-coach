@@ -37,6 +37,8 @@ jobs:
           node --check phase230-dev5.js
           node --check phase230-dev6.js
           node --check phase230-dev7.js
+          node --check phase230-dev8.js
+          node --check scripts/update-club-data.mjs
       - name: Runtime wiring
         shell: bash
         run: |
@@ -47,10 +49,14 @@ jobs:
           grep -q "phase230-dev5.js?v=230dev5" phase230.js
           grep -q "phase230-dev6.js?v=230dev6" phase230.js
           grep -q "phase230-dev7.js?v=230dev7" phase230.js
-          grep -q "h2h-coach-cloud-v230dev7" service-worker.js
-          grep -q "phase230-dev7.js?v=230dev7" service-worker.js
+          grep -q "phase230-dev8.js?v=230dev8" phase230.js
+          grep -q "h2h-coach-cloud-v230dev8" service-worker.js
+          grep -q "phase230-dev8.js?v=230dev8" service-worker.js
           grep -q "H2H_PHASE230_TEST_READY" phase230-dev5.js
           grep -q "h2h230LearnKickbasePosition" phase230-dev7.js
+          grep -q "h2h230ResolveMasterSurname" phase230-dev8.js
+          grep -q "h2h230RebuildOpponentPitch" phase230-dev8.js
+          grep -q "deletePlayerIds" scripts/update-club-data.mjs
       - name: No temporary development marker files
         shell: bash
         run: |
