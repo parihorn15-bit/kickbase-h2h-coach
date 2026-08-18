@@ -34,6 +34,7 @@ jobs:
           node --check phase230-dev2.js
           node --check phase230-dev3.js
           node --check phase230-dev4.js
+          node --check phase230-dev5.js
       - name: Runtime wiring
         shell: bash
         run: |
@@ -41,8 +42,10 @@ jobs:
           grep -q "phase230-dev2.js?v=230dev2" phase230.js
           grep -q "phase230-dev3.js?v=230dev3" phase230.js
           grep -q "phase230-dev4.js?v=230dev4" phase230.js
-          grep -q "h2h-coach-cloud-v230dev4" service-worker.js
-          grep -q "phase230-dev4.js?v=230dev4" service-worker.js
+          grep -q "phase230-dev5.js?v=230dev5" phase230.js
+          grep -q "h2h-coach-cloud-v230dev5" service-worker.js
+          grep -q "phase230-dev5.js?v=230dev5" service-worker.js
+          grep -q "H2H_PHASE230_TEST_READY" phase230-dev5.js
       - name: No temporary development marker files
         shell: bash
         run: |
