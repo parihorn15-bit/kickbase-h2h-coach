@@ -1,5 +1,5 @@
 (() => {
-  const VERSION='2.3.0-dev11.1';
+  const VERSION='2.3.0-dev11.2';
   const STYLE_ID='phase230OpponentAnalysisPolish';
 
   function installStyle(){
@@ -7,7 +7,7 @@
     const style=document.createElement('style');
     style.id=STYLE_ID;
     style.textContent=`
-      /* Phase 2.3 dev11.1 — visual-only opponent analysis polish. */
+      /* Phase 2.3 dev11.2 — visual-only opponent analysis polish. */
       #phase230OpponentPitch.phase230-opponent-pitch-wrap{margin:20px 0;padding:18px;border-radius:20px;background:linear-gradient(180deg,rgba(15,24,31,.92),rgba(10,18,24,.94));border:1px solid rgba(255,255,255,.10);box-shadow:0 16px 42px rgba(0,0,0,.18)}
       #phase230OpponentPitch .phase230-opponent-pitch-head{align-items:center;margin-bottom:14px}
       #phase230OpponentPitch .phase230-opponent-pitch-head span{font-size:10px;letter-spacing:.14em;opacity:.55}
@@ -41,26 +41,16 @@
     const current=hint.textContent||'';
     const target='Klick oder Drag & Drop verschiebt Spieler zwischen Startelf und Bank.';
     if(current===target)return false;
-    if(/Drag\s*&\s*Drop|verschieben/i.test(current)){
-      hint.textContent=target;
-      return true;
-    }
+    if(/Drag\s*&\s*Drop|verschieben/i.test(current)){hint.textContent=target;return true}
     return false;
   }
 
-  installStyle();
-  polishCopy();
-
-  let scheduled=false;
-  const observer=new MutationObserver(mutations=>{
-    if(scheduled)return;
-    const relevant=mutations.some(m=>[...m.addedNodes].some(n=>n.nodeType===1&&(n.id==='phase230OpponentPitch'||n.querySelector?.('#phase230OpponentPitch'))));
-    if(!relevant)return;
-    scheduled=true;
-    requestAnimationFrame(()=>{scheduled=false;polishCopy()});
+  function apply(){installStyle();polishCopy()}
+  apply();
+  setTimeout(apply,700);
+  document.addEventListener('change',event=>{
+    if(event.target?.matches?.('[data-opponent-player-state]'))setTimeout(apply,0);
   });
-  observer.observe(document.documentElement,{childList:true,subtree:true});
-
-  window.h2h230PolishOpponentAnalysis=()=>{installStyle();polishCopy()};
+  window.h2h230PolishOpponentAnalysis=apply;
   console.info(`[H2H] Phase ${VERSION} loaded`);
 })();
