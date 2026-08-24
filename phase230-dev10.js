@@ -1,5 +1,5 @@
 (() => {
-  const VERSION='2.3.0-dev10.2';
+  const VERSION='2.3.0-dev10.3';
   const norm=value=>String(value||'').toLocaleLowerCase('de-DE').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
   const compact=value=>norm(value).replace(/\s+/g,'');
   const surname=value=>String(value||'').trim().split(/\s+/).pop()||'';
@@ -21,7 +21,7 @@
         team:hit.team||'',
         position:hit.kickbasePosition||hit.position||'',
         externalPlayerId:hit.externalPlayerId??hit.external_id??null,
-        source:'canonical-opponent-roster-dev10.2'
+        source:'canonical-opponent-roster-dev10.3'
       };
     }catch{return null}
   }
@@ -53,10 +53,9 @@
         if(bold&&bold.textContent!==nextBold)bold.textContent=nextBold;
         if(small&&small.textContent!==nextSmall)small.textContent=nextSmall;
         if(el.dataset.phase230CanonicalName!==full)el.dataset.phase230CanonicalName=full;
-        if(hit.externalPlayerId!=null&&el.dataset.phase230PlayerId!==String(hit.externalPlayerId)){
-          el.dataset.phase230PlayerId=String(hit.externalPlayerId);
-        }
+        if(hit.externalPlayerId!=null&&el.dataset.phase230PlayerId!==String(hit.externalPlayerId))el.dataset.phase230PlayerId=String(hit.externalPlayerId);
       });
+      try{window.h2h230PolishOpponentAnalysis?.()}catch{}
       return true;
     }finally{patching=false}
   }
@@ -65,31 +64,24 @@
   if(typeof priorRebuild==='function'){
     window.h2h230RebuildOpponentPitch=function(...args){
       const result=priorRebuild.apply(this,args);
-      queueMicrotask(patchPitch);
+      setTimeout(patchPitch,0);
       return result;
     };
   }
 
-  let scheduled=false;
-  const observer=new MutationObserver(mutations=>{
-    if(patching||scheduled)return;
-    const relevant=mutations.some(m=>m.addedNodes?.length&&(
-      [...m.addedNodes].some(n=>n.nodeType===1&&(n.id==='phase230OpponentPitch'||n.querySelector?.('#phase230OpponentPitch')))
-    ));
-    if(!relevant)return;
-    scheduled=true;
-    requestAnimationFrame(()=>{scheduled=false;patchPitch()});
+  // Targeted UI events replace the former document-wide MutationObserver.
+  document.addEventListener('change',event=>{
+    if(event.target?.matches?.('[data-opponent-player-state]'))setTimeout(patchPitch,0);
   });
-  observer.observe(document.documentElement,{childList:true,subtree:true});
 
   setTimeout(()=>{
     try{
       window.h2h230CanonicalizeStoredOpponents?.();
       window.h2h230RebuildOpponentPitch?.();
       patchPitch();
-    }catch(e){console.warn('[H2H] dev10.2 pitch sync skipped',e)}
-  },1400);
-  window.addEventListener('focus',()=>setTimeout(patchPitch,50));
+    }catch(e){console.warn('[H2H] dev10.3 pitch sync skipped',e)}
+  },900);
+  window.addEventListener('focus',()=>setTimeout(patchPitch,80));
   window.h2h230PatchOpponentPitchCanonical=patchPitch;
   console.info(`[H2H] Phase ${VERSION} loaded`);
 })();
