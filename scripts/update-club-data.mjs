@@ -84,6 +84,46 @@ async function deletePlayerIds(ids) {
   if (unique.length) console.log(`✓ ${unique.length} veraltete Bundesliga-Spieler aus dem Master entfernt`);
 }
 
+function dedupePlayers(rows) {
+  const byId = new Map();
+  const duplicates = new Map();
+
+  for (const row of rows) {
+    const id = Number(row?.external_id);
+    if (!Number.isFinite(id)) {
+      console.warn(`⚠ Spieler ohne gültige external_id übersprungen: ${row?.name || "unbekannt"}`);
+      continue;
+    }
+
+    const previous = byId.get(id);
+    if (!previous) {
+      byId.set(id, row);
+      continue;
+    }
+
+    const seen = duplicates.get(id) || new Set([previous.team]);
+    seen.add(row.team);
+    duplicates.set(id, seen);
+
+    // football-data kann während Transfers dieselbe Person kurzfristig in zwei
+    // Kadern liefern. Für einen stabilen Master behalten wir genau einen Datensatz.
+    // Der zuletzt gelieferte Eintrag gewinnt; der Konflikt bleibt im Action-Log sichtbar.
+    byId.set(id, { ...previous, ...row });
+  }
+
+  for (const [id, teams] of duplicates) {
+    const selected = byId.get(id);
+    console.warn(
+      `⚠ Doppelte Spieler-ID ${id}: ${[...teams].filter(Boolean).join(" ↔ ")} · ` +
+      `verwende ${selected?.name || "Spieler"} bei ${selected?.team || "unbekannt"}`
+    );
+  }
+
+  const unique = [...byId.values()];
+  console.log(`✓ Spieler-Deduplizierung: ${rows.length} Rohzeilen → ${unique.length} eindeutige IDs`);
+  return unique;
+}
+
 console.log("Lade Bundesliga-Vereinsliste ...");
 const teamsData = await fd("/competitions/BL1/teams");
 console.log("Lade Bundesliga-Tabelle ...");
@@ -106,7 +146,7 @@ for (const match of scheduled.sort((a, b) => new Date(a.utcDate) - new Date(b.ut
 
 const now = new Date().toISOString();
 const clubs = [];
-const players = [];
+const rawPlayers = [];
 
 for (const baseTeam of teamsData.teams || []) {
   console.log(`Lade ${baseTeam.name} ...`);
@@ -135,7 +175,7 @@ for (const baseTeam of teamsData.teams || []) {
   });
 
   for (const p of team.squad || []) {
-    players.push({
+    rawPlayers.push({
       external_id: p.id,
       name: p.name,
       first_name: p.firstName || null,
@@ -154,14 +194,16 @@ for (const baseTeam of teamsData.teams || []) {
   }
 }
 
+const players = dedupePlayers(rawPlayers);
+
 // Build the complete new master first. Only after all provider requests succeed do we
 // write anything. Then remove IDs no longer present in any current Bundesliga squad.
 const oldIds = await existingPlayerIds();
-const currentIds = new Set(players.map(p => Number(p.external_id)).filter(Number.isFinite));
+const currentIds = new Set(rawPlayers.map(p => Number(p.external_id)).filter(Number.isFinite));
 const staleIds = oldIds.filter(id => !currentIds.has(id));
 
 await upsert("bundesliga_clubs", clubs, "team");
 await upsert("bundesliga_players", players, "external_id");
 await deletePlayerIds(staleIds);
 
-console.log(`✅ Update abgeschlossen: ${clubs.length} Vereine und ${players.length} aktuelle Spieler; ${staleIds.length} veraltete Spieler entfernt.`);
+console.log(`✅ Update abgeschlossen: ${clubs.length} Vereine, ${players.length} eindeutige aktuelle Spieler (${rawPlayers.length} Rohzeilen); ${staleIds.length} veraltete Spieler entfernt.`);
