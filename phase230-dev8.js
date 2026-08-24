@@ -1,5 +1,5 @@
 (() => {
-  const VERSION='2.3.0-dev8';
+  const VERSION='2.3.0-dev8.1';
   const norm=value=>String(value||'').toLocaleLowerCase('de-DE').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
   const compact=value=>norm(value).replace(/\s+/g,'');
 
@@ -47,7 +47,7 @@
   function setState(name,state){const select=[...document.querySelectorAll('[data-opponent-player-state]')].find(el=>el.dataset.opponentPlayerState===name);if(!select)return;select.value=state;select.dispatchEvent(new Event('change',{bubbles:true}))}
   function card(name,state){const pos=positionOf(name),team=teamOf(name)||'Verein unbekannt';return `<button type="button" class="phase230-opp-player ${state==='bank'?'phase230-bank-player':'phase230-field-player'}" draggable="true" data-phase230-opp-drag="${escHtml(name)}"><b>${escHtml(name.split(/\s+/).pop())}</b><small>${escHtml(team)} · ${escHtml(pos)}</small></button>`}
   function rebuildInteractiveOpponentField(){
-    const picker=document.querySelector('.opponent-roster-picker'); if(!picker)return;
+    const picker=document.querySelector('.opponent-roster-picker'); if(!picker)return false;
     let box=document.getElementById('phase230OpponentPitch'); if(!box){box=document.createElement('section');box.id='phase230OpponentPitch';box.className='phase230-opponent-pitch-wrap';picker.parentNode.insertBefore(box,picker)}
     const lineup=selectedNames('lineup'),bank=selectedNames('bank'),groups={Tor:[],Abwehr:[],Mittelfeld:[],Sturm:[],Unbekannt:[]};
     lineup.forEach(name=>{const pos=positionOf(name);(groups[pos]||groups.Unbekannt).push(name)});
@@ -55,10 +55,28 @@
     box.innerHTML=`<div class="phase230-opponent-pitch-head"><div><span>INTERAKTIVE GEGNER-AUFSTELLUNG</span><h3>${lineup.length}/11 Startelf · ${outfield}</h3></div><small>Spieler per Drag & Drop zwischen Feld und Bank verschieben.</small></div><div class="phase230-opponent-pitch" data-phase230-drop="lineup">${['Sturm','Mittelfeld','Abwehr','Tor','Unbekannt'].map(pos=>`<div class="phase230-pitch-row" data-phase230-position="${pos}"><span class="phase230-row-label">${pos}</span>${groups[pos].map(n=>card(n,'lineup')).join('')||'<em>–</em>'}</div>`).join('')}</div><div class="phase230-opponent-bank" data-phase230-drop="bank"><b>Bank</b>${bank.map(n=>card(n,'bank')).join('')||'<span>Keine Spieler auf der Bank</span>'}</div>`;
     box.querySelectorAll('[data-phase230-opp-drag]').forEach(el=>{el.addEventListener('dragstart',()=>{dragName=el.dataset.phase230OppDrag||''});el.addEventListener('click',()=>{const current=[...document.querySelectorAll('[data-opponent-player-state]')].find(s=>s.dataset.opponentPlayerState===el.dataset.phase230OppDrag)?.value;setState(el.dataset.phase230OppDrag,current==='lineup'?'bank':'lineup');rebuildInteractiveOpponentField()})});
     box.querySelectorAll('[data-phase230-drop]').forEach(zone=>{zone.addEventListener('dragover',e=>e.preventDefault());zone.addEventListener('drop',e=>{e.preventDefault();if(!dragName)return;const target=zone.dataset.phase230Drop;if(target==='lineup'&&selectedNames('lineup').length>=11&&!selectedNames('lineup').includes(dragName)){if(typeof toast==='function')toast('Maximal 11 Spieler in der Startelf');return}setState(dragName,target);dragName='';rebuildInteractiveOpponentField()})});
+    try{window.h2h230PatchOpponentPitchCanonical?.();window.h2h230PolishOpponentAnalysis?.()}catch{}
+    return true;
   }
 
-  const observer=new MutationObserver(()=>{if(document.querySelector('.opponent-roster-picker')&&!document.getElementById('phase230OpponentPitch')){rebuildInteractiveOpponentField();document.querySelectorAll('[data-opponent-player-state]').forEach(el=>el.addEventListener('change',rebuildInteractiveOpponentField))}});
-  observer.observe(document.documentElement,{childList:true,subtree:true}); setTimeout(rebuildInteractiveOpponentField,500);
-  window.h2h230ResolveMasterSurname=masterCandidateForRaw; window.h2h230RebuildOpponentPitch=rebuildInteractiveOpponentField;
+  // Freeze-safe lifecycle: no document-wide MutationObserver. Rebuild only after relevant user/UI events.
+  let scheduled=false;
+  function scheduleRebuild(delay=40){
+    if(scheduled)return;
+    scheduled=true;
+    setTimeout(()=>{scheduled=false;rebuildInteractiveOpponentField()},delay);
+  }
+  document.addEventListener('change',event=>{
+    if(event.target?.matches?.('[data-opponent-player-state]'))scheduleRebuild(0);
+  });
+  document.addEventListener('click',event=>{
+    const target=event.target;
+    if(target?.closest?.('.opponent-roster-picker,[data-opponent-player-state]')||/bearbeiten|aufstellung|spieltag/i.test(target?.textContent||''))scheduleRebuild(80);
+  });
+  window.addEventListener('focus',()=>scheduleRebuild(100));
+  setTimeout(()=>scheduleRebuild(0),500);
+
+  window.h2h230ResolveMasterSurname=masterCandidateForRaw;
+  window.h2h230RebuildOpponentPitch=rebuildInteractiveOpponentField;
   console.info(`[H2H] Phase ${VERSION} loaded`);
 })();
