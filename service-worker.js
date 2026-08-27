@@ -1,4 +1,4 @@
-const CACHE_NAME='h2h-coach-cloud-v230dev11_7';
+const CACHE_NAME='h2h-coach-cloud-v230fulluse1';
 const CORE=[
   './',
   './index.html',
@@ -6,18 +6,18 @@ const CORE=[
   './config.js?v=215n',
   './app.js?v=215n',
   './cloud.js?v=230dev6',
-  './phase230.js?v=230dev11_7',
+  './phase230.js?v=230fulluse1',
   './phase230-dev1.js?v=230dev1',
   './phase230-dev2.js?v=230dev2',
   './phase230-dev3.js?v=230dev3',
   './phase230-dev4.js?v=230dev4',
-  './phase230-dev5.js?v=230dev5',
+  './phase230-dev5.js?v=230dev5_1',
   './phase230-dev6.js?v=230dev6',
   './phase230-dev7.js?v=230dev7',
   './phase230-dev8.js?v=230dev8_3',
   './phase230-dev9.js?v=230dev9_3',
   './phase230-dev10.js?v=230dev10_4',
-  './phase230-dev11.js?v=230dev11_6',
+  './phase230-dev11.js?v=230dev11_7',
   './manifest.webmanifest'
 ];
 
@@ -33,7 +33,7 @@ self.addEventListener('activate',event=>{
       .then(()=>self.clients.claim())
       .then(async()=>{
         const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});
-        for(const client of clients) client.postMessage({type:'APP_UPDATED',version:'2.3.0-test-dev11.7'});
+        for(const client of clients) client.postMessage({type:'APP_UPDATED',version:'2.3.0-test-fulluse1'});
       })
   );
 });
