@@ -42,21 +42,15 @@ jobs:
           grep -q "phase230-dev5.js?v=230dev5" phase230.js
           grep -q "phase230-dev6.js?v=230dev6" phase230.js
           grep -q "phase230-dev7.js?v=230dev7" phase230.js
-          grep -q "phase230-dev8.js?v=230dev8_2" phase230.js
-          grep -q "phase230-dev9.js?v=230dev9_2" phase230.js
-          grep -q "phase230-dev10.js?v=230dev10_3" phase230.js
-          grep -q "phase230-dev11.js?v=230dev11_5" phase230.js
-          grep -q "h2h-coach-cloud-v230dev11_6" service-worker.js
-          grep -q "phase230-dev9.js?v=230dev9_2" service-worker.js
-          grep -q "H2H_PHASE230_TEST_READY" phase230-dev5.js
-          grep -q "h2h230LearnKickbasePosition" phase230-dev7.js
-          grep -q "h2h230ResolveMasterSurname" phase230-dev8.js
-          grep -q "h2h230RebuildOpponentPitch" phase230-dev8.js
-          grep -q "h2h230ResolveCanonicalPlayer" phase230-dev9.js
-          grep -q "h2h230CanonicalIdentity" phase230-dev9.js
-          grep -q "h2h230PatchOpponentPitchCanonical" phase230-dev10.js
-          grep -q "h2h230PolishOpponentAnalysis" phase230-dev11.js
-          grep -q "deletePlayerIds" scripts/update-club-data.mjs
+          grep -q "phase230-dev8.js?v=230dev8_3" phase230.js
+          grep -q "phase230-dev9.js?v=230dev9_3" phase230.js
+          grep -q "phase230-dev10.js?v=230dev10_4" phase230.js
+          grep -q "phase230-dev11.js?v=230dev11_6" phase230.js
+          grep -q "h2h-coach-cloud-v230dev11_7" service-worker.js
+          grep -q "phase230-dev8.js?v=230dev8_3" service-worker.js
+          grep -q "phase230-dev9.js?v=230dev9_3" service-worker.js
+          grep -q "phase230-dev10.js?v=230dev10_4" service-worker.js
+          grep -q "phase230-dev11.js?v=230dev11_6" service-worker.js
       - name: Canonical resolver guards
         shell: bash
         run: |
@@ -64,8 +58,15 @@ jobs:
           grep -q "reason:'unique-surname'" phase230-dev9.js
           grep -q "reason:'unique-prefix'" phase230-dev9.js
           grep -q "reason:'unique-ocr-1char'" phase230-dev9.js
+          grep -q "h2h230CanonicalPosition" phase230-dev9.js
+          grep -q "h2h230OpponentPickerIdentity" phase230-dev8.js
+          grep -q "canonicalPos" phase230-dev8.js
+          grep -q "canonicalPos" phase230-dev10.js
+          ! grep -q "VERIFIED_ALIASES" phase230-dev8.js
           ! grep -q "VERIFIED_ALIASES" phase230-dev9.js
+          ! grep -q "Sheraldo Becker" phase230-dev8.js
           ! grep -q "Sheraldo Becker" phase230-dev9.js
+          ! grep -q "Daiki Hashioka" phase230-dev8.js
           ! grep -q "Daiki Hashioka" phase230-dev9.js
       - name: Freeze regression guards
         shell: bash
@@ -75,6 +76,11 @@ jobs:
           ! grep -q "new MutationObserver" phase230-dev11.js
           grep -q "let rebuilding=false" phase230-dev8.js
           grep -q "lastStateSignature" phase230-dev8.js
+      - name: Test runtime marker
+        shell: bash
+        run: |
+          grep -q "Runtime dev11.6" phase230-dev11.js
+          grep -q "H2H_PHASE230_TEST_READY" phase230-dev5.js
       - name: No temporary development marker files
         shell: bash
         run: |
