@@ -1,82 +1,123 @@
 (() => {
-  const VERSION='2.3.0-dev9';
+  const VERSION='2.3.0-dev9.2';
   const LIVE_KEY=typeof LIVE_LINEUP_STORAGE_KEY!=='undefined'?LIVE_LINEUP_STORAGE_KEY:'kickbaseCoachLiveLineupsV1';
   const norm=value=>String(value||'').toLocaleLowerCase('de-DE')
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
     .replace(/[^a-z0-9]+/g,' ').trim();
   const compact=value=>norm(value).replace(/\s+/g,'');
+  const surnameOf=p=>String(p?.last_name||p?.lastName||p?.name||'').trim().split(/\s+/).pop()||'';
+  const playerId=p=>p?.external_id??p?.externalId??p?.id??null;
+  const masterRows=()=>Array.isArray(window.BUNDESLIGA_PLAYERS)?window.BUNDESLIGA_PLAYERS:[];
 
-  // Verified current Bundesliga identity + Kickbase positional evidence from the supplied lineup screenshot.
-  const VERIFIED_ALIASES=[
-    {prefixes:['hashio','hashioka'],name:'Daiki Hashioka',team:'Borussia Mönchengladbach',kickbasePosition:'Abwehr'},
-    {prefixes:['becker','sheraldobecker'],name:'Sheraldo Becker',team:'1. FSV Mainz 05',kickbasePosition:'Sturm'}
-  ];
-
-  function masterRows(){return Array.isArray(window.BUNDESLIGA_PLAYERS)?window.BUNDESLIGA_PLAYERS:[]}
-  function surnameOf(p){return String(p?.last_name||p?.lastName||p?.name||'').trim().split(/\s+/).pop()||''}
-  function aliasFor(raw){
-    const ck=compact(raw);
-    return VERIFIED_ALIASES.find(a=>a.prefixes.some(prefix=>ck===prefix||ck.startsWith(prefix)||prefix.startsWith(ck)))||null;
-  }
-  function candidate(raw){
-    const key=norm(raw),ck=compact(raw);
-    if(!key)return null;
-    let rows=masterRows().filter(p=>{
-      const full=norm(p.name),sur=norm(surnameOf(p));
-      const fc=compact(p.name),sc=compact(surnameOf(p));
-      return full===key||sur===key||fc===ck||sc===ck||
-        (ck.length>=5&&(sc.startsWith(ck)||ck.startsWith(sc)||fc.endsWith(ck)));
+  function unique(rows){
+    const seen=new Set();
+    return rows.filter(p=>{
+      const id=playerId(p),key=id!=null?`id:${id}`:`name:${norm(p?.name)}`;
+      if(!key||seen.has(key))return false;
+      seen.add(key);return true;
     });
-    if(rows.length===1)return rows[0];
-    const alias=aliasFor(raw);
-    if(!alias)return null;
-    const current=masterRows().find(p=>compact(p.name)===compact(alias.name));
-    return current||{name:alias.name,team:alias.team,kickbase_position:alias.kickbasePosition,source:'verified-phase230-alias'};
   }
+
+  function editDistance(a,b){
+    a=String(a||'');b=String(b||'');
+    const prev=Array.from({length:b.length+1},(_,i)=>i),cur=Array(b.length+1).fill(0);
+    for(let i=1;i<=a.length;i++){
+      cur[0]=i;
+      for(let j=1;j<=b.length;j++)cur[j]=Math.min(cur[j-1]+1,prev[j]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));
+      for(let j=0;j<=b.length;j++)prev[j]=cur[j];
+    }
+    return prev[b.length];
+  }
+
+  function resolveCanonical(input,{externalPlayerId=null,team=''}={}){
+    const rows=unique(masterRows());
+    if(!rows.length)return null;
+    if(externalPlayerId!=null){
+      const byId=rows.filter(p=>String(playerId(p))===String(externalPlayerId));
+      if(byId.length===1)return {row:byId[0],confidence:1,reason:'master-id'};
+    }
+
+    const key=norm(input),ck=compact(input),teamKey=norm(team);
+    if(!key)return null;
+    const exact=rows.filter(p=>norm(p.name)===key||compact(p.name)===ck);
+    if(exact.length===1)return {row:exact[0],confidence:.999,reason:'exact-name'};
+
+    const surnameExact=rows.filter(p=>norm(surnameOf(p))===key||compact(surnameOf(p))===ck);
+    if(surnameExact.length===1)return {row:surnameExact[0],confidence:.985,reason:'unique-surname'};
+    if(surnameExact.length>1&&teamKey){
+      const sameTeam=surnameExact.filter(p=>norm(p.team)===teamKey);
+      if(sameTeam.length===1)return {row:sameTeam[0],confidence:.99,reason:'surname+team'};
+    }
+
+    if(ck.length>=5){
+      const prefix=rows.filter(p=>{
+        const sc=compact(surnameOf(p)),fc=compact(p.name);
+        return sc.startsWith(ck)||ck.startsWith(sc)||fc.startsWith(ck)||fc.endsWith(ck);
+      });
+      if(prefix.length===1)return {row:prefix[0],confidence:.96,reason:'unique-prefix'};
+      if(prefix.length>1&&teamKey){
+        const sameTeam=prefix.filter(p=>norm(p.team)===teamKey);
+        if(sameTeam.length===1)return {row:sameTeam[0],confidence:.97,reason:'prefix+team'};
+      }
+    }
+
+    if(ck.length>=5){
+      const fuzzy=rows.map(p=>{
+        const sc=compact(surnameOf(p)),fc=compact(p.name);
+        const d=Math.min(editDistance(ck,sc),editDistance(ck,fc));
+        const base=Math.max(ck.length,Math.min(sc.length||99,fc.length||99),1);
+        return {p,d,ratio:1-d/base};
+      }).filter(x=>x.d<=1&&x.ratio>=.8);
+      if(fuzzy.length===1)return {row:fuzzy[0].p,confidence:.93,reason:'unique-ocr-1char'};
+      if(fuzzy.length>1&&teamKey){
+        const sameTeam=fuzzy.filter(x=>norm(x.p.team)===teamKey);
+        if(sameTeam.length===1)return {row:sameTeam[0].p,confidence:.94,reason:'ocr+team'};
+      }
+    }
+    return null;
+  }
+
   function kickbasePos(row,raw){
     try{
-      const learned=window.h2h230KickbasePositionFor?.(row?.name||raw,row?.external_id??row?.id??null);
+      const learned=window.h2h230KickbasePositionFor?.(row?.name||raw,playerId(row));
       if(learned?.position)return learned.position;
     }catch{}
-    const alias=aliasFor(raw)||aliasFor(row?.name);
-    return alias?.kickbasePosition||row?.kickbase_position||row?.kickbasePosition||row?.position||'';
-  }
-  function canonicalIdentity(raw){
-    const row=candidate(raw);
-    if(!row)return null;
-    const alias=aliasFor(raw)||aliasFor(row.name);
-    return {
-      name:String(row.name||alias?.name||raw),
-      team:String(row.team||alias?.team||''),
-      position:kickbasePos(row,raw),
-      externalPlayerId:row.external_id??row.id??null,
-      source:row.source||'bundesliga-master'
-    };
+    return row?.kickbase_position||row?.kickbasePosition||row?.kb_position||row?.position||'';
   }
 
-  // Teach Dev7 the verified Kickbase position without overwriting official club position semantics.
-  for(const a of VERIFIED_ALIASES){
-    try{window.h2h230LearnKickbasePosition?.(a.name,a.kickbasePosition,'verified-kickbase-lineup-screenshot-2026-08-18',1)}catch{}
+  function canonicalIdentity(raw,context={}){
+    const hit=resolveCanonical(raw,context);
+    if(!hit)return null;
+    const row=hit.row;
+    return {
+      name:String(row.name||raw),
+      team:String(row.team||''),
+      position:kickbasePos(row,raw),
+      externalPlayerId:playerId(row),
+      source:`bundesliga-master:${hit.reason}`,
+      confidence:hit.confidence
+    };
   }
 
   function patchSnapshot(snap){
     if(!snap)return false;
     const raw=String(snap.rawName||snap.name||'').trim();
-    const hit=canonicalIdentity(raw);
+    const hit=canonicalIdentity(raw,{externalPlayerId:snap.externalPlayerId,team:snap.teamAtImport||snap.team||''});
     if(!hit)return false;
     const before=JSON.stringify([snap.name,snap.team,snap.position,snap.externalPlayerId,snap.state]);
     snap.name=hit.name;
     snap.team=hit.team||snap.team||'';
     snap.kickbasePosition=hit.position||snap.kickbasePosition||'';
     snap.position=hit.position||snap.position||'';
-    snap.positionSource=hit.position?'kickbase-canonical-dev9':(snap.positionSource||'');
+    snap.positionSource=hit.position?'kickbase-canonical-dev9.2':(snap.positionSource||'');
     snap.externalPlayerId=hit.externalPlayerId??snap.externalPlayerId??null;
-    snap.state='secure';
-    snap.reason='2.3 dev9: kanonische Spieleridentität nachgezogen';
+    snap.state=Number(hit.confidence||0)>=.93?'secure':(snap.state||'review');
+    snap.reason=`2.3 dev9.2: kanonische Spieleridentität (${hit.source})`;
     snap.linkedAt=new Date().toISOString();
     const after=JSON.stringify([snap.name,snap.team,snap.position,snap.externalPlayerId,snap.state]);
     return before!==after;
   }
+
   function patchNameList(list,snapshots){
     if(!Array.isArray(list))return list;
     return list.map(name=>{
@@ -84,6 +125,7 @@
       return snap?.name||canonicalIdentity(name)?.name||name;
     });
   }
+
   function migrateAll(){
     let changed=0;
     let liveStore={};
@@ -91,10 +133,7 @@
     for(const live of Object.values(liveStore||{})){
       const snaps=Array.isArray(live?.playerSnapshots)?live.playerSnapshots:[];
       for(const snap of snaps)if(patchSnapshot(snap))changed++;
-      if(snaps.length){
-        live.players=snaps.map(s=>s.name).filter(Boolean).slice(0,11);
-        live.count=live.players.length;
-      }
+      if(snaps.length){live.players=snaps.map(s=>s.name).filter(Boolean).slice(0,11);live.count=live.players.length}
     }
 
     const managerData=data?.league?.managerData||data?.competition?.managerData||data?.managerData||null;
@@ -120,27 +159,29 @@
     return changed;
   }
 
-  // Make roster rendering canonical as well, so the lower picker and the pitch never disagree again.
+  if(typeof resolveScreenshotPlayerV216==='function'){
+    const prior=resolveScreenshotPlayerV216;
+    resolveScreenshotPlayerV216=function(input,context={}){
+      const base=prior.apply(this,arguments);
+      if(base?.matched&&base?.externalPlayerId!=null)return base;
+      const hit=canonicalIdentity(input,{externalPlayerId:base?.externalPlayerId??context.externalPlayerId??null,team:context.team||context.club||base?.team||''});
+      if(!hit)return base;
+      return {matched:true,name:hit.name,team:hit.team,position:hit.position,externalPlayerId:hit.externalPlayerId,external_id:hit.externalPlayerId,confidence:hit.confidence,reason:hit.source,source:'phase230-general-canonical'};
+    };
+  }
+
   if(typeof opponentRoster==='function'){
     const prior=opponentRoster;
     opponentRoster=function(...args){
       const roster=(prior.apply(this,args)||[]).map(player=>{
-        const hit=canonicalIdentity(player?.name);
+        const hit=canonicalIdentity(player?.name,{externalPlayerId:player?.externalPlayerId??player?.external_id??null,team:player?.team||''});
         if(!hit)return player;
-        return {
-          ...player,
-          name:hit.name,
-          team:hit.team||player.team||'',
-          position:hit.position||player.position||'',
-          kickbasePosition:hit.position||player.kickbasePosition||'',
-          externalPlayerId:hit.externalPlayerId??player.externalPlayerId??player.external_id??null,
-          canonicalized230:true
-        };
+        return {...player,name:hit.name,team:hit.team||player.team||'',position:hit.position||player.position||'',kickbasePosition:hit.position||player.kickbasePosition||'',externalPlayerId:hit.externalPlayerId??player.externalPlayerId??player.external_id??null,canonicalized230:true};
       });
       const dedup=[];
       for(const p of roster){
-        const key=p.externalPlayerId!=null?`id:${p.externalPlayerId}`:`name:${norm(p.name)}`;
-        if(!dedup.some(x=>(x.externalPlayerId!=null?`id:${x.externalPlayerId}`:`name:${norm(x.name)}`)===key))dedup.push(p);
+        const id=p.externalPlayerId??p.external_id??null,key=id!=null?`id:${id}`:`name:${norm(p.name)}`;
+        if(!dedup.some(x=>{const xid=x.externalPlayerId??x.external_id??null;return (xid!=null?`id:${xid}`:`name:${norm(x.name)}`)===key}))dedup.push(p);
       }
       return dedup;
     };
@@ -153,9 +194,10 @@
     return changed+migrateAll();
   };
 
+  window.h2h230ResolveCanonicalPlayer=resolveCanonical;
   window.h2h230CanonicalIdentity=canonicalIdentity;
   window.h2h230CanonicalizeStoredOpponents=migrateAll;
-  setTimeout(()=>{try{migrateAll();window.h2h230RebuildOpponentPitch?.()}catch(e){console.warn('[H2H] dev9 migration skipped',e)}},1200);
+  setTimeout(()=>{try{migrateAll();window.h2h230RebuildOpponentPitch?.()}catch(e){console.warn('[H2H] dev9.2 migration skipped',e)}},1200);
   window.addEventListener('focus',()=>{try{migrateAll()}catch{}});
   console.info(`[H2H] Phase ${VERSION} loaded`);
 })();
