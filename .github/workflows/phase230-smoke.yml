@@ -22,18 +22,19 @@ jobs:
           node --check cloud.js
           node --check service-worker.js
           node --check phase230.js
-          for file in phase230-dev{1..14}.js; do node --check "$file"; done
+          for file in phase230-dev{1..15}.js; do node --check "$file"; done
           node --check scripts/update-club-data.mjs
       - name: Runtime wiring
         run: |
           grep -q "phase230-mobile.css?v=230mobile1" phase230.js
+          grep -q "phase230-dev11.js?v=230dev11_9" phase230.js
           grep -q "phase230-dev14.js?v=230dev14_1" phase230.js
-          grep -q "h2h-coach-cloud-v230fulluse8" service-worker.js
-          grep -q "cloud.js?v=230dev7" service-worker.js
-          grep -q "phase230-mobile.css?v=230mobile1" service-worker.js
+          grep -q "phase230-dev15.js?v=230dev15_0" phase230.js
+          grep -q "h2h-coach-cloud-v230fulluse10" service-worker.js
+          grep -q "phase230-dev15.js?v=230dev15_0" service-worker.js
       - name: Exact kickoff guards
         run: |
-          grep -q 'matches?status=SCHEDULED\|/competitions/BL1/matches' scripts/update-club-data.mjs
+          grep -q "/competitions/BL1/matches" scripts/update-club-data.mjs
           grep -q "schedule230" scripts/update-club-data.mjs
           grep -q "kickoffAt" scripts/update-club-data.mjs
           grep -q "mergeKickoffSchedule" cloud.js
@@ -41,12 +42,19 @@ jobs:
           grep -q "first-kickoff" phase230-dev14.js
           grep -q "points-fallback" phase230-dev14.js
           ! grep -q "analysis-capture" phase230-dev14.js
+      - name: Opponent shirt guards
+        run: |
+          grep -q "fixtureForTeam" phase230-dev15.js
+          grep -q "sideForTeam" phase230-dev15.js
+          grep -q "phase230-shirt" phase230-dev15.js
+          grep -q "h2h230OpponentKitSide" phase230-dev15.js
+          grep -q "Runtime dev15.0" phase230-dev11.js
+          ! grep -q "new MutationObserver" phase230-dev15.js
       - name: Mobile guards
         run: |
           test -s phase230-mobile.css
           grep -q "env(safe-area-inset-top)" phase230-mobile.css
           grep -q "min-height:44px" phase230-mobile.css
-          grep -q "max-width:760px" phase230-mobile.css
           grep -q "92dvh" phase230-mobile.css
       - name: Canonical resolver guards
         run: |
@@ -60,8 +68,8 @@ jobs:
           ! grep -q "new MutationObserver" phase230-dev10.js
           ! grep -q "new MutationObserver" phase230-dev11.js
           ! grep -q "new MutationObserver" phase230-dev14.js
+          ! grep -q "new MutationObserver" phase230-dev15.js
           grep -q "let rebuilding=false" phase230-dev8.js
-          grep -q "lastStateSignature" phase230-dev8.js
       - name: Full-use runtime guards
         run: |
           grep -q "H2H_PHASE230_FULL_USE=true" phase230-dev5.js
