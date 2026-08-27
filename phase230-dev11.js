@@ -1,5 +1,5 @@
 (() => {
-  const VERSION='2.3.0-dev11.6';
+  const VERSION='2.3.0-dev11.7';
   const STYLE_ID='phase230OpponentAnalysisPolish';
 
   function installStyle(){
@@ -8,7 +8,6 @@
     if(style.dataset.version===VERSION)return false;
     style.dataset.version=VERSION;
     style.textContent=`
-      /* Phase 2.3 dev11.6 — freeze-safe visual-only opponent analysis polish. */
       #phase230OpponentPitch.phase230-opponent-pitch-wrap{margin:16px 0;padding:16px;border-radius:20px;background:linear-gradient(180deg,rgba(15,24,31,.92),rgba(10,18,24,.94));border:1px solid rgba(255,255,255,.10);box-shadow:0 16px 42px rgba(0,0,0,.18)}
       #phase230OpponentPitch .phase230-opponent-pitch-head{align-items:center;margin-bottom:12px}
       #phase230OpponentPitch .phase230-opponent-pitch-head span{font-size:10px;letter-spacing:.14em;opacity:.55}
@@ -53,7 +52,7 @@
 
   function markRuntime(){
     const brand=document.querySelector('#sidebar .brand small');
-    if(brand)brand.textContent='Version 2.3.0 TEST · Runtime dev11.6 · Cloud-Schreiben AUS · 2026/27';
+    if(brand)brand.textContent='Version 2.3.0 TEST · Runtime dev11.7 · Cloud-Schreiben AKTIV · 2026/27';
   }
   function apply(){installStyle();polishPitchCopy();markRuntime()}
 
