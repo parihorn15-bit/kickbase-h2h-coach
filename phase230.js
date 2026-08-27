@@ -20,5 +20,6 @@
     .then(()=>load('phase230-dev9.js?v=230dev9_3','phase230dev9'))
     .then(()=>load('phase230-dev10.js?v=230dev10_4','phase230dev10'))
     .then(()=>load('phase230-dev11.js?v=230dev11_7','phase230dev11'))
+    .then(()=>load('phase230-dev12.js?v=230dev12_0','phase230dev12'))
     .catch(error=>console.error('2.3 runtime load failed',error));
 })();
