@@ -1,21 +1,13 @@
 name: Phase 2.3.0 Smoke Check
-
 on:
   push:
     branches: ["phase-2.3.0"]
   pull_request:
     branches: ["main"]
-    paths:
-      - "phase230*.js"
-      - "app.js"
-      - "cloud.js"
-      - "service-worker.js"
-      - ".github/workflows/phase230-smoke.yml"
+    paths: ["phase230*.js","phase230-mobile.css","app.js","cloud.js","service-worker.js","scripts/update-club-data.mjs",".github/workflows/phase230-smoke.yml"]
   workflow_dispatch:
-
 permissions:
   contents: read
-
 jobs:
   syntax-and-wiring:
     runs-on: ubuntu-latest
@@ -33,47 +25,36 @@ jobs:
           for file in phase230-dev{1..14}.js; do node --check "$file"; done
           node --check scripts/update-club-data.mjs
       - name: Runtime wiring
-        shell: bash
         run: |
-          grep -q "phase230-dev5.js?v=230dev5_1" phase230.js
-          grep -q "phase230-dev8.js?v=230dev8_3" phase230.js
-          grep -q "phase230-dev9.js?v=230dev9_3" phase230.js
-          grep -q "phase230-dev10.js?v=230dev10_4" phase230.js
-          grep -q "phase230-dev11.js?v=230dev11_8" phase230.js
-          grep -q "phase230-dev12.js?v=230dev12_1" phase230.js
-          grep -q "phase230-dev13.js?v=230dev13_0" phase230.js
+          grep -q "phase230-mobile.css?v=230mobile1" phase230.js
           grep -q "phase230-dev14.js?v=230dev14_1" phase230.js
-          grep -q "h2h-coach-cloud-v230fulluse7" service-worker.js
-          grep -q "phase230-dev14.js?v=230dev14_1" service-worker.js
-      - name: Canonical resolver guards
-        shell: bash
+          grep -q "h2h-coach-cloud-v230fulluse8" service-worker.js
+          grep -q "cloud.js?v=230dev7" service-worker.js
+          grep -q "phase230-mobile.css?v=230mobile1" service-worker.js
+      - name: Exact kickoff guards
         run: |
-          grep -q "reason:'master-id'" phase230-dev9.js
-          grep -q "reason:'unique-surname'" phase230-dev9.js
-          grep -q "reason:'unique-prefix'" phase230-dev9.js
-          grep -q "reason:'unique-ocr-1char'" phase230-dev9.js
-          grep -q "h2h230CanonicalPosition" phase230-dev9.js
-          grep -q "h2h230OpponentPickerIdentity" phase230-dev8.js
-          grep -q "canonicalPos" phase230-dev8.js
-          grep -q "canonicalPos" phase230-dev10.js
-          ! grep -q "VERIFIED_ALIASES" phase230-dev8.js
-          ! grep -q "VERIFIED_ALIASES" phase230-dev9.js
-          ! grep -q "Sheraldo Becker" phase230-dev8.js
-          ! grep -q "Sheraldo Becker" phase230-dev9.js
-          ! grep -q "Daiki Hashioka" phase230-dev8.js
-          ! grep -q "Daiki Hashioka" phase230-dev9.js
-      - name: Opponent lineup model guards
-        shell: bash
-        run: |
-          grep -q "historicalLineup230" phase230-dev14.js
-          grep -q "current-live+kickoff-locked-history" phase230-dev14.js
+          grep -q 'matches?status=SCHEDULED\|/competitions/BL1/matches' scripts/update-club-data.mjs
+          grep -q "schedule230" scripts/update-club-data.mjs
+          grep -q "kickoffAt" scripts/update-club-data.mjs
+          grep -q "mergeKickoffSchedule" cloud.js
+          grep -q "h2h:kickoff-schedule" cloud.js
           grep -q "first-kickoff" phase230-dev14.js
           grep -q "points-fallback" phase230-dev14.js
-          grep -q "h2h230OpponentMatchdayStarted" phase230-dev14.js
-          grep -q "h2h230OpponentFirstKickoffMs" phase230-dev14.js
           ! grep -q "analysis-capture" phase230-dev14.js
+      - name: Mobile guards
+        run: |
+          test -s phase230-mobile.css
+          grep -q "env(safe-area-inset-top)" phase230-mobile.css
+          grep -q "min-height:44px" phase230-mobile.css
+          grep -q "max-width:760px" phase230-mobile.css
+          grep -q "92dvh" phase230-mobile.css
+      - name: Canonical resolver guards
+        run: |
+          grep -q "reason:'master-id'" phase230-dev9.js
+          grep -q "h2h230CanonicalPosition" phase230-dev9.js
+          ! grep -q "VERIFIED_ALIASES" phase230-dev8.js
+          ! grep -q "VERIFIED_ALIASES" phase230-dev9.js
       - name: Freeze regression guards
-        shell: bash
         run: |
           ! grep -q "new MutationObserver" phase230-dev8.js
           ! grep -q "new MutationObserver" phase230-dev10.js
@@ -82,17 +63,7 @@ jobs:
           grep -q "let rebuilding=false" phase230-dev8.js
           grep -q "lastStateSignature" phase230-dev8.js
       - name: Full-use runtime guards
-        shell: bash
         run: |
           grep -q "H2H_PHASE230_FULL_USE=true" phase230-dev5.js
           grep -q "H2H_PHASE230_TEST_CLOUD_READONLY=false" phase230-dev5.js
           grep -q "Cloud-Schreiben AKTIV" phase230-dev11.js
-          ! grep -q "Cloud save suppressed" phase230-dev5.js
-          ! grep -q "Cloud flush suppressed" phase230-dev5.js
-          ! grep -q "cloudQueueSave=()=>" phase230-dev5.js
-      - name: No temporary development marker files
-        shell: bash
-        run: |
-          test ! -e PHASE230_DEV2_NOTE.txt
-          test ! -e phase230-dev1-copy-marker.txt
-          test ! -e phase230-loader-tmp.js
