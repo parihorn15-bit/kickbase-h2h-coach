@@ -1,4 +1,4 @@
-const CACHE_NAME='h2h-coach-cloud-v230fulluse3';
+const CACHE_NAME='h2h-coach-cloud-v230fulluse4';
 const CORE=[
   './',
   './index.html',
@@ -6,7 +6,7 @@ const CORE=[
   './config.js?v=215n',
   './app.js?v=215n',
   './cloud.js?v=230dev6',
-  './phase230.js?v=230fulluse3',
+  './phase230.js?v=230fulluse4',
   './phase230-dev1.js?v=230dev1',
   './phase230-dev2.js?v=230dev2',
   './phase230-dev3.js?v=230dev3',
@@ -19,6 +19,7 @@ const CORE=[
   './phase230-dev10.js?v=230dev10_4',
   './phase230-dev11.js?v=230dev11_7',
   './phase230-dev12.js?v=230dev12_1',
+  './phase230-dev13.js?v=230dev13_0',
   './manifest.webmanifest'
 ];
 
@@ -34,7 +35,7 @@ self.addEventListener('activate',event=>{
       .then(()=>self.clients.claim())
       .then(async()=>{
         const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});
-        for(const client of clients) client.postMessage({type:'APP_UPDATED',version:'2.3.0-test-fulluse3'});
+        for(const client of clients) client.postMessage({type:'APP_UPDATED',version:'2.3.0-test-fulluse4'});
       })
   );
 });
