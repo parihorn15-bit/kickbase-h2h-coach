@@ -30,15 +30,7 @@ jobs:
           node --check cloud.js
           node --check service-worker.js
           node --check phase230.js
-          node --check phase230-dev1.js
-          node --check phase230-dev2.js
-          node --check phase230-dev3.js
-          node --check phase230-dev4.js
-          node --check phase230-dev5.js
-          node --check phase230-dev6.js
-          node --check phase230-dev7.js
-          node --check phase230-dev8.js
-          node --check phase230-dev9.js
+          for file in phase230-dev{1..11}.js; do node --check "$file"; done
           node --check scripts/update-club-data.mjs
       - name: Runtime wiring
         shell: bash
@@ -50,17 +42,31 @@ jobs:
           grep -q "phase230-dev5.js?v=230dev5" phase230.js
           grep -q "phase230-dev6.js?v=230dev6" phase230.js
           grep -q "phase230-dev7.js?v=230dev7" phase230.js
-          grep -q "phase230-dev8.js?v=230dev8" phase230.js
+          grep -q "phase230-dev8.js?v=230dev8_2" phase230.js
           grep -q "phase230-dev9.js?v=230dev9" phase230.js
-          grep -q "h2h-coach-cloud-v230dev9" service-worker.js
-          grep -q "phase230-dev9.js?v=230dev9" service-worker.js
+          grep -q "phase230-dev10.js?v=230dev10_3" phase230.js
+          grep -q "phase230-dev11.js?v=230dev11_5" phase230.js
+          grep -q "h2h-coach-cloud-v230dev11_5" service-worker.js
+          grep -q "phase230-dev8.js?v=230dev8_2" service-worker.js
+          grep -q "phase230-dev10.js?v=230dev10_3" service-worker.js
+          grep -q "phase230-dev11.js?v=230dev11_5" service-worker.js
           grep -q "H2H_PHASE230_TEST_READY" phase230-dev5.js
           grep -q "h2h230LearnKickbasePosition" phase230-dev7.js
           grep -q "h2h230ResolveMasterSurname" phase230-dev8.js
           grep -q "h2h230RebuildOpponentPitch" phase230-dev8.js
           grep -q "h2h230CanonicalIdentity" phase230-dev9.js
           grep -q "Daiki Hashioka" phase230-dev9.js
+          grep -q "h2h230PatchOpponentPitchCanonical" phase230-dev10.js
+          grep -q "h2h230PolishOpponentAnalysis" phase230-dev11.js
           grep -q "deletePlayerIds" scripts/update-club-data.mjs
+      - name: Freeze regression guards
+        shell: bash
+        run: |
+          ! grep -q "new MutationObserver" phase230-dev8.js
+          ! grep -q "new MutationObserver" phase230-dev10.js
+          ! grep -q "new MutationObserver" phase230-dev11.js
+          grep -q "let rebuilding=false" phase230-dev8.js
+          grep -q "lastStateSignature" phase230-dev8.js
       - name: No temporary development marker files
         shell: bash
         run: |
