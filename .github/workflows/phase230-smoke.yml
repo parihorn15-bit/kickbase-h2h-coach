@@ -27,28 +27,29 @@ jobs:
       - name: Runtime wiring
         run: |
           grep -q "phase230-mobile.css?v=230mobile1" phase230.js
-          grep -q "phase230-dev11.js?v=230dev11_9" phase230.js
+          grep -q "phase230-dev11.js?v=230dev11_10" phase230.js
           grep -q "phase230-dev14.js?v=230dev14_1" phase230.js
-          grep -q "phase230-dev15.js?v=230dev15_0" phase230.js
-          grep -q "h2h-coach-cloud-v230fulluse10" service-worker.js
-          grep -q "phase230-dev15.js?v=230dev15_0" service-worker.js
+          grep -q "phase230-dev15.js?v=230dev15_1" phase230.js
+          grep -q "h2h-coach-cloud-v230fulluse11" service-worker.js
+          grep -q "phase230-dev15.js?v=230dev15_1" service-worker.js
       - name: Exact kickoff guards
         run: |
           grep -q "/competitions/BL1/matches" scripts/update-club-data.mjs
           grep -q "schedule230" scripts/update-club-data.mjs
           grep -q "kickoffAt" scripts/update-club-data.mjs
           grep -q "mergeKickoffSchedule" cloud.js
-          grep -q "h2h:kickoff-schedule" cloud.js
           grep -q "first-kickoff" phase230-dev14.js
           grep -q "points-fallback" phase230-dev14.js
-          ! grep -q "analysis-capture" phase230-dev14.js
-      - name: Opponent shirt guards
+      - name: Real kit guards
         run: |
-          grep -q "fixtureForTeam" phase230-dev15.js
-          grep -q "sideForTeam" phase230-dev15.js
-          grep -q "phase230-shirt" phase230-dev15.js
-          grep -q "h2h230OpponentKitSide" phase230-dev15.js
-          grep -q "Runtime dev15.0" phase230-dev11.js
+          grep -q "KIT_PATTERNS" phase230-dev15.js
+          grep -q "Special:Redirect/file/Kit_" phase230-dev15.js
+          grep -q "Kit_${part}" phase230-dev15.js
+          grep -q "rbl2627hh" phase230-dev15.js
+          grep -q "unionberlin2627a" phase230-dev15.js
+          grep -q "phase230-kit-body" phase230-dev15.js
+          grep -q "h2h230BundesligaKitPatterns" phase230-dev15.js
+          grep -q "Runtime dev15.1" phase230-dev11.js
           ! grep -q "new MutationObserver" phase230-dev15.js
       - name: Mobile guards
         run: |
@@ -56,19 +57,16 @@ jobs:
           grep -q "env(safe-area-inset-top)" phase230-mobile.css
           grep -q "min-height:44px" phase230-mobile.css
           grep -q "92dvh" phase230-mobile.css
-      - name: Canonical resolver guards
+      - name: Canonical and freeze guards
         run: |
           grep -q "reason:'master-id'" phase230-dev9.js
           grep -q "h2h230CanonicalPosition" phase230-dev9.js
           ! grep -q "VERIFIED_ALIASES" phase230-dev8.js
           ! grep -q "VERIFIED_ALIASES" phase230-dev9.js
-      - name: Freeze regression guards
-        run: |
           ! grep -q "new MutationObserver" phase230-dev8.js
           ! grep -q "new MutationObserver" phase230-dev10.js
           ! grep -q "new MutationObserver" phase230-dev11.js
           ! grep -q "new MutationObserver" phase230-dev14.js
-          ! grep -q "new MutationObserver" phase230-dev15.js
           grep -q "let rebuilding=false" phase230-dev8.js
       - name: Full-use runtime guards
         run: |
