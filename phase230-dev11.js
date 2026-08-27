@@ -52,7 +52,7 @@
 
   function markRuntime(){
     const brand=document.querySelector('#sidebar .brand small');
-    if(brand)brand.textContent='Version 2.3.0 TEST · Runtime dev11.7 · Cloud-Schreiben AKTIV · 2026/27';
+    if(brand)brand.textContent='Version 2.3.0 TEST · Runtime dev13.0 · Cloud-Schreiben AKTIV · 2026/27';
   }
   function apply(){installStyle();polishPitchCopy();markRuntime()}
 
