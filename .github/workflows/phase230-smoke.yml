@@ -35,22 +35,14 @@ jobs:
       - name: Runtime wiring
         shell: bash
         run: |
-          grep -q "phase230-dev1.js?v=230dev1" phase230.js
-          grep -q "phase230-dev2.js?v=230dev2" phase230.js
-          grep -q "phase230-dev3.js?v=230dev3" phase230.js
-          grep -q "phase230-dev4.js?v=230dev4" phase230.js
-          grep -q "phase230-dev5.js?v=230dev5" phase230.js
-          grep -q "phase230-dev6.js?v=230dev6" phase230.js
-          grep -q "phase230-dev7.js?v=230dev7" phase230.js
+          grep -q "phase230-dev5.js?v=230dev5_1" phase230.js
           grep -q "phase230-dev8.js?v=230dev8_3" phase230.js
           grep -q "phase230-dev9.js?v=230dev9_3" phase230.js
           grep -q "phase230-dev10.js?v=230dev10_4" phase230.js
-          grep -q "phase230-dev11.js?v=230dev11_6" phase230.js
-          grep -q "h2h-coach-cloud-v230dev11_7" service-worker.js
-          grep -q "phase230-dev8.js?v=230dev8_3" service-worker.js
-          grep -q "phase230-dev9.js?v=230dev9_3" service-worker.js
-          grep -q "phase230-dev10.js?v=230dev10_4" service-worker.js
-          grep -q "phase230-dev11.js?v=230dev11_6" service-worker.js
+          grep -q "phase230-dev11.js?v=230dev11_7" phase230.js
+          grep -q "h2h-coach-cloud-v230fulluse1" service-worker.js
+          grep -q "phase230-dev5.js?v=230dev5_1" service-worker.js
+          grep -q "phase230-dev11.js?v=230dev11_7" service-worker.js
       - name: Canonical resolver guards
         shell: bash
         run: |
@@ -76,11 +68,15 @@ jobs:
           ! grep -q "new MutationObserver" phase230-dev11.js
           grep -q "let rebuilding=false" phase230-dev8.js
           grep -q "lastStateSignature" phase230-dev8.js
-      - name: Test runtime marker
+      - name: Full-use runtime guards
         shell: bash
         run: |
-          grep -q "Runtime dev11.6" phase230-dev11.js
-          grep -q "H2H_PHASE230_TEST_READY" phase230-dev5.js
+          grep -q "H2H_PHASE230_FULL_USE=true" phase230-dev5.js
+          grep -q "H2H_PHASE230_TEST_CLOUD_READONLY=false" phase230-dev5.js
+          grep -q "Cloud-Schreiben AKTIV" phase230-dev11.js
+          ! grep -q "Cloud save suppressed" phase230-dev5.js
+          ! grep -q "Cloud flush suppressed" phase230-dev5.js
+          ! grep -q "cloudQueueSave=()=>" phase230-dev5.js
       - name: No temporary development marker files
         shell: bash
         run: |
