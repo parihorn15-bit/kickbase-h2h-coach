@@ -30,7 +30,7 @@ jobs:
           node --check cloud.js
           node --check service-worker.js
           node --check phase230.js
-          for file in phase230-dev{1..11}.js; do node --check "$file"; done
+          for file in phase230-dev{1..14}.js; do node --check "$file"; done
           node --check scripts/update-club-data.mjs
       - name: Runtime wiring
         shell: bash
@@ -39,10 +39,12 @@ jobs:
           grep -q "phase230-dev8.js?v=230dev8_3" phase230.js
           grep -q "phase230-dev9.js?v=230dev9_3" phase230.js
           grep -q "phase230-dev10.js?v=230dev10_4" phase230.js
-          grep -q "phase230-dev11.js?v=230dev11_7" phase230.js
-          grep -q "h2h-coach-cloud-v230fulluse1" service-worker.js
-          grep -q "phase230-dev5.js?v=230dev5_1" service-worker.js
-          grep -q "phase230-dev11.js?v=230dev11_7" service-worker.js
+          grep -q "phase230-dev11.js?v=230dev11_8" phase230.js
+          grep -q "phase230-dev12.js?v=230dev12_1" phase230.js
+          grep -q "phase230-dev13.js?v=230dev13_0" phase230.js
+          grep -q "phase230-dev14.js?v=230dev14_0" phase230.js
+          grep -q "h2h-coach-cloud-v230fulluse6" service-worker.js
+          grep -q "phase230-dev14.js?v=230dev14_0" service-worker.js
       - name: Canonical resolver guards
         shell: bash
         run: |
@@ -60,12 +62,22 @@ jobs:
           ! grep -q "Sheraldo Becker" phase230-dev9.js
           ! grep -q "Daiki Hashioka" phase230-dev8.js
           ! grep -q "Daiki Hashioka" phase230-dev9.js
+      - name: Opponent lineup model guards
+        shell: bash
+        run: |
+          grep -q "historicalLineup230" phase230-dev14.js
+          grep -q "current-live+immutable-matchday-snapshot" phase230-dev14.js
+          grep -q "h2h230OpponentCurrentLineup" phase230-dev14.js
+          grep -q "h2h230OpponentHistoricalLineup" phase230-dev14.js
+          grep -q "h2h230CaptureOpponentHistory" phase230-dev14.js
+          grep -q "Runtime dev14.0" phase230-dev11.js
       - name: Freeze regression guards
         shell: bash
         run: |
           ! grep -q "new MutationObserver" phase230-dev8.js
           ! grep -q "new MutationObserver" phase230-dev10.js
           ! grep -q "new MutationObserver" phase230-dev11.js
+          ! grep -q "new MutationObserver" phase230-dev14.js
           grep -q "let rebuilding=false" phase230-dev8.js
           grep -q "lastStateSignature" phase230-dev8.js
       - name: Full-use runtime guards
