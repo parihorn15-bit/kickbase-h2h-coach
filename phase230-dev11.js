@@ -1,5 +1,5 @@
 (() => {
-  const VERSION='2.3.0-dev11.5';
+  const VERSION='2.3.0-dev11.6';
   const STYLE_ID='phase230OpponentAnalysisPolish';
 
   function installStyle(){
@@ -8,7 +8,7 @@
     if(style.dataset.version===VERSION)return false;
     style.dataset.version=VERSION;
     style.textContent=`
-      /* Phase 2.3 dev11.5 — freeze-safe visual-only opponent analysis polish. */
+      /* Phase 2.3 dev11.6 — freeze-safe visual-only opponent analysis polish. */
       #phase230OpponentPitch.phase230-opponent-pitch-wrap{margin:16px 0;padding:16px;border-radius:20px;background:linear-gradient(180deg,rgba(15,24,31,.92),rgba(10,18,24,.94));border:1px solid rgba(255,255,255,.10);box-shadow:0 16px 42px rgba(0,0,0,.18)}
       #phase230OpponentPitch .phase230-opponent-pitch-head{align-items:center;margin-bottom:12px}
       #phase230OpponentPitch .phase230-opponent-pitch-head span{font-size:10px;letter-spacing:.14em;opacity:.55}
@@ -24,8 +24,6 @@
       #phase230OpponentPitch .phase230-opponent-bank{margin-top:10px;min-height:56px;padding:8px 10px;border-radius:12px;gap:7px;opacity:.84}
       #phase230OpponentPitch .phase230-opponent-bank>b{font-size:11px;opacity:.65}
       #phase230OpponentPitch .phase230-bank-player{min-width:112px;max-width:150px;background:rgba(31,42,48,.84)}
-
-      /* Analysis hierarchy: keep calculation/markup untouched and improve only presentation. */
       [role="dialog"] .opponent-analysis,[role="dialog"] [data-opponent-analysis],.modal .opponent-analysis,.modal [data-opponent-analysis]{display:grid;gap:10px}
       [role="dialog"] .opponent-analysis-card,[role="dialog"] .analysis-player-card,.modal .opponent-analysis-card,.modal .analysis-player-card{position:relative;border-radius:14px!important;padding:12px 14px!important;line-height:1.28;box-shadow:0 8px 22px rgba(0,0,0,.10)}
       [role="dialog"] .opponent-analysis-card h4,[role="dialog"] .analysis-player-card h4,.modal .opponent-analysis-card h4,.modal .analysis-player-card h4{margin:0 72px 3px 0!important;line-height:1.15;font-size:15px;font-weight:800}
@@ -35,21 +33,8 @@
       [role="dialog"] .opponent-analysis-card [class*="confidence"],[role="dialog"] .analysis-player-card [class*="confidence"],.modal .opponent-analysis-card [class*="confidence"],.modal .analysis-player-card [class*="confidence"]{font-size:10px;opacity:.58}
       [role="dialog"] .opponent-analysis-card ul,[role="dialog"] .analysis-player-card ul,.modal .opponent-analysis-card ul,.modal .analysis-player-card ul{margin:6px 0 0;padding-left:16px;font-size:11px;line-height:1.32;opacity:.76}
       [role="dialog"] .opponent-analysis-card li+li,[role="dialog"] .analysis-player-card li+li,.modal .opponent-analysis-card li+li,.modal .analysis-player-card li+li{margin-top:2px}
-
-      @media(min-width:980px){
-        [role="dialog"] .opponent-analysis,.modal .opponent-analysis,[role="dialog"] [data-opponent-analysis],.modal [data-opponent-analysis]{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
-      }
-      @media(max-width:720px){
-        #phase230OpponentPitch.phase230-opponent-pitch-wrap{padding:13px}
-        #phase230OpponentPitch .phase230-opponent-pitch-head{align-items:flex-start}
-        #phase230OpponentPitch .phase230-opponent-pitch-head small{text-align:left;max-width:none}
-        #phase230OpponentPitch .phase230-opponent-pitch{min-height:350px;padding:18px 7px;gap:11px}
-        #phase230OpponentPitch .phase230-pitch-row{gap:7px}
-        #phase230OpponentPitch .phase230-opp-player{min-width:94px;max-width:122px;padding:7px 8px}
-        #phase230OpponentPitch .phase230-opp-player b{font-size:11px}
-        #phase230OpponentPitch .phase230-opp-player small{font-size:8px}
-        [role="dialog"] .opponent-analysis-card,[role="dialog"] .analysis-player-card,.modal .opponent-analysis-card,.modal .analysis-player-card{padding:11px 12px!important}
-      }
+      @media(min-width:980px){[role="dialog"] .opponent-analysis,.modal .opponent-analysis,[role="dialog"] [data-opponent-analysis],.modal [data-opponent-analysis]{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}}
+      @media(max-width:720px){#phase230OpponentPitch.phase230-opponent-pitch-wrap{padding:13px}#phase230OpponentPitch .phase230-opponent-pitch-head{align-items:flex-start}#phase230OpponentPitch .phase230-opponent-pitch-head small{text-align:left;max-width:none}#phase230OpponentPitch .phase230-opponent-pitch{min-height:350px;padding:18px 7px;gap:11px}#phase230OpponentPitch .phase230-pitch-row{gap:7px}#phase230OpponentPitch .phase230-opp-player{min-width:94px;max-width:122px;padding:7px 8px}#phase230OpponentPitch .phase230-opp-player b{font-size:11px}#phase230OpponentPitch .phase230-opp-player small{font-size:8px}[role="dialog"] .opponent-analysis-card,[role="dialog"] .analysis-player-card,.modal .opponent-analysis-card,.modal .analysis-player-card{padding:11px 12px!important}}
     `;
     return true;
   }
@@ -66,13 +51,15 @@
     return false;
   }
 
-  function apply(){installStyle();polishPitchCopy()}
+  function markRuntime(){
+    const brand=document.querySelector('#sidebar .brand small');
+    if(brand)brand.textContent='Version 2.3.0 TEST · Runtime dev11.6 · Cloud-Schreiben AUS · 2026/27';
+  }
+  function apply(){installStyle();polishPitchCopy();markRuntime()}
 
   apply();
   setTimeout(apply,600);
-  document.addEventListener('change',event=>{
-    if(event.target?.matches?.('[data-opponent-player-state]'))setTimeout(apply,0);
-  });
+  document.addEventListener('change',event=>{if(event.target?.matches?.('[data-opponent-player-state]'))setTimeout(apply,0)});
   window.h2h230PolishOpponentAnalysis=apply;
   console.info(`[H2H] Phase ${VERSION} loaded`);
 })();
