@@ -1,7 +1,18 @@
 (() => {
-  const VERSION='2.3.0-dev8.2';
+  const VERSION='2.3.0-dev8.3';
   const norm=value=>String(value||'').toLocaleLowerCase('de-DE').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
   const compact=value=>norm(value).replace(/\s+/g,'');
+  const canonicalPos=value=>{
+    const raw=String(value||'').trim();
+    if(!raw)return '';
+    try{const mapped=canonicalLineupPosition(raw);if(mapped)return mapped}catch{}
+    const k=norm(raw);
+    if(/tor|goal|keeper|gk/.test(k))return 'Tor';
+    if(/abwehr|defence|defender|verteid|back/.test(k))return 'Abwehr';
+    if(/mittel|midfield|midfielder|mid/.test(k))return 'Mittelfeld';
+    if(/sturm|angriff|offence|forward|striker|attack/.test(k))return 'Sturm';
+    return '';
+  };
 
   if(!document.getElementById('phase230OpponentPitchStyle')){
     const style=document.createElement('style');
@@ -25,7 +36,6 @@
     let matches=rows.filter(p=>{const full=norm(p.name),surname=norm(surnameOf(p)),fc=compact(p.name),sc=compact(surnameOf(p));return full===key||surname===key||fc===ck||sc===ck});
     if(matches.length===1)return matches[0];
     if(!matches.length&&ck.length>=5){matches=rows.filter(p=>{const s=compact(surnameOf(p)),f=compact(p.name);return s.startsWith(ck)||ck.startsWith(s)||f.endsWith(ck)||f.startsWith(ck)});if(matches.length===1)return matches[0]}
-    if(ck==='becker'){const becker=rows.find(p=>compact(p.name)==='sheraldobecker');if(becker)return becker}
     return null;
   }
 
@@ -34,12 +44,39 @@
     resolveScreenshotPlayerV216=function(input,context={}){
       const base=prior.apply(this,arguments); if(base?.matched)return base;
       const candidate=masterCandidateForRaw(input); if(!candidate)return base;
-      return {matched:true,name:candidate.name,team:candidate.team||'',position:candidate.kickbase_position||candidate.kickbasePosition||candidate.position||'',externalPlayerId:candidate.external_id??candidate.id??null,confidence:.97,reason:'Eindeutiger aktueller Bundesliga-Mastertreffer (Nachname/Präfix)',source:'phase230-dev8-master-surname'};
+      return {matched:true,name:candidate.name,team:candidate.team||'',position:canonicalPos(candidate.kickbase_position||candidate.kickbasePosition||candidate.position||'')||candidate.kickbase_position||candidate.kickbasePosition||candidate.position||'',externalPlayerId:candidate.external_id??candidate.id??null,confidence:.97,reason:'Eindeutiger aktueller Bundesliga-Mastertreffer (Nachname/Präfix)',source:'phase230-dev8-master-surname'};
     };
   }
 
-  function positionOf(name){try{const kb=window.h2h230KickbasePositionFor?.(name);if(kb?.position)return kb.position}catch{} const master=masterCandidateForRaw(name);const raw=master?.kickbase_position||master?.kickbasePosition||master?.position||'';if(typeof canonicalLineupPosition==='function')return canonicalLineupPosition(raw)||raw||'Unbekannt';return raw||'Unbekannt'}
-  function teamOf(name){return masterCandidateForRaw(name)?.team||''}
+  function pickerMetadata(name){
+    const select=[...document.querySelectorAll('[data-opponent-player-state]')].find(el=>el.dataset.opponentPlayerState===name);
+    const article=select?.closest?.('.opponent-roster-player');
+    const small=article?.querySelector('small')?.textContent?.trim()||'';
+    if(!small)return null;
+    const parts=small.split('·').map(x=>x.trim()).filter(Boolean);
+    const maybePos=parts.length>1?parts.at(-1):'';
+    const pos=canonicalPos(maybePos);
+    const team=parts.length>1?parts.slice(0,-1).join(' · '):small;
+    return {team:team==='Verein unbekannt'?'':team,position:pos||''};
+  }
+
+  function identityFor(name){
+    const picker=pickerMetadata(name)||{};
+    let canonical=null;
+    try{canonical=window.h2h230CanonicalIdentity?.(name,{team:picker.team||''})||null}catch{}
+    const master=canonical?null:masterCandidateForRaw(name);
+    let learned='';
+    try{learned=window.h2h230KickbasePositionFor?.(canonical?.name||name,canonical?.externalPlayerId??null)?.position||''}catch{}
+    const rawPos=learned||canonical?.position||picker.position||master?.kickbase_position||master?.kickbasePosition||master?.position||'';
+    return {
+      name:canonical?.name||master?.name||name,
+      team:canonical?.team||picker.team||master?.team||'',
+      position:canonicalPos(rawPos)||rawPos||'Unbekannt',
+      externalPlayerId:canonical?.externalPlayerId??master?.external_id??master?.id??null
+    };
+  }
+
+  function positionOf(name){return identityFor(name).position||'Unbekannt'}
   function escHtml(value){if(typeof esc==='function')return esc(value);return String(value??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]))}
 
   let dragName='';
@@ -48,7 +85,7 @@
   function selectedNames(value){return [...document.querySelectorAll('[data-opponent-player-state]')].filter(el=>el.value===value).map(el=>el.dataset.opponentPlayerState).filter(Boolean)}
   function stateSignature(){return [...document.querySelectorAll('[data-opponent-player-state]')].map(el=>`${el.dataset.opponentPlayerState||''}:${el.value||''}`).join('|')}
   function setState(name,state){const select=[...document.querySelectorAll('[data-opponent-player-state]')].find(el=>el.dataset.opponentPlayerState===name);if(!select)return;select.value=state;select.dispatchEvent(new Event('change',{bubbles:true}))}
-  function card(name,state){const pos=positionOf(name),team=teamOf(name)||'Verein unbekannt';return `<button type="button" class="phase230-opp-player ${state==='bank'?'phase230-bank-player':'phase230-field-player'}" draggable="true" data-phase230-opp-drag="${escHtml(name)}"><b>${escHtml(name.split(/\s+/).pop())}</b><small>${escHtml(team)} · ${escHtml(pos)}</small></button>`}
+  function card(name,state){const hit=identityFor(name);return `<button type="button" class="phase230-opp-player ${state==='bank'?'phase230-bank-player':'phase230-field-player'}" draggable="true" data-phase230-opp-drag="${escHtml(name)}"${hit.externalPlayerId!=null?` data-phase230-player-id="${escHtml(hit.externalPlayerId)}"`:''}><b>${escHtml(String(hit.name||name).split(/\s+/).pop())}</b><small>${escHtml(hit.team||'Verein unbekannt')} · ${escHtml(hit.position||'Unbekannt')}</small></button>`}
   function rebuildInteractiveOpponentField(){
     if(rebuilding)return false;
     const picker=document.querySelector('.opponent-roster-picker'); if(!picker)return false;
@@ -67,30 +104,18 @@
       box.querySelectorAll('[data-phase230-drop]').forEach(zone=>{zone.addEventListener('dragover',e=>e.preventDefault());zone.addEventListener('drop',e=>{e.preventDefault();if(!dragName)return;const target=zone.dataset.phase230Drop;if(target==='lineup'&&selectedNames('lineup').length>=11&&!selectedNames('lineup').includes(dragName)){if(typeof toast==='function')toast('Maximal 11 Spieler in der Startelf');return}setState(dragName,target);dragName=''})});
       try{window.h2h230PatchOpponentPitchCanonical?.();window.h2h230PolishOpponentAnalysis?.()}catch{}
       return true;
-    }finally{
-      rebuilding=false;
-    }
+    }finally{rebuilding=false}
   }
 
-  // Freeze-safe lifecycle: no document-wide MutationObserver. Rebuild only after relevant user/UI events.
-  // State deduplication prevents a synthetic change event plus follow-up hooks from rebuilding the same pitch repeatedly.
   let scheduled=false;
-  function scheduleRebuild(delay=40){
-    if(scheduled)return;
-    scheduled=true;
-    setTimeout(()=>{scheduled=false;rebuildInteractiveOpponentField()},delay);
-  }
-  document.addEventListener('change',event=>{
-    if(event.target?.matches?.('[data-opponent-player-state]'))scheduleRebuild(0);
-  });
-  document.addEventListener('click',event=>{
-    const target=event.target;
-    if(target?.closest?.('.opponent-roster-picker,[data-opponent-player-state]')||/bearbeiten|aufstellung|spieltag/i.test(target?.textContent||''))scheduleRebuild(80);
-  });
+  function scheduleRebuild(delay=40){if(scheduled)return;scheduled=true;setTimeout(()=>{scheduled=false;rebuildInteractiveOpponentField()},delay)}
+  document.addEventListener('change',event=>{if(event.target?.matches?.('[data-opponent-player-state]'))scheduleRebuild(0)});
+  document.addEventListener('click',event=>{const target=event.target;if(target?.closest?.('.opponent-roster-picker,[data-opponent-player-state]')||/bearbeiten|aufstellung|spieltag/i.test(target?.textContent||''))scheduleRebuild(80)});
   window.addEventListener('focus',()=>scheduleRebuild(100));
   setTimeout(()=>scheduleRebuild(0),500);
 
   window.h2h230ResolveMasterSurname=masterCandidateForRaw;
+  window.h2h230OpponentPickerIdentity=identityFor;
   window.h2h230RebuildOpponentPitch=rebuildInteractiveOpponentField;
   console.info(`[H2H] Phase ${VERSION} loaded`);
 })();
