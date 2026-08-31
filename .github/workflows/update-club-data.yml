@@ -3,7 +3,7 @@ on:
   schedule:
     - cron: "35 */6 * * *"
   push:
-    branches: ["phase-2.3.0"]
+    branches: ["main"]
     paths:
       - "scripts/update-club-data.mjs"
       - ".github/workflows/update-club-data.yml"
