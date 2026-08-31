@@ -1,5 +1,5 @@
 (() => {
-  const VERSION='2.3.0-dev12.1';
+  const VERSION='2.3.0-dev12.2';
   let editContext=null;
 
   function selectedLineup(){
@@ -47,7 +47,7 @@
 
   function markRuntime(){
     const brand=document.querySelector('#sidebar .brand small');
-    if(brand)brand.textContent='Version 2.3.0 TEST · Runtime dev12.1 · Cloud-Schreiben AKTIV · 2026/27';
+    if(brand)brand.textContent='Version 2.3.0 · Runtime dev18.0 · Cloud-Schreiben AKTIV · 2026/27';
   }
   markRuntime();
   setTimeout(markRuntime,700);
