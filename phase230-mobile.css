@@ -1,8 +1,13 @@
 /* Phase 2.3 smartphone-first responsive layer */
 html{-webkit-text-size-adjust:100%}body{min-width:0}button,.btn,.nav-btn,.tab,.squad-tab,.cloud-badge{touch-action:manipulation}
 @media(max-width:760px){
-  body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom)}
+  /* Reserve enough scroll space for the persistent mobile navigation. The
+     navigation intentionally floats above the app, so page content must be
+     able to scroll completely past it instead of ending underneath it. */
+  body{overflow-x:hidden;padding-bottom:calc(118px + env(safe-area-inset-bottom))}
+  .app{padding-bottom:calc(118px + env(safe-area-inset-bottom))}
   .app,main,#content{width:100%;min-width:0}
+  #content{padding:10px 10px calc(118px + env(safe-area-inset-bottom))}
   header{top:0;padding:calc(10px + env(safe-area-inset-top)) 10px 10px;gap:9px;align-items:center}
   header>div:nth-child(2){min-width:0;flex:1}header h1{font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}header p{display:none}
   #menuBtn{min-width:44px;min-height:44px;border-radius:12px;background:#111d31;font-size:20px}
@@ -10,7 +15,7 @@ html{-webkit-text-size-adjust:100%}body{min-width:0}button,.btn,.nav-btn,.tab,.s
   aside{width:min(86vw,320px);left:min(-88vw,-330px);padding-top:calc(16px + env(safe-area-inset-top));padding-bottom:calc(14px + env(safe-area-inset-bottom));box-shadow:20px 0 55px rgba(0,0,0,.5)}
   aside.open{left:0}.sidebar-backdrop{position:fixed;inset:0;background:rgba(2,6,23,.66);z-index:19;display:none}.sidebar-backdrop.open{display:block}
   .nav-btn,.aside-actions button,.aside-actions label{min-height:46px;font-size:14px}
-  #content{padding:10px}.grid{gap:10px}.card{padding:13px;border-radius:15px}.section-head{align-items:flex-start;gap:8px;flex-wrap:wrap}.section-head>div{min-width:0}
+  .grid{gap:10px}.card{padding:13px;border-radius:15px}.section-head{align-items:flex-start;gap:8px;flex-wrap:wrap}.section-head>div{min-width:0}
   .kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.kpi strong{font-size:21px}.kpi{min-width:0}
   .player-card{padding:12px}.player-card .name{font-size:15px}.player-card .actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.player-card .actions .btn{width:100%}
   .btn,button,input,select,textarea{min-height:44px}.btn.small{min-height:38px;padding:8px 10px}
