@@ -1,5 +1,5 @@
 (() => {
-  const VERSION='2.3.0-dev14.1';
+  const VERSION='2.3.0-dev14.2';
   const LIVE_KEY=typeof LIVE_LINEUP_STORAGE_KEY!=='undefined'?LIVE_LINEUP_STORAGE_KEY:'kickbaseCoachLiveLineupsV1';
   let editContext=null;
 
@@ -39,7 +39,7 @@
         localStorage.setItem(LIVE_KEY,JSON.stringify(store));
       }
       return result||rawLive(managerId);
-    }catch(error){console.warn('[H2H] dev14.1 current opponent save failed',error);return null}
+    }catch(error){console.warn('[H2H] dev14.2 current opponent save failed',error);return null}
   }
 
   function fixtureKickoffMs(fixture){
@@ -67,7 +67,6 @@
     return values.length?Math.min(...values):null;
   }
   function matchdayStarted(md){const first=firstKickoffMs(md);return Number.isFinite(first)&&Date.now()>=first}
-  function hasPoints(row){return row?.points!==null&&row?.points!==undefined&&String(row.points).trim()!==''&&Number.isFinite(Number(row.points))}
 
   function captureHistory(managerId,md,{lineup=null,bank=null,formation=null,source='kickoff-lock'}={}){
     const row=rowFor(managerId,md);if(!row)return null;
@@ -93,7 +92,6 @@
   function ensureHistoryIfLocked(managerId,md){
     const row=rowFor(managerId,md);if(!row||historical(row))return historical(row);
     if(matchdayStarted(md))return captureHistory(managerId,md,{source:'first-kickoff'});
-    if(hasPoints(row))return captureHistory(managerId,md,{source:'points-fallback'});
     return null;
   }
 
@@ -146,12 +144,9 @@
     const lineup=button.id==='clearOpponentMd'?[]:currentLineupFromModal();
     const bank=button.id==='clearOpponentMd'?[]:currentBankFromModal();
     const formation=button.id==='clearOpponentMd'?'':String(document.getElementById('oppMdFormation')?.value||currentFormation(ctx.managerId)||'');
-    const pointsValue=document.getElementById('oppMdPoints')?.value;
 
-    if(!historical(row)&&pointsValue!==undefined&&pointsValue!==''&&Number.isFinite(Number(pointsValue))){
-      captureHistory(ctx.managerId,ctx.md,{lineup,bank,formation,source:'points-fallback'});
-    }else if(!historical(row)&&matchdayStarted(ctx.md)){
-      captureHistory(ctx.managerId,ctx.md,{source:'first-kickoff'});
+    if(!historical(row)&&matchdayStarted(ctx.md)){
+      captureHistory(ctx.managerId,ctx.md,{lineup,bank,formation,source:'first-kickoff'});
     }
 
     setTimeout(()=>{
@@ -171,6 +166,7 @@
   }
   setTimeout(sweepLocks,1200);
   window.addEventListener('focus',sweepLocks);
+  window.addEventListener('h2h:kickoff-schedule',sweepLocks);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)sweepLocks()});
 
   window.h2h230OpponentCurrentLineup=managerId=>rawLive(managerId);
