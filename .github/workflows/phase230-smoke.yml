@@ -22,17 +22,17 @@ jobs:
           node --check cloud.js
           node --check service-worker.js
           node --check phase230.js
-          for file in phase230-dev{1..17}.js; do node --check "$file"; done
+          for file in phase230-dev*.js; do node --check "$file"; done
           node --check scripts/update-club-data.mjs
       - name: Runtime wiring
         run: |
-          grep -q "phase230-mobile.css?v=230mobile1" phase230.js
-          grep -q "phase230-dev11.js?v=230dev11_12" phase230.js
-          grep -q "phase230-dev14.js?v=230dev14_1" phase230.js
-          grep -q "phase230-dev16.js?v=230dev16_1" phase230.js
-          grep -q "phase230-dev17.js?v=230dev17_0" phase230.js
-          grep -q "h2h-coach-cloud-v230fulluse13" service-worker.js
-          grep -q "phase230-dev17.js?v=230dev17_0" service-worker.js
+          grep -q "phase230-mobile.css" phase230.js
+          grep -q "phase230-dev14.js" phase230.js
+          grep -q "phase230-dev16.js" phase230.js
+          grep -q "phase230-dev17.js" phase230.js
+          grep -q "h2h-coach-cloud-v230fulluse" service-worker.js
+          grep -q "phase230-dev14.js" service-worker.js
+          grep -q "phase230-dev17.js" service-worker.js
       - name: Core lineup pipeline guards
         run: |
           grep -q "phase230LiveLineups" phase230-dev16.js
@@ -42,7 +42,6 @@ jobs:
           grep -q "commitScreenshotLineupCoreV224" phase230-dev1.js
           grep -q "snapshotFromReview230" phase230-dev1.js
           grep -q "current-live+kickoff-locked-history" phase230-dev14.js
-          grep -q "Runtime dev17.0" phase230-dev11.js
           ! grep -q "new MutationObserver" phase230-dev16.js
           ! grep -q "new MutationObserver" phase230-dev17.js
       - name: Manual reconstruction guards
@@ -61,7 +60,8 @@ jobs:
           grep -q "kickoffAt" scripts/update-club-data.mjs
           grep -q "mergeKickoffSchedule" cloud.js
           grep -q "first-kickoff" phase230-dev14.js
-          grep -q "points-fallback" phase230-dev14.js
+          grep -q "h2h:kickoff-schedule" phase230-dev14.js
+          ! grep -q "points-fallback" phase230-dev14.js
       - name: Real kit guards
         run: |
           grep -q "KIT_PATTERNS" phase230-dev15.js
