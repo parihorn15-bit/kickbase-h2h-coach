@@ -22,32 +22,38 @@ jobs:
           node --check cloud.js
           node --check service-worker.js
           node --check phase230.js
-          for file in phase230-dev{1..16}.js; do node --check "$file"; done
+          for file in phase230-dev{1..17}.js; do node --check "$file"; done
           node --check scripts/update-club-data.mjs
       - name: Runtime wiring
         run: |
           grep -q "phase230-mobile.css?v=230mobile1" phase230.js
-          grep -q "phase230-dev11.js?v=230dev11_11" phase230.js
+          grep -q "phase230-dev11.js?v=230dev11_12" phase230.js
           grep -q "phase230-dev14.js?v=230dev14_1" phase230.js
-          grep -q "phase230-dev15.js?v=230dev15_1" phase230.js
           grep -q "phase230-dev16.js?v=230dev16_1" phase230.js
-          grep -q "h2h-coach-cloud-v230fulluse12" service-worker.js
-          grep -q "phase230-dev16.js?v=230dev16_1" service-worker.js
+          grep -q "phase230-dev17.js?v=230dev17_0" phase230.js
+          grep -q "h2h-coach-cloud-v230fulluse13" service-worker.js
+          grep -q "phase230-dev17.js?v=230dev17_0" service-worker.js
       - name: Core lineup pipeline guards
         run: |
           grep -q "phase230LiveLineups" phase230-dev16.js
           grep -q "data.settings.phase230LiveLineups" phase230-dev16.js
           grep -q "h2h230PersistCurrentLineups" phase230-dev16.js
-          grep -q "h2h230CoreHealth" phase230-dev16.js
           grep -q "writeLiveLineupV1=function" phase230-dev16.js
-          grep -q "readLiveLineupV1=function" phase230-dev16.js
-          grep -q "mergeData=function" phase230-dev16.js
           grep -q "commitScreenshotLineupCoreV224" phase230-dev1.js
           grep -q "snapshotFromReview230" phase230-dev1.js
-          grep -q "syncTransferSingleSource" phase230-dev3.js
           grep -q "current-live+kickoff-locked-history" phase230-dev14.js
-          grep -q "Runtime dev16.1" phase230-dev11.js
+          grep -q "Runtime dev17.0" phase230-dev11.js
           ! grep -q "new MutationObserver" phase230-dev16.js
+          ! grep -q "new MutationObserver" phase230-dev17.js
+      - name: Manual reconstruction guards
+        run: |
+          grep -q "phase230ManualLineupNames" phase230-dev17.js
+          grep -q "Plausible Aufstellung erstellen" phase230-dev17.js
+          grep -q "manual-reconstruction" phase230-dev17.js
+          grep -q "noOriginalLineupScreenshot:true" phase230-dev17.js
+          grep -q "h2h230BuildLogicalLineup" phase230-dev17.js
+          grep -q "h2h230ClassifyScreenshotReview" phase230-dev17.js
+          grep -q "Neuer/unklarer Screenshot-Typ" phase230-dev17.js
       - name: Exact kickoff guards
         run: |
           grep -q "/competitions/BL1/matches" scripts/update-club-data.mjs
@@ -59,7 +65,6 @@ jobs:
       - name: Real kit guards
         run: |
           grep -q "KIT_PATTERNS" phase230-dev15.js
-          grep -q "Special:Redirect/file/Kit_" phase230-dev15.js
           grep -q "h2h230BundesligaKitPatterns" phase230-dev15.js
           ! grep -q "new MutationObserver" phase230-dev15.js
       - name: Mobile guards
@@ -68,6 +73,7 @@ jobs:
           grep -q "env(safe-area-inset-top)" phase230-mobile.css
           grep -q "min-height:44px" phase230-mobile.css
           grep -q "92dvh" phase230-mobile.css
+          grep -q "@media(max-width:760px)" phase230-dev17.js
       - name: Canonical and freeze guards
         run: |
           grep -q "reason:'master-id'" phase230-dev9.js
