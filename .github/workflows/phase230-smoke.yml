@@ -30,9 +30,11 @@ jobs:
           grep -q "phase230-dev14.js" phase230.js
           grep -q "phase230-dev16.js" phase230.js
           grep -q "phase230-dev17.js" phase230.js
+          grep -q "phase230-dev18.js" phase230.js
           grep -q "h2h-coach-cloud-v230fulluse" service-worker.js
           grep -q "phase230-dev14.js" service-worker.js
           grep -q "phase230-dev17.js" service-worker.js
+          grep -q "phase230-dev18.js" service-worker.js
       - name: Core lineup pipeline guards
         run: |
           grep -q "phase230LiveLineups" phase230-dev16.js
@@ -44,6 +46,7 @@ jobs:
           grep -q "current-live+kickoff-locked-history" phase230-dev14.js
           ! grep -q "new MutationObserver" phase230-dev16.js
           ! grep -q "new MutationObserver" phase230-dev17.js
+          ! grep -q "new MutationObserver" phase230-dev18.js
       - name: Manual reconstruction guards
         run: |
           grep -q "phase230ManualLineupNames" phase230-dev17.js
@@ -53,6 +56,14 @@ jobs:
           grep -q "h2h230BuildLogicalLineup" phase230-dev17.js
           grep -q "h2h230ClassifyScreenshotReview" phase230-dev17.js
           grep -q "Neuer/unklarer Screenshot-Typ" phase230-dev17.js
+      - name: Points finalization guards
+        run: |
+          grep -q "pointsFinal230" phase230-dev18.js
+          grep -q "pointsFinalValue230" phase230-dev18.js
+          grep -q "Punkte finalisieren" phase230-dev18.js
+          grep -q "Finalisierung aufheben" phase230-dev18.js
+          grep -q "manual-kickbase-opta-final" phase230-dev18.js
+          grep -q "provisional-to-final-with-explicit-unlock" phase230-dev18.js
       - name: Exact kickoff guards
         run: |
           grep -q "/competitions/BL1/matches" scripts/update-club-data.mjs
@@ -74,6 +85,7 @@ jobs:
           grep -q "min-height:44px" phase230-mobile.css
           grep -q "92dvh" phase230-mobile.css
           grep -q "@media(max-width:760px)" phase230-dev17.js
+          grep -q "@media(max-width:760px)" phase230-dev18.js
       - name: Canonical and freeze guards
         run: |
           grep -q "reason:'master-id'" phase230-dev9.js
