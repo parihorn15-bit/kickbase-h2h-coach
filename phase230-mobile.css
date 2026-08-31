@@ -1,0 +1,32 @@
+/* Phase 2.3 smartphone-first responsive layer */
+html{-webkit-text-size-adjust:100%}body{min-width:0}button,.btn,.nav-btn,.tab,.squad-tab,.cloud-badge{touch-action:manipulation}
+@media(max-width:760px){
+  body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom)}
+  .app,main,#content{width:100%;min-width:0}
+  header{top:0;padding:calc(10px + env(safe-area-inset-top)) 10px 10px;gap:9px;align-items:center}
+  header>div:nth-child(2){min-width:0;flex:1}header h1{font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}header p{display:none}
+  #menuBtn{min-width:44px;min-height:44px;border-radius:12px;background:#111d31;font-size:20px}
+  .header-actions{margin-left:0;min-width:0}.cloud-badge{max-width:108px;overflow:hidden;text-overflow:ellipsis;padding:8px 9px}
+  aside{width:min(86vw,320px);left:min(-88vw,-330px);padding-top:calc(16px + env(safe-area-inset-top));padding-bottom:calc(14px + env(safe-area-inset-bottom));box-shadow:20px 0 55px rgba(0,0,0,.5)}
+  aside.open{left:0}.sidebar-backdrop{position:fixed;inset:0;background:rgba(2,6,23,.66);z-index:19;display:none}.sidebar-backdrop.open{display:block}
+  .nav-btn,.aside-actions button,.aside-actions label{min-height:46px;font-size:14px}
+  #content{padding:10px}.grid{gap:10px}.card{padding:13px;border-radius:15px}.section-head{align-items:flex-start;gap:8px;flex-wrap:wrap}.section-head>div{min-width:0}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.kpi strong{font-size:21px}.kpi{min-width:0}
+  .player-card{padding:12px}.player-card .name{font-size:15px}.player-card .actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.player-card .actions .btn{width:100%}
+  .btn,button,input,select,textarea{min-height:44px}.btn.small{min-height:38px;padding:8px 10px}
+  input,select,textarea{font-size:16px}textarea{min-height:110px}
+  .toolbar{width:100%;gap:7px}.toolbar>.btn,.toolbar>button{flex:1 1 130px}
+  .tabs,.squad-tabs{overflow-x:auto;flex-wrap:nowrap;display:flex;padding-bottom:4px;scrollbar-width:none}.tabs::-webkit-scrollbar,.squad-tabs::-webkit-scrollbar{display:none}.tab,.squad-tab{flex:0 0 auto;min-height:42px}
+  .table-wrap{margin-inline:-3px;border-radius:11px;-webkit-overflow-scrolling:touch}table{min-width:680px}th,td{padding:9px 8px}
+  .fixture{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);padding:9px 7px;gap:6px}.fixture .home,.fixture>*{min-width:0}.fixture .home,.fixture .away{font-size:12px;overflow-wrap:anywhere}
+  .bar-row{grid-template-columns:88px minmax(0,1fr) 55px;gap:7px;font-size:11px}
+  .modal-backdrop,.cloud-panel{padding:0;align-items:end}.modal-card,.cloud-panel-card{width:100%;max-height:92dvh;border-radius:20px 20px 0 0;padding:15px 13px calc(14px + env(safe-area-inset-bottom));overscroll-behavior:contain}
+  #phase230OpponentPitch.phase230-opponent-pitch-wrap{margin:10px -3px;padding:10px!important;border-radius:15px!important}
+  #phase230OpponentPitch .phase230-opponent-pitch{min-height:330px!important;padding:14px 4px!important;gap:9px!important;overflow-x:auto}
+  #phase230OpponentPitch .phase230-pitch-row{min-width:330px;gap:5px!important}
+  #phase230OpponentPitch .phase230-opp-player{min-width:82px!important;max-width:104px!important;padding:7px 6px!important}
+  #phase230OpponentPitch .phase230-opp-player b{font-size:10px!important}#phase230OpponentPitch .phase230-opp-player small{font-size:8px!important}
+  .phase230-opponent-bank{overflow-x:auto;flex-wrap:nowrap!important;-webkit-overflow-scrolling:touch}.phase230-bank-player{flex:0 0 auto}
+  .change-row{padding:9px 5px}.li-player{grid-template-columns:minmax(0,1fr) 42px}.li-player>select{grid-column:1/-1}.icon-link{width:42px;height:42px}
+}
+@media(max-width:390px){.kpis{grid-template-columns:1fr}.cloud-badge{max-width:92px;font-size:10px}.card{padding:11px}.player-card .metrics{gap:6px}.metric{padding:7px}.fixture{font-size:11px}}

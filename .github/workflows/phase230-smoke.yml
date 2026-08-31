@@ -1,0 +1,104 @@
+name: Phase 2.3.0 Smoke Check
+on:
+  push:
+    branches: ["phase-2.3.0"]
+  pull_request:
+    branches: ["main"]
+    paths: ["phase230*.js","phase230-mobile.css","app.js","cloud.js","service-worker.js","scripts/update-club-data.mjs",".github/workflows/phase230-smoke.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  syntax-and-wiring:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+      - name: JavaScript syntax
+        run: |
+          node --check app.js
+          node --check cloud.js
+          node --check service-worker.js
+          node --check phase230.js
+          for file in phase230-dev*.js; do node --check "$file"; done
+          node --check scripts/update-club-data.mjs
+      - name: Runtime wiring
+        run: |
+          grep -q "phase230-mobile.css" phase230.js
+          grep -q "phase230-dev14.js" phase230.js
+          grep -q "phase230-dev16.js" phase230.js
+          grep -q "phase230-dev17.js" phase230.js
+          grep -q "phase230-dev18.js" phase230.js
+          grep -q "h2h-coach-cloud-v230fulluse" service-worker.js
+          grep -q "phase230-dev14.js" service-worker.js
+          grep -q "phase230-dev17.js" service-worker.js
+          grep -q "phase230-dev18.js" service-worker.js
+      - name: Core lineup pipeline guards
+        run: |
+          grep -q "phase230LiveLineups" phase230-dev16.js
+          grep -q "data.settings.phase230LiveLineups" phase230-dev16.js
+          grep -q "h2h230PersistCurrentLineups" phase230-dev16.js
+          grep -q "writeLiveLineupV1=function" phase230-dev16.js
+          grep -q "commitScreenshotLineupCoreV224" phase230-dev1.js
+          grep -q "snapshotFromReview230" phase230-dev1.js
+          grep -q "current-live+kickoff-locked-history" phase230-dev14.js
+          ! grep -q "new MutationObserver" phase230-dev16.js
+          ! grep -q "new MutationObserver" phase230-dev17.js
+          ! grep -q "new MutationObserver" phase230-dev18.js
+      - name: Manual reconstruction guards
+        run: |
+          grep -q "phase230ManualLineupNames" phase230-dev17.js
+          grep -q "Plausible Aufstellung erstellen" phase230-dev17.js
+          grep -q "manual-reconstruction" phase230-dev17.js
+          grep -q "noOriginalLineupScreenshot:true" phase230-dev17.js
+          grep -q "h2h230BuildLogicalLineup" phase230-dev17.js
+          grep -q "h2h230ClassifyScreenshotReview" phase230-dev17.js
+          grep -q "Neuer/unklarer Screenshot-Typ" phase230-dev17.js
+      - name: Points finalization guards
+        run: |
+          grep -q "pointsFinal230" phase230-dev18.js
+          grep -q "pointsFinalValue230" phase230-dev18.js
+          grep -q "Punkte finalisieren" phase230-dev18.js
+          grep -q "Finalisierung aufheben" phase230-dev18.js
+          grep -q "manual-kickbase-opta-final" phase230-dev18.js
+          grep -q "provisional-to-final-with-explicit-unlock" phase230-dev18.js
+      - name: Exact kickoff guards
+        run: |
+          grep -q "/competitions/BL1/matches" scripts/update-club-data.mjs
+          grep -q "schedule230" scripts/update-club-data.mjs
+          grep -q "kickoffAt" scripts/update-club-data.mjs
+          grep -q "mergeKickoffSchedule" cloud.js
+          grep -q "first-kickoff" phase230-dev14.js
+          grep -q "h2h:kickoff-schedule" phase230-dev14.js
+          ! grep -q "points-fallback" phase230-dev14.js
+      - name: Real kit guards
+        run: |
+          grep -q "KIT_PATTERNS" phase230-dev15.js
+          grep -q "h2h230BundesligaKitPatterns" phase230-dev15.js
+          ! grep -q "new MutationObserver" phase230-dev15.js
+      - name: Mobile guards
+        run: |
+          test -s phase230-mobile.css
+          grep -q "env(safe-area-inset-top)" phase230-mobile.css
+          grep -q "min-height:44px" phase230-mobile.css
+          grep -q "92dvh" phase230-mobile.css
+          grep -q "@media(max-width:760px)" phase230-dev17.js
+          grep -q "@media(max-width:760px)" phase230-dev18.js
+      - name: Canonical and freeze guards
+        run: |
+          grep -q "reason:'master-id'" phase230-dev9.js
+          grep -q "h2h230CanonicalPosition" phase230-dev9.js
+          ! grep -q "VERIFIED_ALIASES" phase230-dev8.js
+          ! grep -q "VERIFIED_ALIASES" phase230-dev9.js
+          ! grep -q "new MutationObserver" phase230-dev8.js
+          ! grep -q "new MutationObserver" phase230-dev10.js
+          ! grep -q "new MutationObserver" phase230-dev11.js
+          ! grep -q "new MutationObserver" phase230-dev14.js
+          grep -q "let rebuilding=false" phase230-dev8.js
+      - name: Full-use runtime guards
+        run: |
+          grep -q "H2H_PHASE230_FULL_USE=true" phase230-dev5.js
+          grep -q "H2H_PHASE230_TEST_CLOUD_READONLY=false" phase230-dev5.js
+          grep -q "Cloud-Schreiben AKTIV" phase230-dev11.js

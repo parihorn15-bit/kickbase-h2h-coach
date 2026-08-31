@@ -1,0 +1,46 @@
+name: Deploy Production 2.3.0
+
+on:
+  push:
+    branches: ["phase-2.3.0"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout production 2.3.0
+        uses: actions/checkout@v6
+        with:
+          ref: phase-2.3.0
+
+      - name: Build production Pages artifact
+        shell: bash
+        run: |
+          mkdir -p publish
+          rsync -a --delete --exclude '.git' --exclude '.github' --exclude 'publish' ./ publish/
+          touch publish/.nojekyll
+          echo "Production source: phase-2.3.0" > publish/DEPLOYMENT_SOURCE.txt
+          echo "Version: 2.3.0" >> publish/DEPLOYMENT_SOURCE.txt
+          echo "Mode: production" >> publish/DEPLOYMENT_SOURCE.txt
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: publish
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
