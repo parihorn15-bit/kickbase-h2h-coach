@@ -1,12 +1,14 @@
 (() => {
-  const VERSION='2.3.0-test-dev5.1';
+  const VERSION='2.3.0-prod-dev5.2';
 
   const enableFullUse=()=>{
+    // Legacy runtime flags stay available for compatibility, but 2.3.0 is now
+    // the single production application on main.
     window.H2H_PHASE230_TEST_READY=true;
     window.H2H_PHASE230_TEST_VERSION=VERSION;
     window.H2H_PHASE230_TEST_CLOUD_READONLY=false;
     window.H2H_PHASE230_FULL_USE=true;
-    document.title='Kickbase H2H Coach 2.3.0 TEST';
+    document.title='Kickbase H2H Coach 2.3.0';
 
     const upload=document.getElementById('cloudUploadLocal');
     if(upload){
@@ -16,17 +18,10 @@
     }
 
     const brand=document.querySelector('#sidebar .brand small');
-    if(brand)brand.textContent='Version 2.3.0 TEST · Vollmodus · Cloud-Schreiben AKTIV · 2026/27';
+    if(brand)brand.textContent='Version 2.3.0 · Cloud-Schreiben AKTIV · 2026/27';
 
-    let badge=document.getElementById('phase230TestBadge');
-    if(!badge){
-      badge=document.createElement('div');
-      badge.id='phase230TestBadge';
-      badge.style.cssText='position:fixed;right:12px;bottom:12px;z-index:99999;padding:7px 10px;border-radius:999px;background:#0f5132;color:#fff;font:700 12px/1.2 system-ui,sans-serif;box-shadow:0 4px 18px rgba(0,0,0,.25);opacity:.94';
-      document.body.appendChild(badge);
-    }
-    badge.style.background='#0f5132';
-    badge.textContent='2.3.0 TEST · Vollmodus · Cloud AKTIV';
+    // Remove the obsolete test/full-mode badge from older 2.3 runtimes.
+    document.getElementById('phase230TestBadge')?.remove();
   };
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',enableFullUse,{once:true});
