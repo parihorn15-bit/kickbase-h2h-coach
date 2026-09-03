@@ -1,50 +1,40 @@
 (()=>{
-  const VERSION='3.0.0-horn-transfer-history30';
+  const VERSION='3.0.0-horn-transfer-history31';
   const TEAM_ID='team::horn-capital-fc';
-  const EXPECTED_UNIQUE=72;
-  const EXPECTED_LIFECYCLES=43;
-  const EXPECTED_ACTIVE=14;
-  const EXPECTED_SOLD=29;
+  const EXPECTED_UNIQUE=72,EXPECTED_LIFECYCLES=43,EXPECTED_ACTIVE=14,EXPECTED_SOLD=29;
   const norm=v=>String(v||'').toLocaleLowerCase('de-DE').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+  const surname=v=>norm(v).split(' ').filter(Boolean).at(-1)||'';
   const seq=e=>{const m=String(e?.event_id||'').match(/(\d+)$/);return m?Number(m[1]):0};
+  const CURRENT_META={
+    raab:{name:'Matheo Raab',team:'1. FC Union Berlin'},anton:{name:'Waldemar Anton',team:'Borussia Dortmund'},itakura:{name:'Ko Itakura',team:'Borussia Mönchengladbach'},maluze:{name:'Jeremiaha Maluze',team:'Eintracht Frankfurt'},nakuzola:{name:'Rael Nakuzola',team:'1. FSV Mainz 05'},'ter horst':{name:'Jano ter Horst',team:'SC Paderborn 07'},'castro montes':{name:'Alessio Castro-Montes',team:'1. FC Köln'},fernandez:{name:'Ignacio Fernández',team:'Bayer 04 Leverkusen'},garcia:{name:'Aleix García',team:'Bayer 04 Leverkusen'},olise:{name:'Michael Olise',team:'FC Bayern München'},reis:{name:'Ludovit Reis',team:'SV Werder Bremen'},moerstedt:{name:'Max Moerstedt',team:'TSG Hoffenheim'},saibari:{name:'Ismael Saibari',team:'FC Bayern München'},tietz:{name:'Phillip Tietz',team:'1. FSV Mainz 05'}
+  };
+  function sameIdentity(a,b){const na=norm(a),nb=norm(b);return !!na&&!!nb&&(na===nb||surname(a)===surname(b)||na.endsWith(' '+nb)||nb.endsWith(' '+na))}
   function eventKey(e){const d=e?.relative_time?.days_ago!=null?`d${e.relative_time.days_ago}`:e?.relative_time?.hours_ago!=null?`h${e.relative_time.hours_ago}`:String(e?.absolute_time||'');return [norm(e?.player_name),e?.direction,Number(e?.price)||0,d,norm(e?.counterparty_name)].join('|')}
-  function events(){const all=(window.H2H_CANONICAL_MODEL?.events?.transfers||[]).filter(e=>e?.manager_team_id===TEAM_ID);const seen=new Set(),out=[];for(const e of all){const k=eventKey(e);if(seen.has(k))continue;seen.add(k);out.push(e)}return out}
+  function events(){const all=(window.H2H_CANONICAL_MODEL?.events?.transfers||[]).filter(e=>e?.manager_team_id===TEAM_ID&&!e?.h2hLocalDynamic);const seen=new Set(),out=[];for(const e of all){const k=eventKey(e);if(seen.has(k))continue;seen.add(k);out.push(e)}return out}
   function dateOf(e){const d=new Date(e?.absolute_time||'');return Number.isNaN(d.getTime())?'':d.toISOString().slice(0,10)}
-  function lifecycles(){
-    const ordered=events().sort((a,b)=>{const ta=Date.parse(a?.absolute_time||'')||0,tb=Date.parse(b?.absolute_time||'')||0;if(ta!==tb)return ta-tb;return seq(b)-seq(a)});
-    const open=new Map(),out=[];
-    for(const e of ordered){const key=norm(e.player_name);if(e.direction==='BUY'){
-      const row={id:`canonical-horn-${e.event_id}`,name:e.player_name,buyDate:dateOf(e),buyPrice:Number(e.price)||0,buyCounterparty:e.counterparty_name||'Kickbase',buyEventId:e.event_id,soldDate:'',salePrice:0,saleCounterparty:'',saleEventId:null};
-      out.push(row);if(!open.has(key))open.set(key,[]);open.get(key).push(row);
-    }else if(e.direction==='SELL'){
-      const stack=open.get(key)||[];const row=stack.length?stack.pop():null;if(row){row.soldDate=dateOf(e);row.salePrice=Number(e.price)||0;row.saleCounterparty=e.counterparty_name||'Kickbase';row.saleEventId=e.event_id}
-    }}
-    return out.sort((a,b)=>(b.buyDate||'').localeCompare(a.buyDate||'')||a.name.localeCompare(b.name,'de'));
+  function lifecycles(){const ordered=events().sort((a,b)=>{const ta=Date.parse(a?.absolute_time||'')||0,tb=Date.parse(b?.absolute_time||'')||0;if(ta!==tb)return ta-tb;return seq(b)-seq(a)}),open=new Map(),out=[];for(const e of ordered){const key=norm(e.player_name);if(e.direction==='BUY'){const row={id:`canonical-horn-${e.event_id}`,name:e.player_name,buyDate:dateOf(e),buyPrice:Number(e.price)||0,buyCounterparty:e.counterparty_name||'Kickbase',buyEventId:e.event_id,soldDate:'',salePrice:0,saleCounterparty:'',saleEventId:null};out.push(row);if(!open.has(key))open.set(key,[]);open.get(key).push(row)}else if(e.direction==='SELL'){const stack=open.get(key)||[],row=stack.length?stack.pop():null;if(row){row.soldDate=dateOf(e);row.salePrice=Number(e.price)||0;row.saleCounterparty=e.counterparty_name||'Kickbase';row.saleEventId=e.event_id}}}return out.sort((a,b)=>(b.buyDate||'').localeCompare(a.buyDate||'')||a.name.localeCompare(b.name,'de'))}
+  function report(){const ev=events(),life=lifecycles(),active=life.filter(x=>!x.soldDate).length,sold=life.filter(x=>x.soldDate).length,r={version:VERSION,teamId:TEAM_ID,expectedUniqueEvents:EXPECTED_UNIQUE,canonicalUniqueEvents:ev.length,expectedLifecycles:EXPECTED_LIFECYCLES,canonicalLifecycles:life.length,expectedActive:EXPECTED_ACTIVE,active,expectedSold:EXPECTED_SOLD,sold,complete:ev.length===EXPECTED_UNIQUE&&life.length===EXPECTED_LIFECYCLES&&active===EXPECTED_ACTIVE&&sold===EXPECTED_SOLD,checkedAt:new Date().toISOString(),source:'Horn Capital FC.zip · 24 Screenshots'};window.H2H_HORN_TRANSFER_COMPLETENESS=r;const m=window.H2H_CANONICAL_MODEL;if(m){m.data_quality=m.data_quality||{};m.data_quality.horn_transfer_history=r}return r}
+  function positionLabel(raw){const p=String(raw||'').toUpperCase();return p==='TW'?'Tor':p==='ABW'?'Abwehr':p==='MF'?'Mittelfeld':p==='ANG'?'Sturm':String(raw||'')}
+  function metadataFor(name,target){
+    const current=CURRENT_META[norm(name)]||CURRENT_META[surname(name)]||null,m=window.H2H_CANONICAL_MODEL;
+    const ids=m?.indexes?.player_ids_by_normalized_name?.[norm(name)]||m?.indexes?.player_ids_by_normalized_name?.[surname(name)]||[];
+    let ownership=null,entity=null;for(const pid of ids){const own=m?.state?.current_ownership?.[pid];if(own?.team_id===TEAM_ID){ownership=own;entity=m?.entities?.players?.[pid];break}if(!entity)entity=m?.entities?.players?.[pid]}
+    let live=null;try{live=typeof resolveShortNameAgainstLocalMasters==='function'?resolveShortNameAgainstLocalMasters(name,{team:current?.team||target?.team||''}):null}catch{};try{if(!live&&typeof findSelectablePlayerByName==='function')live=findSelectablePlayerByName(name)}catch{}
+    return {name:target?.name||current?.name||live?.name||entity?.display_name||name,team:target?.team||current?.team||live?.team||'',position:target?.position||positionLabel(ownership?.position||entity?.positions_seen?.[0]||live?.position||''),marketValue:Number(ownership?.market_value||target?.marketValue||live?.marketValue||0),avgPoints:Number(target?.avgPoints||live?.avgPoints||0)}
   }
-  function report(){const ev=events(),life=lifecycles(),active=life.filter(x=>!x.soldDate).length,sold=life.filter(x=>x.soldDate).length;const r={version:VERSION,teamId:TEAM_ID,expectedUniqueEvents:EXPECTED_UNIQUE,canonicalUniqueEvents:ev.length,expectedLifecycles:EXPECTED_LIFECYCLES,canonicalLifecycles:life.length,expectedActive:EXPECTED_ACTIVE,active,expectedSold:EXPECTED_SOLD,sold,complete:ev.length===EXPECTED_UNIQUE&&life.length===EXPECTED_LIFECYCLES&&active===EXPECTED_ACTIVE&&sold===EXPECTED_SOLD,checkedAt:new Date().toISOString(),source:'Horn Capital FC.zip · 24 Screenshots'};window.H2H_HORN_TRANSFER_COMPLETENESS=r;const m=window.H2H_CANONICAL_MODEL;if(m){m.data_quality=m.data_quality||{};m.data_quality.horn_transfer_history=r}return r}
-  function metadataFor(name){try{const p=(data.players||[]).find(x=>norm(x.name)===norm(name)&&!x.h2hCanonicalHornHistory);if(p)return {team:p.team||'',position:p.position||'',marketValue:Number(p.marketValue)||0,avgPoints:Number(p.avgPoints)||0};}catch{}const m=window.H2H_CANONICAL_MODEL,ids=m?.indexes?.player_ids_by_normalized_name?.[norm(name)]||[];for(const id of ids){const p=m?.entities?.players?.[id];if(p&&!p.historical_only)return {team:p.club_name||p.club||p.team||'',position:p.position||'',marketValue:Number(p.market_value||p.marketValue)||0,avgPoints:Number(p.avg_points||p.avgPoints)||0}}return {team:'',position:'',marketValue:0,avgPoints:0}}
-  function syncIntoExistingTable(){
-    let d;try{d=data}catch{return false}if(!d||!Array.isArray(d.players))return false;
-    const life=lifecycles(),r=report();if(!r.complete)return false;
-    const signature=`horn72:${r.canonicalUniqueEvents}:${r.canonicalLifecycles}:${r.active}:${r.sold}:v2`;
-    if(d.ui?.hornCanonicalHistorySignature===signature)return true;
-    const previous=d.players.filter(p=>p?.h2hCanonicalHornHistory);d.players=d.players.filter(p=>!p?.h2hCanonicalHornHistory);
-    const used=new Set();
-    for(const row of life){
-      let target=d.players.find(p=>!used.has(p.id)&&norm(p.name)===norm(row.name)&&Number(p.buyPrice||0)===row.buyPrice);
-      if(target){used.add(target.id);target.buyDate=row.buyDate||target.buyDate;target.buyPrice=row.buyPrice;target.buySource=row.buyCounterparty==='Kickbase'?'Transfermarkt':'Mitspieler';target.buyCounterparty=row.buyCounterparty;target.soldDate=row.soldDate||'';target.salePrice=row.salePrice||0;target.saleSource=row.soldDate?(row.saleCounterparty==='Kickbase'?'Transfermarkt':'Mitspieler'):'';target.saleCounterparty=row.saleCounterparty||'';target.h2hCanonicalHornVerified=true;target.h2hCanonicalBuyEventId=row.buyEventId;target.h2hCanonicalSaleEventId=row.saleEventId||null;
-      }else{
-        const meta=metadataFor(row.name);d.players.push({id:row.id,name:row.name,team:meta.team,position:meta.position,buyDate:row.buyDate,buyPrice:row.buyPrice,marketAtBuy:0,marketValue:row.soldDate?0:meta.marketValue,avgPoints:meta.avgPoints,note:'Historischer Horn-Transfer aus verifiziertem Screenshot-Archiv',buySource:row.buyCounterparty==='Kickbase'?'Transfermarkt':'Mitspieler',buyCounterparty:row.buyCounterparty,buyReason:'',buyReasons:[],soldDate:row.soldDate||'',salePrice:row.salePrice||0,saleReason:'',saleSource:row.soldDate?(row.saleCounterparty==='Kickbase'?'Transfermarkt':'Mitspieler'):'',saleCounterparty:row.saleCounterparty||'',h2hCanonicalHornHistory:true,h2hCanonicalHornVerified:true,h2hCanonicalBuyEventId:row.buyEventId,h2hCanonicalSaleEventId:row.saleEventId||null});
-      }
-    }
-    d.ui=d.ui||{};d.ui.hornCanonicalHistorySignature=signature;
-    try{save()}catch(e){console.warn('[H2H] Horn history save failed',e)}
-    console.info(`[H2H] ${VERSION}: existing transfer table synced`,{rows:d.players.length,canonicalLifecycles:life.length,removedPreviousSynthetic:previous.length});
-    return true;
+  function scoreCandidate(p,row){if(!sameIdentity(p?.name,row.name))return -1;let s=35;if(norm(p.name)===norm(row.name))s+=15;if(Number(p.buyPrice||0)===row.buyPrice)s+=55;else if(Math.abs(Number(p.buyPrice||0)-row.buyPrice)<=Math.max(50000,row.buyPrice*.01))s+=25;if(p.buyDate&&row.buyDate&&p.buyDate===row.buyDate)s+=25;if(p.h2hCanonicalHornVerified)s+=10;return s}
+  function syncIntoExistingTable({force=false}={}){
+    let d;try{d=data}catch{return false}if(!d||!Array.isArray(d.players))return false;const life=lifecycles(),r=report();if(!r.complete)return false;
+    const signature=`horn72:${r.canonicalUniqueEvents}:${r.canonicalLifecycles}:${r.active}:${r.sold}:v3`;if(!force&&d.ui?.hornCanonicalHistorySignature===signature&&d.players.filter(p=>!p.soldDate).length===EXPECTED_ACTIVE&&d.players.filter(p=>p.h2hCanonicalHornVerified).length===EXPECTED_LIFECYCLES)return true;
+    const original=d.players.filter(p=>!p?.h2hCanonicalHornHistory),used=new Set(),canonicalRows=[];
+    for(const row of life){let best=null,bestScore=-1;for(const p of original){if(used.has(p.id))continue;const s=scoreCandidate(p,row);if(s>bestScore){best=p;bestScore=s}}const target=bestScore>=60?best:null;if(target)used.add(target.id);const meta=metadataFor(row.name,target);const p=target||{id:row.id,note:'Historischer Horn-Transfer aus verifiziertem Screenshot-Archiv',buyReason:'',buyReasons:[],saleReason:''};Object.assign(p,{name:meta.name,team:meta.team,position:meta.position,buyDate:row.buyDate,buyPrice:row.buyPrice,marketAtBuy:Number(p.marketAtBuy)||0,marketValue:row.soldDate?0:meta.marketValue,avgPoints:meta.avgPoints,buySource:row.buyCounterparty==='Kickbase'?'Transfermarkt':'Mitspieler',buyCounterparty:row.buyCounterparty,soldDate:row.soldDate||'',salePrice:row.salePrice||0,saleSource:row.soldDate?(row.saleCounterparty==='Kickbase'?'Transfermarkt':'Mitspieler'):'',saleCounterparty:row.saleCounterparty||'',h2hCanonicalHornHistory:!target,h2hCanonicalHornVerified:true,h2hCanonicalBuyEventId:row.buyEventId,h2hCanonicalSaleEventId:row.saleEventId||null});canonicalRows.push(p)}
+    const newestBaseline=life.reduce((mx,x)=>x.buyDate>mx?x.buyDate:mx,'');const extras=original.filter(p=>{if(used.has(p.id))return false;const belongsToBaseline=life.some(row=>sameIdentity(p.name,row.name))&&(!p.buyDate||p.buyDate<=newestBaseline);return !belongsToBaseline});
+    d.players=[...canonicalRows,...extras];d.ui=d.ui||{};d.ui.hornCanonicalHistorySignature=signature;d.ui.hornCanonicalRepair={at:new Date().toISOString(),canonicalRows:canonicalRows.length,extras:extras.length,active:d.players.filter(p=>!p.soldDate).length,sold:d.players.filter(p=>p.soldDate).length};
+    try{if(typeof save==='function')save()}catch(e){console.warn('[H2H] Horn history save failed',e)}
+    console.info(`[H2H] ${VERSION}: transfer lifecycles reconciled`,d.ui.hornCanonicalRepair);return true
   }
   function removeDuplicateCard(){document.getElementById('h2hHornCanonicalTransfers300')?.remove()}
-  window.h2h300HornTransferCompleteness=report;window.h2h300SyncHornHistoryIntoTransfers=syncIntoExistingTable;
-  let tries=0,t=setInterval(()=>{tries++;if(events().length>=EXPECTED_UNIQUE&&syncIntoExistingTable()){clearInterval(t);try{if(typeof page!=='undefined'&&page==='transfers'&&typeof render==='function')render()}catch{}setTimeout(removeDuplicateCard,50)}else if(tries>40)clearInterval(t)},250);
-  document.addEventListener('click',()=>setTimeout(removeDuplicateCard,60),true);setTimeout(()=>{syncIntoExistingTable();removeDuplicateCard()},1800);
-  console.info(`[H2H] ${VERSION} loaded`);
+  window.h2h300HornTransferCompleteness=report;window.h2h300HornLifecycles=lifecycles;window.h2h300SyncHornHistoryIntoTransfers=syncIntoExistingTable;window.h2h300SyncHornHistoryToLegacyTable=syncIntoExistingTable;
+  let tries=0,t=setInterval(()=>{tries++;if(events().length>=EXPECTED_UNIQUE&&syncIntoExistingTable()){clearInterval(t);try{window.h2h300SyncAllDerivedState?.({reason:'horn-baseline-reconcile',render:true})}catch{}setTimeout(removeDuplicateCard,50)}else if(tries>40)clearInterval(t)},250);
+  document.addEventListener('click',()=>setTimeout(removeDuplicateCard,60),true);setTimeout(()=>{syncIntoExistingTable({force:true});removeDuplicateCard()},1800);console.info(`[H2H] ${VERSION} loaded`)
 })();
