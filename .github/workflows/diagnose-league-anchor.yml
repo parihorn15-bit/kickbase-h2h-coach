@@ -13,16 +13,29 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: "22"
-      - name: Show concise syntax error
+      - name: Locate model parse error
         run: |
-          set +e
-          node --check phase230-league-anchor.js >/tmp/anchor.out 2>/tmp/anchor.err
-          code=$?
-          if [ "$code" -ne 0 ]; then
-            echo "ANCHOR_SYNTAX_FAILED"
-            grep -E "SyntaxError|Unexpected|Expected|at checkSyntax|phase230-league-anchor" /tmp/anchor.err | tail -n 8 || true
-            echo "ERR_TAIL"
-            tail -n 8 /tmp/anchor.err | sed '/^  const MODEL = /d'
-            exit "$code"
-          fi
-          echo "ANCHOR_SYNTAX_OK"
+          node <<'NODE'
+          const fs=require('fs');
+          const src=fs.readFileSync('phase230-league-anchor.js','utf8');
+          const marker='const MODEL = ';
+          const start=src.indexOf(marker);
+          const end=src.indexOf(';',start+marker.length);
+          if(start<0||end<0)throw new Error('MODEL assignment boundaries missing');
+          const json=src.slice(start+marker.length,end).trim();
+          console.log('MODEL_CHARS',json.length,'FILE_CHARS',src.length,'JSON_END',JSON.stringify(json.slice(-160)));
+          try{
+            JSON.parse(json);
+            console.log('MODEL_JSON_OK');
+          }catch(error){
+            console.log('MODEL_JSON_ERROR',error.message);
+            const m=String(error.message).match(/position (\d+)/i);
+            if(m){
+              const p=Number(m[1]);
+              console.log('ERROR_POSITION',p);
+              console.log('CONTEXT_BEFORE',JSON.stringify(json.slice(Math.max(0,p-180),p)));
+              console.log('CONTEXT_AFTER',JSON.stringify(json.slice(p,p+180)));
+            }
+            throw error;
+          }
+          NODE
