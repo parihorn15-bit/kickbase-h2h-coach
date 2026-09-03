@@ -11,14 +11,27 @@ window.H2H_CLOUD_CONFIG = {
 // is loaded after app.js/cloud.js have initialized so the installed PWA and Pages
 // always use the same production feature set.
 window.addEventListener('load', () => {
-  if (document.querySelector('script[data-phase230-production]')) return;
-
   const versionNode = document.querySelector('#sidebar .brand small');
   if (versionNode) versionNode.textContent = 'Version 2.3.0 · wird geladen …';
   document.title = 'Kickbase H2H Coach 2.3.0';
 
+  // Installed PWAs can keep an older worker alive for a while. Explicitly ask the
+  // registration to check GitHub Pages for a fresh worker on every online launch.
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    setTimeout(async () => {
+      try {
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (registration) await registration.update();
+      } catch (error) {
+        console.warn('PWA update check failed', error);
+      }
+    }, 750);
+  }
+
+  if (document.querySelector('script[data-phase230-production]')) return;
+
   const runtime = document.createElement('script');
-  runtime.src = 'phase230.js?v=230fulluse20';
+  runtime.src = 'phase230.js?v=230fulluse21';
   runtime.async = false;
   runtime.dataset.phase230Production = '1';
   runtime.onerror = () => {
@@ -26,6 +39,7 @@ window.addEventListener('load', () => {
     console.error('Kickbase Coach 2.3.0 production runtime could not be loaded.');
   };
   runtime.onload = () => {
+    if (versionNode) versionNode.textContent = 'Version 2.3.0';
     const existing = document.querySelector('script[data-st1-anchor]');
     if (existing) return;
     const anchor = document.createElement('script');
