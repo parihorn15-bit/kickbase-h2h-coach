@@ -1,4 +1,4 @@
-const CACHE_NAME='h2h-coach-v300-bootstrap4';
+const CACHE_NAME='h2h-coach-v300-autoupdate1';
 const APP_VERSION='3.0.0';
 const CORE=[
   './','./index.html','./styles.css?v=215n','./phase230-mobile.css?v=230mobile1',
@@ -30,14 +30,57 @@ function upgradeHtml(html){
   }
   return html;
 }
-self.addEventListener('install',event=>{self.skipWaiting();event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(CORE)));});
-self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))).then(()=>self.clients.claim()).then(async()=>{const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});for(const client of clients)client.postMessage({type:'APP_UPDATED',version:APP_VERSION});}));});
-self.addEventListener('message',event=>{if(event.data?.type==='SKIP_WAITING')self.skipWaiting();});
+async function notifyClients(){
+  const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});
+  for(const client of clients) client.postMessage({type:'APP_UPDATED',version:APP_VERSION});
+}
+self.addEventListener('install',event=>{
+  self.skipWaiting();
+  event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(CORE)));
+});
+self.addEventListener('activate',event=>{
+  event.waitUntil((async()=>{
+    const keys=await caches.keys();
+    await Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)));
+    await self.clients.claim();
+    await notifyClients();
+  })());
+});
+self.addEventListener('message',event=>{
+  if(event.data?.type==='SKIP_WAITING') self.skipWaiting();
+  if(event.data?.type==='CHECK_VERSION') event.source?.postMessage({type:'APP_VERSION',version:APP_VERSION});
+});
 self.addEventListener('fetch',event=>{
-  const req=event.request;if(req.method!=='GET')return;const url=new URL(req.url);if(url.origin!==self.location.origin)return;
+  const req=event.request;
+  if(req.method!=='GET') return;
+  const url=new URL(req.url);
+  if(url.origin!==self.location.origin) return;
   const navigation=req.mode==='navigate'||url.pathname.endsWith('/index.html')||url.pathname.endsWith('/');
-  if(navigation){event.respondWith(fetch(req,{cache:'no-store'}).then(async resp=>{if(!resp||!resp.ok)return resp;const html=upgradeHtml(await resp.text());const out=new Response(html,{status:resp.status,statusText:resp.statusText,headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'}});caches.open(CACHE_NAME).then(cache=>cache.put(req,out.clone()));return out;}).catch(()=>caches.match(req).then(async r=>{if(!r)return caches.match('./index.html');const html=upgradeHtml(await r.text());return new Response(html,{headers:{'Content-Type':'text/html; charset=utf-8'}});})));return;}
+  if(navigation){
+    event.respondWith(fetch(req,{cache:'no-store'}).then(async resp=>{
+      if(!resp||!resp.ok) return resp;
+      const html=upgradeHtml(await resp.text());
+      const out=new Response(html,{status:resp.status,statusText:resp.statusText,headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'}});
+      const cache=await caches.open(CACHE_NAME); await cache.put(req,out.clone());
+      return out;
+    }).catch(async()=>{
+      const r=(await caches.match(req))||(await caches.match('./index.html'));
+      if(!r) return new Response('Offline',{status:503});
+      const html=upgradeHtml(await r.text());
+      return new Response(html,{headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'}});
+    }));
+    return;
+  }
   const coreText=/\.(?:js|css|webmanifest)$/.test(url.pathname);
-  if(coreText){event.respondWith(fetch(req,{cache:'no-store'}).then(resp=>{if(resp&&resp.ok){const copy=resp.clone();caches.open(CACHE_NAME).then(cache=>cache.put(req,copy));}return resp;}).catch(()=>caches.match(req)));return;}
-  event.respondWith(caches.match(req).then(cached=>cached||fetch(req).then(resp=>{if(resp&&resp.ok){const copy=resp.clone();caches.open(CACHE_NAME).then(cache=>cache.put(req,copy));}return resp;})));
+  if(coreText){
+    event.respondWith(fetch(req,{cache:'no-store'}).then(async resp=>{
+      if(resp&&resp.ok){const cache=await caches.open(CACHE_NAME);await cache.put(req,resp.clone());}
+      return resp;
+    }).catch(()=>caches.match(req)));
+    return;
+  }
+  event.respondWith(caches.match(req).then(cached=>cached||fetch(req).then(async resp=>{
+    if(resp&&resp.ok){const cache=await caches.open(CACHE_NAME);await cache.put(req,resp.clone());}
+    return resp;
+  })));
 });
