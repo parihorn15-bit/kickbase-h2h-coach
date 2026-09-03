@@ -1,0 +1,53 @@
+name: Repair 3.0 startup shell
+
+on:
+  push:
+    paths:
+      - '.github/workflows/repair-startup-shell.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch static shell and remove legacy reload listener
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          index = Path('index.html')
+          html = index.read_text(encoding='utf-8')
+          html = re.sub(r'<title>[^<]*</title>', '<title>Kickbase H2H Coach 3.0.0</title>', html, count=1)
+          html = re.sub(r'<small>Version [^<]*</small>', '<small>Version 3.0.0 · Cloud-Schreiben AKTIV · 2026/27</small>', html, count=1)
+          for asset in ('styles.css','config.js','app.js','cloud.js','phase230.js','version.js'):
+              html = re.sub(re.escape(asset) + r'\?v=[^\"\']+', asset + '?v=300statecore3', html)
+          index.write_text(html, encoding='utf-8')
+
+          app = Path('app.js')
+          js = app.read_text(encoding='utf-8')
+          marker = 'const $='
+          pos = js.find(marker)
+          if pos > 0 and 'APP_UPDATED' in js[:pos] and 'location.reload()' in js[:pos]:
+              js = js[pos:]
+          js = js.replace("setTimeout(()=>location.reload(),250);", "console.info('[H2H] legacy APP_UPDATED reload suppressed');")
+          app.write_text(js, encoding='utf-8')
+
+          assert 'Kickbase H2H Coach 3.0.0' in html
+          assert 'Version 3.0.0 · Cloud-Schreiben AKTIV' in html
+          assert 'setTimeout(()=>location.reload(),250);' not in js
+          PY
+      - name: Commit repaired shell
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html app.js
+          if git diff --cached --quiet; then
+            echo "Nothing to commit"
+          else
+            git commit -m "Make 3.0 shell authoritative and remove reload listener"
+            git push
+          fi
