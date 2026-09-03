@@ -1,5 +1,5 @@
 (() => {
-  const VERSION='2.3.0-dev19.0';
+  const VERSION='3.0.0-service19';
   const norm=v=>String(v||'').toLocaleLowerCase('de-DE').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
   const model=()=>window.H2H_CANONICAL_MODEL||null;
   const clone=v=>v==null?v:JSON.parse(JSON.stringify(v));
@@ -98,5 +98,5 @@
   window.h2h230TeamTransfers=(team,opts)=>transfers(team,opts);
   window.h2h230CompareTeams=(a,b)=>compareTeams(a,b);
   window.H2H_PHASE230_SERVICE_LAYER=true;
-  console.info(`[H2H] Phase ${VERSION} loaded`,validate());
+  console.info(`[H2H] ${VERSION} loaded`,validate());
 })();
