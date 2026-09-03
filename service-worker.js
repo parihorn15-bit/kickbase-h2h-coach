@@ -1,16 +1,20 @@
-// 3.0.0: legacy service worker retired.
-// The app now uses normal browser HTTP caching plus explicit asset keys.
-// This worker exists only to replace older registered workers, clear their
-// caches and unregister itself without forcing a page reload.
-self.addEventListener('install',event=>{
-  self.skipWaiting();
-});
-self.addEventListener('activate',event=>{
-  event.waitUntil((async()=>{
-    const keys=await caches.keys();
-    await Promise.all(keys.filter(key=>/^h2h-coach-|^kickbase/i.test(key)).map(key=>caches.delete(key)));
+// 3.0.0 legacy-worker recovery bridge. Fresh pages never register this worker.
+self.addEventListener('install', event => { self.skipWaiting(); });
+self.addEventListener('activate', event => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(k => /^(h2h-coach-|kickbase)/i.test(k)).map(k => caches.delete(k)));
     await self.clients.claim();
+    const clients = await self.clients.matchAll({type:'window', includeUncontrolled:true});
     await self.registration.unregister();
+    for (const client of clients) {
+      try {
+        const url = new URL(client.url);
+        if (url.searchParams.get('h2hFresh') === '300statecore4') continue;
+        url.searchParams.set('h2hFresh', '300statecore4');
+        await client.navigate(url.href);
+      } catch (_) {}
+    }
   })());
 });
-// Intentionally no fetch interception and no APP_UPDATED/version messages.
+// No fetch handler. No APP_UPDATED messages. No recurring reloads.
