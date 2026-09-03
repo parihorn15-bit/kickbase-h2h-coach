@@ -1,0 +1,36 @@
+name: Repair League Anchor
+on:
+  push:
+    branches: ["main"]
+    paths: [".github/workflows/repair-league-anchor.yml"]
+permissions:
+  contents: write
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+      - name: Repair one missing model brace and verify
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const path='phase230-league-anchor.js';
+          let src=fs.readFileSync(path,'utf8');
+          const needle='"Historical lineups remain separated from mutable current ownership."]}};';
+          const replacement='"Historical lineups remain separated from mutable current ownership."]}}};';
+          const count=src.split(needle).length-1;
+          if(count!==1)throw new Error(`Expected exactly one malformed MODEL tail, found ${count}`);
+          src=src.replace(needle,replacement);
+          fs.writeFileSync(path,src);
+          NODE
+          node --check phase230-league-anchor.js
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add phase230-league-anchor.js
+          git commit -m "Fix canonical league anchor model closure"
+          git push origin HEAD:main
