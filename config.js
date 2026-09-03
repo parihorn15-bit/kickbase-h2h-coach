@@ -25,5 +25,15 @@ window.addEventListener('load', () => {
     if (versionNode) versionNode.textContent = 'Version 2.3.0 · Ladefehler';
     console.error('Kickbase Coach 2.3.0 production runtime could not be loaded.');
   };
+  runtime.onload = () => {
+    const existing = document.querySelector('script[data-st1-anchor]');
+    if (existing) return;
+    const anchor = document.createElement('script');
+    anchor.src = 'phase230-st1-anchor.js?v=20260903a';
+    anchor.async = false;
+    anchor.dataset.st1Anchor = '1';
+    anchor.onerror = () => console.error('Kickbase Coach ST1 screenshot anchor could not be loaded.');
+    document.head.appendChild(anchor);
+  };
   document.head.appendChild(runtime);
 });
