@@ -4,7 +4,7 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
-    paths: ["version.js","phase230*.js","phase230-mobile.css","app.js","cloud.js","config.js","service-worker.js","scripts/update-club-data.mjs",".github/workflows/phase230-smoke.yml"]
+    paths: ["version.js","phase230*.js","phase230-mobile.css","app.js","cloud.js","config.js","service-worker.js","index.html","scripts/update-club-data.mjs",".github/workflows/phase230-smoke.yml"]
   workflow_dispatch:
 permissions:
   contents: read
@@ -34,7 +34,6 @@ jobs:
           grep -q "version.js" config.js
           grep -q "H2H_RELEASE" config.js
           grep -q "H2H_RELEASE" phase230.js
-          grep -q "importScripts('./version.js" service-worker.js
           ! grep -q "const APP_VERSION='" phase230.js
           ! grep -q "const APP_VERSION='" service-worker.js
           node <<'NODE'
@@ -52,6 +51,18 @@ jobs:
           if (!release.cacheName.includes(`v${token}`)) throw new Error(`cacheName ${release.cacheName} does not match version ${release.version}`);
           console.log(`Canonical release OK: ${release.version} / ${release.assetKey} / ${release.cacheName}`);
           NODE
+      - name: Reload-free startup guards
+        run: |
+          grep -q "<title>Kickbase H2H Coach 3.0.0</title>" index.html
+          grep -q "Version 3.0.0 · Cloud-Schreiben AKTIV" index.html
+          grep -q "300statecore3" index.html
+          ! grep -q "location.reload()" app.js
+          ! grep -q "location.reload()" phase230.js
+          ! grep -q "APP_UPDATED" service-worker.js
+          ! grep -q "addEventListener('fetch'" service-worker.js
+          ! grep -q 'addEventListener("fetch"' service-worker.js
+          grep -q "registration.unregister" service-worker.js
+          grep -q "caches.keys" service-worker.js
       - name: Runtime wiring
         run: |
           grep -q "phase230-mobile.css" phase230.js
@@ -61,9 +72,20 @@ jobs:
           grep -q "phase230-dev18.js" phase230.js
           grep -q "phase230-dev26.js" phase230.js
           grep -q "phase230-dev27.js" phase230.js
+          grep -q "phase230-dev29.js" phase230.js
+          grep -q "phase230-dev31.js" phase230.js
           ! grep -Eq "phase230-dev[0-9]+\\.js" service-worker.js
           ! grep -q "V3_SCRIPTS" service-worker.js
-          ! grep -q "location.reload()" phase230.js
+      - name: Horn history migration guards
+        run: |
+          grep -q "EXPECTED_UNIQUE=72" phase230-dev29.js
+          grep -q "EXPECTED_LIFECYCLES=43" phase230-dev29.js
+          grep -q "EXPECTED_ACTIVE=14" phase230-dev29.js
+          grep -q "EXPECTED_SOLD=29" phase230-dev29.js
+          grep -q "needsRepair" phase230-dev29.js
+          grep -q "removeLegacyBaselineDuplicates" phase230-dev29.js
+          grep -q "force:!firstSuccessful" phase230-dev29.js
+          grep -q "h2hCanonicalHornVerified" phase230-dev29.js
       - name: Core lineup pipeline guards
         run: |
           grep -q "phase230LiveLineups" phase230-dev16.js
