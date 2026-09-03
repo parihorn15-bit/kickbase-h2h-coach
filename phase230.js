@@ -1,24 +1,7 @@
 (() => {
+  if(window.__H2H_PHASE230_BOOTSTRAPPED__)return;
+  window.__H2H_PHASE230_BOOTSTRAPPED__=true;
   const APP_VERSION='3.0.0';
-  if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('./service-worker.js',{scope:'./',updateViaCache:'none'}).then(async reg=>{
-      try{await reg.update()}catch(_){ }
-      if(reg.waiting)reg.waiting.postMessage({type:'SKIP_WAITING'});
-      reg.addEventListener('updatefound',()=>{
-        const worker=reg.installing;
-        if(!worker)return;
-        worker.addEventListener('statechange',()=>{
-          if(worker.state==='installed'&&navigator.serviceWorker.controller){worker.postMessage({type:'SKIP_WAITING'});}
-        });
-      });
-    }).catch(error=>console.error('3.0.0 service worker registration failed',error));
-    let reloading=false;
-    navigator.serviceWorker.addEventListener('controllerchange',()=>{
-      if(reloading)return;
-      reloading=true;
-      location.reload();
-    });
-  }
   const brandVersion=()=>{
     const small=document.querySelector('#sidebar .brand small');
     if(small)small.textContent='Version '+APP_VERSION+' · Cloud-Schreiben AKTIV · 2026/27';
