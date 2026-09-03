@@ -25,6 +25,8 @@ jobs:
           node --check service-worker.js
           node --check phase230.js
           for file in phase230-dev*.js; do node --check "$file"; done
+          node --check phase230-st1-anchor.js
+          node --check phase230-st1-corrections.js
           node --check scripts/update-club-data.mjs
       - name: Canonical release wiring
         run: |
@@ -56,6 +58,7 @@ jobs:
           grep -q "phase230-dev16.js" phase230.js
           grep -q "phase230-dev17.js" phase230.js
           grep -q "phase230-dev18.js" phase230.js
+          grep -q "phase230-dev26.js" phase230.js
           ! grep -Eq "phase230-dev[0-9]+\\.js" service-worker.js
           ! grep -q "V3_SCRIPTS" service-worker.js
           ! grep -q "location.reload()" phase230.js
@@ -71,6 +74,30 @@ jobs:
           ! grep -q "new MutationObserver" phase230-dev16.js
           ! grep -q "new MutationObserver" phase230-dev17.js
           ! grep -q "new MutationObserver" phase230-dev18.js
+      - name: Historical points integrity guards
+        run: |
+          grep -q "h2h230ValidateHistoricalPoints" phase230-dev26.js
+          grep -q "historicalPointsValidation230" phase230-dev26.js
+          grep -q "historicalDataSuspect230" phase230-dev26.js
+          grep -q "player-points-incomplete" phase230-dev26.js
+          grep -q "status==='mismatch'" phase230-dev26.js
+          node <<'NODE'
+          const fs=require('fs'),vm=require('vm');
+          const src=fs.readFileSync('phase230-st1-corrections.js','utf8');
+          const match=src.match(/const P=(\{.*\});const norm=/s);
+          if(!match)throw new Error('Could not extract ST1 screenshot correction map');
+          const P=vm.runInNewContext('('+match[1]+')');
+          const expectedManagers=['me','fabi','fabio','elias','marci','manu'];
+          for(const id of expectedManagers){
+            const row=P[id];
+            if(!row)throw new Error(`Missing ST1 manager ${id}`);
+            const values=Object.values(row.p||{}).map(Number);
+            if(values.length!==11)throw new Error(`${id}: expected 11 starter point values, got ${values.length}`);
+            const sum=values.reduce((a,b)=>a+b,0);
+            if(sum!==Number(row.total))throw new Error(`${id}: player sum ${sum} != manager total ${row.total}`);
+            console.log(`${id}: ${sum}/${row.total} OK`);
+          }
+          NODE
       - name: Manual reconstruction guards
         run: |
           grep -q "phase230ManualLineupNames" phase230-dev17.js
