@@ -109,10 +109,11 @@ jobs:
           grep -q "duplicateSquadOwnership" phase230-dev27.js
           node <<'NODE'
           const fs=require('fs'),vm=require('vm');
-          const src=fs.readFileSync('phase230-league-anchor.js','utf8');
-          const match=src.match(/const MODEL = (\{.*\});\n  window\.H2H_CANONICAL_MODEL/s);
-          if(!match)throw new Error('Could not extract canonical league model');
-          const model=vm.runInNewContext('('+match[1]+')');
+          const context={window:{},console:{info(){},warn(){},error(){}}};
+          vm.createContext(context);
+          vm.runInContext(fs.readFileSync('phase230-league-anchor.js','utf8'),context);
+          const model=context.window.H2H_CANONICAL_MODEL;
+          if(!model)throw new Error('Canonical league model did not initialize');
           const squads=model.state?.current_squads||{};
           const seen=new Map();
           for(const [teamId,ids] of Object.entries(squads)){
