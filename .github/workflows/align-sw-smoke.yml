@@ -1,0 +1,32 @@
+name: Align smoke check with retired service worker
+on:
+  push:
+    paths:
+      - '.github/workflows/align-sw-smoke.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Update startup guards
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('.github/workflows/phase230-smoke.yml')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('grep -q "300statecore3" index.html','grep -q "300statecore4" index.html')
+          old='''          grep -q "registration.unregister" service-worker.js\n          grep -q "caches.keys" service-worker.js\n'''
+          new='''          grep -q "registration.unregister" service-worker.js\n          grep -q "caches.keys" service-worker.js\n          grep -q "h2hLegacySwCleanup" index.html\n          ! grep -q "navigator.serviceWorker.register" index.html\n'''
+          if 'h2hLegacySwCleanup' not in s:
+              s=s.replace(old,new)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/workflows/phase230-smoke.yml
+          git commit -m "Test retired service-worker startup path"
+          git push
