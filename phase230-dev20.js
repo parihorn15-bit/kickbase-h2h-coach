@@ -1,5 +1,5 @@
 (() => {
-  const VERSION='2.3.0-dev20.0';
+  const VERSION='3.0.0-import20';
   const KEY='h2h230CanonicalOverlayV1';
   const MANAGER_TEAM={
     me:'team::horn-capital-fc',fabi:'team::faps-ham-united',elias:'team::al-elshani',
@@ -22,7 +22,7 @@
   function ensurePlayer(o,name,item={}){
     const base=basePlayer(name); if(base)return base;
     const key=`overlay::${slug(name)}`;
-    if(!o.players[key])o.players[key]={player_id:key,display_name:String(name||'').trim(),normalized_name:norm(name),positions_seen:[],identity_basis:'screenshot-import',identity_confidence:Number(item?.t?.identityConfidence)||Number(item?.t?.confidence)||0.5,notes:['Added by Phase 8 screenshot bridge']};
+    if(!o.players[key])o.players[key]={player_id:key,display_name:String(name||'').trim(),normalized_name:norm(name),positions_seen:[],identity_basis:'screenshot-import',identity_confidence:Number(item?.t?.identityConfidence)||Number(item?.t?.confidence)||0.5,notes:['Added by 3.0.0 screenshot bridge']};
     return o.players[key];
   }
   function directionOf(item){
@@ -52,13 +52,13 @@
     if(!payload)return null;const o=loadOverlay();let buys=0,sells=0,unknown=0;
     for(const tx of payload.transfers){
       const p=ensurePlayer(o,tx.player,{t:{identityConfidence:tx.identity_confidence,confidence:tx.confidence}}),pid=p.player_id;
-      const event={event_id:`${payload.imported_at}::${pid}::${tx.direction}::${tx.price||0}`,player_id:pid,player_name:p.display_name,manager_team_id:payload.team_id,direction:tx.direction,price:tx.price,transfer_date:tx.transfer_date,relative_time:tx.relative_time,confidence:tx.confidence,identity_confidence:tx.identity_confidence,source:'screenshot-import-phase8',imported_at:payload.imported_at};
+      const event={event_id:`${payload.imported_at}::${pid}::${tx.direction}::${tx.price||0}`,player_id:pid,player_name:p.display_name,manager_team_id:payload.team_id,direction:tx.direction,price:tx.price,transfer_date:tx.transfer_date,relative_time:tx.relative_time,confidence:tx.confidence,identity_confidence:tx.identity_confidence,source:'screenshot-import-3.0.0',imported_at:payload.imported_at};
       if(!o.events.some(e=>e.event_id===event.event_id))o.events.unshift(event);
-      if(tx.direction==='BUY'){o.ownership[pid]={team_id:payload.team_id,source:'screenshot-import-phase8',updated_at:payload.imported_at};buys++}
-      else if(tx.direction==='SELL'){if(o.ownership[pid]?.team_id===payload.team_id)delete o.ownership[pid];else o.ownership[pid]={team_id:null,source:'screenshot-import-phase8-sale',updated_at:payload.imported_at};sells++}
+      if(tx.direction==='BUY'){o.ownership[pid]={team_id:payload.team_id,source:'screenshot-import-3.0.0',updated_at:payload.imported_at};buys++}
+      else if(tx.direction==='SELL'){if(o.ownership[pid]?.team_id===payload.team_id)delete o.ownership[pid];else o.ownership[pid]={team_id:null,source:'screenshot-import-3.0.0-sale',updated_at:payload.imported_at};sells++}
       else unknown++;
     }
-    if(payload.lineup.length){o.lineups[`${payload.team_id}::md${payload.md||'current'}`]={team_id:payload.team_id,md:payload.md,lineup:[...payload.lineup],source:'screenshot-import-phase8',updated_at:payload.imported_at}}
+    if(payload.lineup.length){o.lineups[`${payload.team_id}::md${payload.md||'current'}`]={team_id:payload.team_id,md:payload.md,lineup:[...payload.lineup],source:'screenshot-import-3.0.0',updated_at:payload.imported_at}}
     saveOverlay(o);return {buys,sells,unknown,lineup:payload.lineup.length,events:o.events.length,updated_at:o.updated_at};
   }
   function patchService(){
@@ -75,7 +75,7 @@
   }
   function importStatusBox(){
     const target=document.getElementById('screenshotImportResult');if(!target||document.getElementById('phase230CanonicalImportBox'))return;
-    const box=document.createElement('div');box.id='phase230CanonicalImportBox';box.className='notice phase230-canonical-import';box.innerHTML='<b>2.3.0 Liga-Datenbasis</b><small>Bestätigte Transfers und Aufstellungen werden zusätzlich kanonisch verknüpft. Historische Spieltage bleiben unverändert.</small>';target.prepend(box);
+    const box=document.createElement('div');box.id='phase230CanonicalImportBox';box.className='notice phase230-canonical-import';box.innerHTML='<b>3.0.0 Liga-Datenbasis</b><small>Bestätigte Transfers und Aufstellungen werden zusätzlich kanonisch verknüpft. Historische Spieltage bleiben unverändert.</small>';target.prepend(box);
   }
   function resultStatus(summary){const host=document.getElementById('screenshotImportStatus');if(!host||!summary)return;let el=document.getElementById('phase230CanonicalCommitStatus');if(!el){el=document.createElement('div');el.id='phase230CanonicalCommitStatus';el.className='notice';host.insertAdjacentElement('afterend',el)}el.textContent=`Liga-Datenbasis aktualisiert · ${summary.buys} Käufe · ${summary.sells} Verkäufe${summary.lineup?` · ${summary.lineup} Aufstellungsplätze`:''}`;el.dataset.kind='good'}
   function canonicalOpponentPanel(managerId,md){
@@ -92,5 +92,5 @@
   }
   hook();setTimeout(hook,250);setTimeout(hook,1000);
   if(!document.getElementById('phase230CanonicalBridgeStyle')){const s=document.createElement('style');s.id='phase230CanonicalBridgeStyle';s.textContent=`.phase230-canonical-import{margin-bottom:10px;display:grid;gap:4px}.phase230-canonical-import small{opacity:.75}.phase230-canonical-opponent{margin:10px 0;padding:11px;border:1px solid rgba(255,255,255,.13);border-radius:13px;background:rgba(10,20,36,.72);display:grid;gap:6px}.phase230-canonical-opponent small{opacity:.7}.phase230-canonical-opponent>div{display:flex;flex-wrap:wrap;gap:6px}.phase230-canonical-opponent span{padding:4px 7px;border-radius:999px;background:rgba(255,255,255,.07);font-size:12px}@media(max-width:760px){.phase230-canonical-opponent{padding:10px}.phase230-canonical-opponent span{font-size:11px}}`;document.head.appendChild(s)}
-  window.h2h230CanonicalOverlay=()=>clone(loadOverlay());window.h2h230ApplyCanonicalImport=applyImport;window.H2H_PHASE230_CANONICAL_IMPORT_BRIDGE=true;console.info(`[H2H] Phase ${VERSION} loaded`);
+  window.h2h230CanonicalOverlay=()=>clone(loadOverlay());window.h2h230ApplyCanonicalImport=applyImport;window.H2H_PHASE230_CANONICAL_IMPORT_BRIDGE=true;console.info(`[H2H] ${VERSION} loaded`);
 })();
