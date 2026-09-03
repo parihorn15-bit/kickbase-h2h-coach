@@ -1,4 +1,4 @@
-importScripts('./version.js?v=canonical1');
+importScripts('./version.js?v=canonical2');
 
 const RELEASE=self.H2H_RELEASE;
 if(!RELEASE?.version||!RELEASE?.assetKey||!RELEASE?.cacheName){
