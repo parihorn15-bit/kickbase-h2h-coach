@@ -1,4 +1,4 @@
-const CACHE_NAME='h2h-coach-v300-bootstrap2';
+const CACHE_NAME='h2h-coach-v300-bootstrap3';
 const APP_VERSION='3.0.0';
 const CORE=[
   './','./index.html','./styles.css?v=215n','./phase230-mobile.css?v=230mobile1',
@@ -10,7 +10,7 @@ const CORE=[
   './phase230-dev12.js?v=230dev12_2','./phase230-dev13.js?v=230dev13_0','./phase230-dev14.js?v=230dev14_2',
   './phase230-dev15.js?v=230dev15_1','./phase230-dev16.js?v=230dev16_1','./phase230-dev17.js?v=230dev17_0',
   './phase230-dev18.js?v=230dev18_0','./phase230-league-anchor.js?v=300release1','./phase230-dev19.js?v=300release1',
-  './phase230-dev20.js?v=300release1','./phase230-st1-anchor.js?v=300release1','./manifest.webmanifest'
+  './phase230-dev20.js?v=300release1','./phase230-dev21.js?v=300release2','./phase230-st1-anchor.js?v=300release1','./manifest.webmanifest'
 ];
 const V3_SCRIPTS=[
   'phase230.js?v=300release1','phase230-dev1.js?v=230dev1','phase230-dev2.js?v=230dev2','phase230-dev3.js?v=230dev3',
@@ -18,7 +18,7 @@ const V3_SCRIPTS=[
   'phase230-dev8.js?v=230dev8_3','phase230-dev9.js?v=230dev9_3','phase230-dev10.js?v=230dev10_4','phase230-dev11.js?v=230dev11_14',
   'phase230-dev12.js?v=230dev12_2','phase230-dev13.js?v=230dev13_0','phase230-dev14.js?v=230dev14_2','phase230-dev15.js?v=230dev15_1',
   'phase230-dev16.js?v=230dev16_1','phase230-dev17.js?v=230dev17_0','phase230-dev18.js?v=230dev18_0','phase230-league-anchor.js?v=300release1',
-  'phase230-dev19.js?v=300release1','phase230-dev20.js?v=300release1','phase230-st1-anchor.js?v=300release1'
+  'phase230-dev19.js?v=300release1','phase230-dev20.js?v=300release1','phase230-dev21.js?v=300release2','phase230-st1-anchor.js?v=300release1'
 ];
 function upgradeHtml(html){
   html=html.replace(/<title>[^<]*<\/title>/,'<title>Kickbase H2H Coach 3.0.0</title>');
