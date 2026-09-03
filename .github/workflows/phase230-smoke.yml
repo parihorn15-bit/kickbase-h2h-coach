@@ -31,7 +31,9 @@ jobs:
           grep -q "phase230-dev16.js" phase230.js
           grep -q "phase230-dev17.js" phase230.js
           grep -q "phase230-dev18.js" phase230.js
-          grep -q "phase230-dev18.js" service-worker.js
+          ! grep -Eq "phase230-dev[0-9]+\\.js" service-worker.js
+          ! grep -q "V3_SCRIPTS" service-worker.js
+          ! grep -q "location.reload()" phase230.js
           node <<'NODE'
           const fs = require('fs');
           const sw = fs.readFileSync('service-worker.js', 'utf8');
