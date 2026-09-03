@@ -1,0 +1,28 @@
+name: Diagnose League Anchor
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+      - name: Show concise syntax error
+        run: |
+          set +e
+          node --check phase230-league-anchor.js >/tmp/anchor.out 2>/tmp/anchor.err
+          code=$?
+          if [ "$code" -ne 0 ]; then
+            echo "ANCHOR_SYNTAX_FAILED"
+            grep -E "SyntaxError|Unexpected|Expected|at checkSyntax|phase230-league-anchor" /tmp/anchor.err | tail -n 8 || true
+            echo "ERR_TAIL"
+            tail -n 8 /tmp/anchor.err | sed '/^  const MODEL = /d'
+            exit "$code"
+          fi
+          echo "ANCHOR_SYNTAX_OK"
