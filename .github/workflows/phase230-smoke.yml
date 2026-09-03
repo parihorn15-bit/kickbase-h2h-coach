@@ -55,7 +55,9 @@ jobs:
         run: |
           grep -q "<title>Kickbase H2H Coach 3.0.0</title>" index.html
           grep -q "Version 3.0.0 · Cloud-Schreiben AKTIV" index.html
-          grep -q "300statecore3" index.html
+          grep -q "300statecore4" index.html
+          grep -q "h2hLegacySwCleanup" index.html
+          ! grep -q "navigator.serviceWorker.register" index.html
           ! grep -q "location.reload()" app.js
           ! grep -q "location.reload()" phase230.js
           ! grep -q "APP_UPDATED" service-worker.js
