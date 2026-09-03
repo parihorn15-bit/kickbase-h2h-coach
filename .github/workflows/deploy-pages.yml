@@ -24,3 +24,31 @@ jobs:
           path: "."
       - id: deployment
         uses: actions/deploy-pages@v4
+      - name: Verify deployed production files
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          set -euo pipefail
+          base="${PAGE_URL%/}/"
+          for file in version.js config.js phase230.js service-worker.js; do
+            ok=0
+            for attempt in {1..12}; do
+              if curl -fsS -H 'Cache-Control: no-cache' "${base}${file}?verify=${GITHUB_SHA}-${attempt}" -o "/tmp/${file}" && cmp -s "$file" "/tmp/${file}"; then
+                ok=1
+                break
+              fi
+              sleep 5
+            done
+            if [ "$ok" -ne 1 ]; then
+              echo "Deployed file mismatch: $file" >&2
+              exit 1
+            fi
+          done
+          node <<'NODE'
+          const fs = require('fs');
+          const vm = require('vm');
+          const context = {};
+          vm.createContext(context);
+          vm.runInContext(fs.readFileSync('/tmp/version.js','utf8'), context);
+          console.log(`Deployed Kickbase Coach version verified: ${context.H2H_RELEASE.version} (${context.H2H_RELEASE.assetKey})`);
+          NODE

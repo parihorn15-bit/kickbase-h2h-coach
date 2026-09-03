@@ -1,16 +1,25 @@
-const CACHE_NAME='h2h-coach-v300-reloadfix1';
-const APP_VERSION='3.0.0';
+importScripts('./version.js?v=canonical1');
+
+const RELEASE=self.H2H_RELEASE;
+if(!RELEASE?.version||!RELEASE?.assetKey||!RELEASE?.cacheName){
+  throw new Error('Canonical H2H release metadata missing in service worker.');
+}
+const APP_VERSION=RELEASE.version;
+const ASSET_KEY=RELEASE.assetKey;
+const CACHE_NAME=RELEASE.cacheName;
 const CORE=[
-  './','./index.html','./styles.css?v=215n','./phase230-mobile.css?v=230mobile1',
-  './config.js?v=300reloadfix1','./app.js?v=215n','./cloud.js?v=300syncfix1',
-  './phase230.js?v=300reloadfix1','./manifest.webmanifest'
+  './','./index.html',`./styles.css?v=${ASSET_KEY}`,`./phase230-mobile.css?v=${ASSET_KEY}`,
+  `./config.js?v=${ASSET_KEY}`,`./app.js?v=${ASSET_KEY}`,`./cloud.js?v=${ASSET_KEY}`,
+  `./phase230.js?v=${ASSET_KEY}`,'./manifest.webmanifest'
 ];
 
 function upgradeHtml(html){
-  html=html.replace(/<title>[^<]*<\/title>/,'<title>Kickbase H2H Coach 3.0.0</title>');
-  html=html.replace(/<small>Version [^<]*<\/small>/,'<small>Version 3.0.0 · Cloud-Schreiben AKTIV · 2026/27</small>');
-  html=html.replace(/config\.js\?v=[^"']+/,'config.js?v=300reloadfix1');
-  html=html.replace(/cloud\.js\?v=[^"']+/,'cloud.js?v=300syncfix1');
+  html=html.replace(/<title>[^<]*<\/title>/,`<title>Kickbase H2H Coach ${APP_VERSION}</title>`);
+  html=html.replace(/<small>Version [^<]*<\/small>/,`<small>Version ${APP_VERSION} · Cloud-Schreiben AKTIV · 2026/27</small>`);
+  html=html.replace(/styles\.css\?v=[^"']+/,`styles.css?v=${ASSET_KEY}`);
+  html=html.replace(/config\.js\?v=[^"']+/,`config.js?v=${ASSET_KEY}`);
+  html=html.replace(/app\.js\?v=[^"']+/,`app.js?v=${ASSET_KEY}`);
+  html=html.replace(/cloud\.js\?v=[^"']+/,`cloud.js?v=${ASSET_KEY}`);
   // Runtime scripts are deliberately NOT injected here. config.js is the only
   // production bootstrap and phase230.js loads its modules exactly once.
   return html;
@@ -30,7 +39,7 @@ self.addEventListener('activate',event=>{
 
 self.addEventListener('message',event=>{
   if(event.data?.type==='SKIP_WAITING') self.skipWaiting();
-  if(event.data?.type==='CHECK_VERSION') event.source?.postMessage({type:'APP_VERSION',version:APP_VERSION});
+  if(event.data?.type==='CHECK_VERSION') event.source?.postMessage({type:'APP_VERSION',version:APP_VERSION,assetKey:ASSET_KEY});
 });
 
 self.addEventListener('fetch',event=>{

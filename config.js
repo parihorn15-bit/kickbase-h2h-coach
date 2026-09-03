@@ -6,34 +6,57 @@ window.H2H_CLOUD_CONFIG = {
   syncIntervalMs: 15000
 };
 
-window.H2H_APP_VERSION = '3.0.0';
-
 // Production runtime bootstrap. Service-worker registration is owned by index.html.
-// Never force a worker update or load phase230.js twice: both can restart the UI.
-window.addEventListener('load', () => {
+// version.js is the single canonical source for app version and release asset key.
+window.addEventListener('load', async () => {
   const versionNode = document.querySelector('#sidebar .brand small');
-  if (versionNode) versionNode.textContent = 'Version 3.0.0 · wird geladen …';
-  document.title = 'Kickbase H2H Coach 3.0.0';
+  const loadRelease = () => new Promise((resolve, reject) => {
+    if (window.H2H_RELEASE?.version) { resolve(window.H2H_RELEASE); return; }
+    const existing = document.querySelector('script[data-h2h-release]');
+    if (existing) {
+      existing.addEventListener('load', () => resolve(window.H2H_RELEASE), { once: true });
+      existing.addEventListener('error', reject, { once: true });
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = `version.js?v=canonical1&t=${Date.now()}`;
+    script.async = false;
+    script.dataset.h2hRelease = '1';
+    script.onload = () => window.H2H_RELEASE?.version ? resolve(window.H2H_RELEASE) : reject(new Error('Canonical release metadata missing.'));
+    script.onerror = () => reject(new Error('Canonical release metadata could not be loaded.'));
+    document.head.appendChild(script);
+  });
 
-  if (
-    window.__H2H_PHASE230_BOOTSTRAPPED__ ||
-    document.querySelector('script[data-phase230-production]') ||
-    document.querySelector('script[src*="phase230.js"]')
-  ) {
-    if (versionNode) versionNode.textContent = 'Version 3.0.0';
-    return;
+  try {
+    const release = await loadRelease();
+    const appVersion = release.version;
+    const assetKey = release.assetKey;
+    if (versionNode) versionNode.textContent = `Version ${appVersion} · wird geladen …`;
+    document.title = `Kickbase H2H Coach ${appVersion}`;
+
+    if (
+      window.__H2H_PHASE230_BOOTSTRAPPED__ ||
+      document.querySelector('script[data-phase230-production]') ||
+      document.querySelector('script[src*="phase230.js"]')
+    ) {
+      if (versionNode) versionNode.textContent = `Version ${appVersion}`;
+      return;
+    }
+
+    const runtime = document.createElement('script');
+    runtime.src = `phase230.js?v=${encodeURIComponent(assetKey)}`;
+    runtime.async = false;
+    runtime.dataset.phase230Production = '1';
+    runtime.onerror = () => {
+      if (versionNode) versionNode.textContent = `Version ${appVersion} · Ladefehler`;
+      console.error(`Kickbase Coach ${appVersion} production runtime could not be loaded.`);
+    };
+    runtime.onload = () => {
+      if (versionNode) versionNode.textContent = `Version ${appVersion}`;
+    };
+    document.head.appendChild(runtime);
+  } catch (error) {
+    if (versionNode) versionNode.textContent = 'Version unbekannt · Ladefehler';
+    console.error('Kickbase Coach release metadata could not be loaded.', error);
   }
-
-  const runtime = document.createElement('script');
-  runtime.src = 'phase230.js?v=300reloadfix1';
-  runtime.async = false;
-  runtime.dataset.phase230Production = '1';
-  runtime.onerror = () => {
-    if (versionNode) versionNode.textContent = 'Version 3.0.0 · Ladefehler';
-    console.error('Kickbase Coach 3.0.0 production runtime could not be loaded.');
-  };
-  runtime.onload = () => {
-    if (versionNode) versionNode.textContent = 'Version 3.0.0';
-  };
-  document.head.appendChild(runtime);
 });

@@ -4,7 +4,7 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
-    paths: ["phase230*.js","phase230-mobile.css","app.js","cloud.js","service-worker.js","scripts/update-club-data.mjs",".github/workflows/phase230-smoke.yml"]
+    paths: ["version.js","phase230*.js","phase230-mobile.css","app.js","cloud.js","config.js","service-worker.js","scripts/update-club-data.mjs",".github/workflows/phase230-smoke.yml"]
   workflow_dispatch:
 permissions:
   contents: read
@@ -18,12 +18,37 @@ jobs:
           node-version: "22"
       - name: JavaScript syntax
         run: |
+          node --check version.js
           node --check app.js
           node --check cloud.js
+          node --check config.js
           node --check service-worker.js
           node --check phase230.js
           for file in phase230-dev*.js; do node --check "$file"; done
           node --check scripts/update-club-data.mjs
+      - name: Canonical release wiring
+        run: |
+          grep -q "version.js" config.js
+          grep -q "H2H_RELEASE" config.js
+          grep -q "H2H_RELEASE" phase230.js
+          grep -q "importScripts('./version.js" service-worker.js
+          ! grep -q "const APP_VERSION='" phase230.js
+          ! grep -q "const APP_VERSION='" service-worker.js
+          node <<'NODE'
+          const fs = require('fs');
+          const vm = require('vm');
+          const context = {};
+          vm.createContext(context);
+          vm.runInContext(fs.readFileSync('version.js', 'utf8'), context);
+          const release = context.H2H_RELEASE;
+          if (!release) throw new Error('H2H_RELEASE missing in version.js');
+          if (!/^\d+\.\d+\.\d+$/.test(release.version)) throw new Error(`version must be semver, got ${release.version}`);
+          if (!/^[a-zA-Z0-9_-]+$/.test(release.assetKey)) throw new Error(`Invalid assetKey: ${release.assetKey}`);
+          if (!/^h2h-coach-v/.test(release.cacheName)) throw new Error(`Unexpected cacheName: ${release.cacheName}`);
+          const token = release.version.replace(/\./g, '');
+          if (!release.cacheName.includes(`v${token}`)) throw new Error(`cacheName ${release.cacheName} does not match version ${release.version}`);
+          console.log(`Canonical release OK: ${release.version} / ${release.assetKey} / ${release.cacheName}`);
+          NODE
       - name: Runtime wiring
         run: |
           grep -q "phase230-mobile.css" phase230.js
@@ -34,21 +59,6 @@ jobs:
           ! grep -Eq "phase230-dev[0-9]+\\.js" service-worker.js
           ! grep -q "V3_SCRIPTS" service-worker.js
           ! grep -q "location.reload()" phase230.js
-          node <<'NODE'
-          const fs = require('fs');
-          const sw = fs.readFileSync('service-worker.js', 'utf8');
-          const version = sw.match(/const APP_VERSION='([^']+)'/);
-          const cache = sw.match(/const CACHE_NAME='([^']+)'/);
-          if (!version) throw new Error('APP_VERSION missing in service-worker.js');
-          if (!/^\d+\.\d+\.\d+$/.test(version[1])) throw new Error(`APP_VERSION must be semver, got ${version[1]}`);
-          if (!cache) throw new Error('CACHE_NAME missing in service-worker.js');
-          if (!/^h2h-coach-v/.test(cache[1])) throw new Error(`Unexpected CACHE_NAME: ${cache[1]}`);
-          const versionToken = version[1].replace(/\./g, '');
-          if (!cache[1].includes(`v${versionToken}`)) {
-            throw new Error(`CACHE_NAME ${cache[1]} does not match APP_VERSION ${version[1]}`);
-          }
-          console.log(`Runtime version wiring OK: ${version[1]} / ${cache[1]}`);
-          NODE
       - name: Core lineup pipeline guards
         run: |
           grep -q "phase230LiveLineups" phase230-dev16.js
