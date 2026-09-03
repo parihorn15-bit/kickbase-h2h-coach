@@ -26,7 +26,7 @@
       ['Guirassy',180],['Amiri',167],['Scheller',133],['Caci',124],['Bredlow',111],['Seiwald',109]
     ],bench:[['Vozar',0]]},
     fabio:{team:'FAPSE FC',points:1280,lineup:[
-      ['Becker',49],['Onyeka',28],['Bakayoko',15],['Mohya',11],['Kleindienst',-21],
+      ['Becker',49],['Onyedika',28],['Bakayoko',15],['Mohya',11],['Kleindienst',-21],
       ['Suzuki',385],['Karetsas',214],['Baum',181],['Raum',149],['Karius',142],['Gutiérrez',117]
     ],bench:[['Lemke',2]]}
   };
