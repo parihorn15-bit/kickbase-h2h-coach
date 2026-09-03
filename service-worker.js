@@ -1,8 +1,8 @@
-const CACHE_NAME='h2h-coach-v300-autoupdate2';
+const CACHE_NAME='h2h-coach-v300-autoupdate3';
 const APP_VERSION='3.0.0';
 const CORE=[
   './','./index.html','./styles.css?v=215n','./phase230-mobile.css?v=230mobile1',
-  './config.js?v=300release1','./app.js?v=215n','./cloud.js?v=230dev7',
+  './config.js?v=300release1','./app.js?v=215n','./cloud.js?v=300syncfix1',
   './phase230.js?v=300release1','./phase230-dev1.js?v=230dev1','./phase230-dev2.js?v=230dev2',
   './phase230-dev3.js?v=230dev3','./phase230-dev4.js?v=230dev4','./phase230-dev5.js?v=230dev5_2',
   './phase230-dev6.js?v=230dev6','./phase230-dev7.js?v=230dev7','./phase230-dev8.js?v=230dev8_3',
@@ -23,6 +23,7 @@ const V3_SCRIPTS=[
 function upgradeHtml(html){
   html=html.replace(/<title>[^<]*<\/title>/,'<title>Kickbase H2H Coach 3.0.0</title>');
   html=html.replace(/<small>Version [^<]*<\/small>/,'<small>Version 3.0.0 · Cloud-Schreiben AKTIV · 2026/27</small>');
+  html=html.replace(/cloud\.js\?v=[^"']+/,'cloud.js?v=300syncfix1');
   if(!html.includes('phase230-mobile.css')) html=html.replace('</head>','<link rel="stylesheet" href="phase230-mobile.css?v=230mobile1"></head>');
   if(!html.includes('phase230.js?v=300release1')){
     const tags=V3_SCRIPTS.map(src=>'<script src="'+src+'"></script>').join('');
@@ -39,9 +40,7 @@ self.addEventListener('activate',event=>{
     const keys=await caches.keys();
     await Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)));
     await self.clients.claim();
-    // Do not broadcast APP_UPDATED here. The app's legacy listener reacts to that
-    // message with location.reload(), which can create a visible reload loop when
-    // the service worker is activated repeatedly by deployments/cache changes.
+    // No APP_UPDATED broadcast: activating a worker must never force a page reload.
   })());
 });
 self.addEventListener('message',event=>{
