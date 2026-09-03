@@ -1,14 +1,14 @@
-const CACHE_NAME='h2h-coach-cloud-v230fulluse21';
-const APP_VERSION='2.3.0-prod21';
+const CACHE_NAME='h2h-coach-cloud-v300release1';
+const APP_VERSION='3.0.0';
 const CORE=[
   './',
   './index.html',
   './styles.css?v=215n',
   './phase230-mobile.css?v=230mobile1',
-  './config.js?v=230pwa21',
+  './config.js?v=300release1',
   './app.js?v=215n',
   './cloud.js?v=230dev7',
-  './phase230.js?v=230fulluse21',
+  './phase230.js?v=300release1',
   './phase230-dev1.js?v=230dev1',
   './phase230-dev2.js?v=230dev2',
   './phase230-dev3.js?v=230dev3',
@@ -27,10 +27,10 @@ const CORE=[
   './phase230-dev16.js?v=230dev16_1',
   './phase230-dev17.js?v=230dev17_0',
   './phase230-dev18.js?v=230dev18_0',
-  './phase230-league-anchor.js?v=230anchor1',
-  './phase230-dev19.js?v=230dev19_0',
-  './phase230-dev20.js?v=230dev20_0',
-  './phase230-st1-anchor.js?v=20260903a',
+  './phase230-league-anchor.js?v=300release1',
+  './phase230-dev19.js?v=300release1',
+  './phase230-dev20.js?v=300release1',
+  './phase230-st1-anchor.js?v=300release1',
   './manifest.webmanifest'
 ];
 
