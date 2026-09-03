@@ -1,4 +1,4 @@
-const CACHE_NAME='h2h-coach-v300-autoupdate1';
+const CACHE_NAME='h2h-coach-v300-autoupdate2';
 const APP_VERSION='3.0.0';
 const CORE=[
   './','./index.html','./styles.css?v=215n','./phase230-mobile.css?v=230mobile1',
@@ -30,10 +30,6 @@ function upgradeHtml(html){
   }
   return html;
 }
-async function notifyClients(){
-  const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});
-  for(const client of clients) client.postMessage({type:'APP_UPDATED',version:APP_VERSION});
-}
 self.addEventListener('install',event=>{
   self.skipWaiting();
   event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(CORE)));
@@ -43,7 +39,9 @@ self.addEventListener('activate',event=>{
     const keys=await caches.keys();
     await Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)));
     await self.clients.claim();
-    await notifyClients();
+    // Do not broadcast APP_UPDATED here. The app's legacy listener reacts to that
+    // message with location.reload(), which can create a visible reload loop when
+    // the service worker is activated repeatedly by deployments/cache changes.
   })());
 });
 self.addEventListener('message',event=>{
