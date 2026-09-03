@@ -31,8 +31,22 @@ jobs:
           grep -q "phase230-dev16.js" phase230.js
           grep -q "phase230-dev17.js" phase230.js
           grep -q "phase230-dev18.js" phase230.js
-          grep -q "h2h-coach-cloud-v230fulluse" service-worker.js
           grep -q "phase230-dev18.js" service-worker.js
+          node <<'NODE'
+          const fs = require('fs');
+          const sw = fs.readFileSync('service-worker.js', 'utf8');
+          const version = sw.match(/const APP_VERSION='([^']+)'/);
+          const cache = sw.match(/const CACHE_NAME='([^']+)'/);
+          if (!version) throw new Error('APP_VERSION missing in service-worker.js');
+          if (!/^\d+\.\d+\.\d+$/.test(version[1])) throw new Error(`APP_VERSION must be semver, got ${version[1]}`);
+          if (!cache) throw new Error('CACHE_NAME missing in service-worker.js');
+          if (!/^h2h-coach-v/.test(cache[1])) throw new Error(`Unexpected CACHE_NAME: ${cache[1]}`);
+          const versionToken = version[1].replace(/\./g, '');
+          if (!cache[1].includes(`v${versionToken}`)) {
+            throw new Error(`CACHE_NAME ${cache[1]} does not match APP_VERSION ${version[1]}`);
+          }
+          console.log(`Runtime version wiring OK: ${version[1]} / ${cache[1]}`);
+          NODE
       - name: Core lineup pipeline guards
         run: |
           grep -q "phase230LiveLineups" phase230-dev16.js
