@@ -24,6 +24,7 @@ jobs:
           node --check config.js
           node --check service-worker.js
           node --check phase230.js
+          node --check phase230-league-anchor.js
           for file in phase230-dev*.js; do node --check "$file"; done
           node --check phase230-st1-anchor.js
           node --check phase230-st1-corrections.js
@@ -108,16 +109,30 @@ jobs:
           grep -q "owner-conflict" phase230-dev27.js
           grep -q "duplicateSquadOwnership" phase230-dev27.js
           node <<'NODE'
-          const fs=require('fs'),vm=require('vm');
+          const fs=require('fs');
           const src=fs.readFileSync('phase230-league-anchor.js','utf8');
-          const startToken='const MODEL = ';
-          const assignmentToken='window.H2H_CANONICAL_MODEL = MODEL';
-          const start=src.indexOf(startToken);
-          const assignment=src.indexOf(assignmentToken,start);
-          const end=src.lastIndexOf(';',assignment);
-          if(start<0||assignment<0||end<=start)throw new Error('Could not locate canonical MODEL expression');
-          const expression=src.slice(start+startToken.length,end).trim();
-          const model=vm.runInNewContext('('+expression+')');
+          const marker='const MODEL = ';
+          const markerPos=src.indexOf(marker);
+          const open=src.indexOf('{',markerPos+marker.length);
+          if(markerPos<0||open<0)throw new Error('Could not locate canonical MODEL object');
+          let depth=0,inString=false,escaped=false,close=-1;
+          for(let i=open;i<src.length;i++){
+            const c=src[i];
+            if(inString){
+              if(escaped){escaped=false;continue;}
+              if(c==='\\'){escaped=true;continue;}
+              if(c==='"')inString=false;
+              continue;
+            }
+            if(c==='"'){inString=true;continue;}
+            if(c==='{')depth++;
+            else if(c==='}'){
+              depth--;
+              if(depth===0){close=i;break;}
+            }
+          }
+          if(close<0)throw new Error('Canonical MODEL object is not balanced');
+          const model=JSON.parse(src.slice(open,close+1));
           if(!model?.state?.current_squads||!model?.state?.current_ownership)throw new Error('Canonical ownership snapshot missing');
           const squads=model.state.current_squads;
           const seen=new Map();
