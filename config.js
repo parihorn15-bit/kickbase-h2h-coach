@@ -18,7 +18,7 @@ window.addEventListener('load', () => {
   document.title = 'Kickbase H2H Coach 2.3.0';
 
   const runtime = document.createElement('script');
-  runtime.src = 'phase230.js?v=230fulluse17';
+  runtime.src = 'phase230.js?v=230fulluse20';
   runtime.async = false;
   runtime.dataset.phase230Production = '1';
   runtime.onerror = () => {
