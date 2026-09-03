@@ -92,39 +92,37 @@
     }catch(error){console.warn("Bundesliga-Livedaten nicht verfügbar:",error);return false}
   }
 
-  async function fetchCloudState({initial=false,silent=false}={}){
+  async function fetchCloudState({applyRemote=false,loadAux=true}={}){
     if(!client||!currentUser||syncing)return;
     syncing=true;
-    if(!silent)setCloudState("Synchronisiere …","working");
+    setCloudState(applyRemote?"Synchronisiere …":"Cloud wird geprüft …","working");
     let shouldRender=false;
     try{
       const{data:row,error}=await client.from("coach_state").select("state, updated_at").eq("user_id",currentUser.id).maybeSingle();
       if(error)throw error;
       if(!row){
-        const{error:insertError}=await client.from("coach_state").insert({user_id:currentUser.id,state:data});
+        const{data:created,error:insertError}=await client.from("coach_state").insert({user_id:currentUser.id,state:data}).select("updated_at").single();
         if(insertError)throw insertError;
-        lastCloudUpdated=new Date().toISOString();
-        if(!silent)setCloudState("Cloud eingerichtet","good");
+        lastCloudUpdated=created?.updated_at||new Date().toISOString();
+        setCloudState("Cloud eingerichtet","good");
       }else{
-        const remoteTime=row.updated_at||"",shouldApply=initial||(remoteTime&&remoteTime>lastCloudUpdated);
-        if(shouldApply&&row.state){
-          if(window.h2hEditingInProgress?.()){
-            if(!silent)setCloudState("Eingabe wird geschützt","working");
-          }else{
-            const merged=mergeData(row.state);
-            shouldRender=!same(data,merged);
+        lastCloudUpdated=row.updated_at||lastCloudUpdated;
+        if(applyRemote&&row.state&&!window.h2hEditingInProgress?.()){
+          const merged=mergeData(row.state);
+          shouldRender=!same(data,merged);
+          if(shouldRender){
             data=merged;
             localStorage.setItem("kickbaseCoachV07",JSON.stringify(data));
-            lastCloudUpdated=remoteTime;
           }
         }
-        if(!silent)setCloudState("Cloud aktuell","good");
+        setCloudState(applyRemote?"Cloud übernommen":"Cloud verbunden","good");
       }
       cloudReady=true;
-      const changes=await Promise.all([fetchTeamStrengths(),fetchBundesligaLiveData(),fetchDataEngine(),fetchOfficialNews()]);
-      if(changes.some(Boolean))shouldRender=true;
+      if(loadAux){
+        const changes=await Promise.all([fetchTeamStrengths(),fetchBundesligaLiveData(),fetchDataEngine(),fetchOfficialNews()]);
+        if(changes.some(Boolean))shouldRender=true;
+      }
       if(shouldRender&&!window.h2hEditingInProgress?.())render();
-      if(silent)setCloudState("Cloud aktuell","good");
     }catch(err){
       console.error(err);
       setCloudState("Cloud-Fehler","bad");
@@ -148,8 +146,16 @@
   window.cloudFlushSave=async()=>{if(!cloudReady)return false;clearTimeout(saveTimer);const started=Date.now();while(syncing&&Date.now()-started<10000)await new Promise(r=>setTimeout(r,150));if(syncing)return false;await pushCloudState();return true};
   async function signIn(){const email=byId("cloudEmail")?.value.trim();if(!email){byId("cloudMessage").textContent="Bitte deine E-Mail-Adresse eintragen.";return}setCloudState("Login-Link wird gesendet …","working");const redirectTo=location.href.split("#")[0].split("?")[0];const{error}=await client.auth.signInWithOtp({email,options:{emailRedirectTo:redirectTo}});if(error){byId("cloudMessage").textContent=error.message;setCloudState("Login fehlgeschlagen","bad");return}byId("cloudMessage").textContent="E-Mail wurde gesendet. Öffne den Login-Link auf diesem Gerät.";setCloudState("E-Mail prüfen","working")}
   async function signOut(){await client.auth.signOut();currentUser=null;cloudReady=false;clearInterval(pollingTimer);setCloudState("Nicht angemeldet","neutral");showAuthPanel("Du wurdest abgemeldet. Lokale Daten bleiben erhalten.")}
-  async function onSession(session){currentUser=session?.user||null;if(!currentUser){cloudReady=false;setCloudState("Nicht angemeldet","neutral");showAuthPanel();return}hidePanel();setCloudState("Verbunden","good");await fetchCloudState({initial:true});clearInterval(pollingTimer);pollingTimer=setInterval(()=>fetchCloudState({silent:true}),cfg.syncIntervalMs||15000)}
+  async function onSession(session){
+    currentUser=session?.user||null;
+    clearInterval(pollingTimer);pollingTimer=null;
+    if(!currentUser){cloudReady=false;setCloudState("Nicht angemeldet","neutral");showAuthPanel();return}
+    hidePanel();
+    setCloudState("Verbunden","good");
+    // Local data is authoritative on startup. Never import coach_state automatically.
+    await fetchCloudState({applyRemote:false,loadAux:true});
+  }
   async function init(){if(!configured||!window.supabase){setCloudState("Cloud nicht eingerichtet","bad");return}client=window.supabase.createClient(cfg.supabaseUrl,cfg.supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});const{data:{session}}=await client.auth.getSession();await onSession(session);client.auth.onAuthStateChange((_event,newSession)=>{if(newSession?.user?.id!==currentUser?.id)onSession(newSession)})}
-  document.addEventListener("click",event=>{const id=event.target?.id;if(id==="cloudBadge")currentUser?showUserPanel(currentUser.email):showAuthPanel();if(id==="cloudClose")hidePanel();if(id==="cloudLoginBtn")signIn();if(id==="cloudLogoutBtn")signOut();if(id==="cloudSyncNow")fetchCloudState({initial:true});if(id==="cloudUploadLocal")pushCloudState()});
+  document.addEventListener("click",event=>{const id=event.target?.id;if(id==="cloudBadge")currentUser?showUserPanel(currentUser.email):showAuthPanel();if(id==="cloudClose")hidePanel();if(id==="cloudLoginBtn")signIn();if(id==="cloudLogoutBtn")signOut();if(id==="cloudSyncNow")fetchCloudState({applyRemote:true,loadAux:true});if(id==="cloudUploadLocal")pushCloudState()});
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
 })();
