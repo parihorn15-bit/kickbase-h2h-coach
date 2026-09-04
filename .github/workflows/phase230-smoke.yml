@@ -75,7 +75,7 @@ jobs:
           grep -q "EXPECTED_SOLD=29" phase230-dev29.js
           grep -q "needsRepair" phase230-dev29.js
           grep -q "h2hCanonicalHornVerified" phase230-dev29.js
-          grep -q "Single-pass only" phase230-dev29.js
+          grep -q "screenshot-horn-" phase230-dev29.js
           ! grep -q "setTimeout(boot" phase230-dev29.js
           ! grep -q "setInterval" phase230-dev29.js
       - name: Core state guards
@@ -86,6 +86,9 @@ jobs:
           grep -q "syncCanonicalRoster" phase230-dev31.js
           grep -q "repairLineup" phase230-dev31.js
           grep -q "syncAll" phase230-dev31.js
+          ! grep -q "central-watch" phase230-dev31.js
+          ! grep -q "startup-stabilization" phase230-dev31.js
+          ! grep -q "setInterval" phase230-dev31.js
       - name: Ownership and lineup guards
         run: |
           grep -q "h2h300ReconcileOwnership" phase230-dev27.js
