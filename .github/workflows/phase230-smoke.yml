@@ -4,7 +4,7 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
-    paths: ["version.js","phase230*.js","phase230-mobile.css","app.js","cloud.js","config.js","service-worker.js","index.html","scripts/update-club-data.mjs",".github/workflows/phase230-smoke.yml"]
+    paths: ["version.js","phase230*.js","phase230-mobile.css","app.js","cloud.js","config.js","service-worker.js","index.html","scripts/*.mjs",".github/workflows/phase230-smoke.yml"]
   workflow_dispatch:
 permissions:
   contents: read
@@ -29,6 +29,9 @@ jobs:
           node --check phase230-st1-anchor.js
           node --check phase230-st1-corrections.js
           node --check scripts/update-club-data.mjs
+          node --check scripts/test-transfer-pipeline.mjs
+      - name: Transfer pipeline regression
+        run: node scripts/test-transfer-pipeline.mjs
       - name: Canonical release wiring
         run: |
           grep -q "version.js" config.js
