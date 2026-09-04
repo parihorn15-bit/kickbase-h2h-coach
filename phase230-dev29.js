@@ -13,8 +13,8 @@
   function needsRepair(d){const s=currentState(d);return s.total!==EXPECTED_LIFECYCLES||s.active!==EXPECTED_ACTIVE||s.sold!==EXPECTED_SOLD||(d.players||[]).some(p=>String(p?.buyDate||'')<=BASELINE_LAST_DATE&&!p?.h2hCanonicalHornVerified)}
   function sync({force=false}={}){const r=report(),core=window.H2H_STATE_CORE;if(!r.complete||!core?.mergeTransferLifecycles)return false;let d;try{d=data}catch{return false}const sig=`horn72-central:${r.canonicalUniqueEvents}:${r.canonicalLifecycles}:${r.active}:${r.sold}:v4`;if(!force&&!needsRepair(d)&&d?.ui?.hornCentralHistorySignature===sig)return true;core.mergeTransferLifecycles(lifecycles(),{expected:EXPECTED_LIFECYCLES});removeLegacyBaselineDuplicates(d);d.ui=d.ui||{};d.ui.hornCentralHistorySignature=sig;try{if(typeof save==='function')save()}catch{}core.syncAll({reason:'horn-history-adapter-v4',render:true});document.getElementById('h2hHornCanonicalTransfers300')?.remove();return !needsRepair(d)}
   window.h2h300HornTransferCompleteness=report;window.h2h300HornLifecycles=lifecycles;window.h2h300SyncHornHistoryIntoTransfers=sync;window.h2h300SyncHornHistoryToLegacyTable=sync;
-  let tries=0,timer=null;
-  const boot=()=>{tries++;if(window.H2H_STATE_CORE&&events().length>=EXPECTED_UNIQUE){const ok=sync({force:true});if(ok){timer=null;return}}if(tries<24)timer=setTimeout(boot,250);else timer=null};
+  let tries=0,timer=null,firstSuccessful=false;
+  const boot=()=>{tries++;if(window.H2H_STATE_CORE&&events().length>=EXPECTED_UNIQUE){const ok=sync({force:!firstSuccessful});if(ok){firstSuccessful=true;timer=null;return}}if(tries<24)timer=setTimeout(boot,250);else timer=null};
   setTimeout(boot,0);
   console.info(`[H2H] ${VERSION} loaded`)
 })();
