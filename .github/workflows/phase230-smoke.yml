@@ -4,7 +4,7 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
-    paths: ["version.js","phase230*.js","phase230-mobile.css","app.js","cloud.js","config.js","service-worker.js","index.html","scripts/*.mjs",".github/workflows/phase230-smoke.yml"]
+    paths: ["version.js","phase230*.js","h2h-*.js","phase230-mobile.css","app.js","cloud.js","config.js","service-worker.js","index.html","scripts/*.mjs",".github/workflows/phase230-smoke.yml"]
   workflow_dispatch:
 permissions:
   contents: read
@@ -24,6 +24,7 @@ jobs:
           node --check config.js
           node --check service-worker.js
           node --check phase230.js
+          node --check h2h-transfers.js
           node --check phase230-league-anchor.js
           for file in phase230-dev*.js; do node --check "$file"; done
           node --check phase230-st1-anchor.js
@@ -63,7 +64,9 @@ jobs:
       - name: Runtime centralization guards
         run: |
           grep -q "phase230-dev31.js" phase230.js
-          grep -q "phase230-dev29.js" phase230.js
+          grep -q "h2h-transfers.js" phase230.js
+          ! grep -q "phase230-dev29.js" phase230.js
+          ! grep -q "phase230-dev23.js" phase230.js
           ! grep -q "phase230-dev30.js" phase230.js
           grep -q "runtime-ready" phase230.js
           grep -q "h2h300SyncHornHistoryIntoTransfers" phase230.js
@@ -72,15 +75,16 @@ jobs:
           ! grep -q "setInterval" phase230.js
       - name: Horn history deterministic cutover
         run: |
-          grep -q "EXPECTED_UNIQUE=72" phase230-dev29.js
-          grep -q "EXPECTED_LIFECYCLES=43" phase230-dev29.js
-          grep -q "EXPECTED_ACTIVE=14" phase230-dev29.js
-          grep -q "EXPECTED_SOLD=29" phase230-dev29.js
-          grep -q "needsRepair" phase230-dev29.js
-          grep -q "h2hCanonicalHornVerified" phase230-dev29.js
-          grep -q "screenshot-horn-" phase230-dev29.js
-          ! grep -q "setTimeout(boot" phase230-dev29.js
-          ! grep -q "setInterval" phase230-dev29.js
+          grep -q "EXPECTED_UNIQUE=72" h2h-transfers.js
+          grep -q "EXPECTED_LIFECYCLES=43" h2h-transfers.js
+          grep -q "EXPECTED_ACTIVE=14" h2h-transfers.js
+          grep -q "EXPECTED_SOLD=29" h2h-transfers.js
+          grep -q "needsRepair" h2h-transfers.js
+          grep -q "h2hCanonicalHornVerified" h2h-transfers.js
+          grep -q "screenshot-horn-" h2h-transfers.js
+          grep -q "H2H_PHASE300_SCREENSHOT_ANCHORS" h2h-transfers.js
+          ! grep -q "setTimeout(boot" h2h-transfers.js
+          ! grep -q "setInterval" h2h-transfers.js
       - name: Core state guards
         run: |
           grep -q "dedupePlayers" phase230-dev31.js
