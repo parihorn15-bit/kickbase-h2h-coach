@@ -12,7 +12,8 @@
     compatibility:Object.freeze(['phase230-dev1.js','phase230-dev2.js','phase230-dev3.js','phase230-dev4.js','phase230-dev5.js','phase230-dev6.js','phase230-dev7.js','phase230-dev8.js','phase230-dev9.js','phase230-dev10.js','phase230-dev11.js','phase230-dev12.js','phase230-dev13.js','phase230-dev14.js','phase230-dev15.js']),
     lineupAndHistorical:Object.freeze(['phase230-dev16.js','phase230-dev17.js','phase230-dev18.js','phase230-league-anchor.js','phase230-dev19.js','phase230-st1-anchor.js','phase230-st1-corrections.js','phase230-dev20.js','phase230-dev21.js','phase230-dev22.js','phase230-dev24.js']),
     canonicalTransferData:Object.freeze(['phase230-transfer-anchor-core.js','phase230-transfer-al.js','phase230-transfer-cello.js','phase230-transfer-calcio.js','phase230-transfer-horn.js']),
-    validation:Object.freeze(['phase230-dev26.js','phase230-dev27.js','phase230-dev28.js']),
+    validation:Object.freeze(['h2h-validation.js']),
+    ownership:Object.freeze(['h2h-ownership.js']),
     state:Object.freeze(['h2h-state-core.js']),
     transfers:Object.freeze(['h2h-transfers.js'])
   });
