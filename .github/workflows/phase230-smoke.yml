@@ -24,7 +24,7 @@ jobs:
           node --check config.js
           node --check service-worker.js
           node --check phase230.js
-          node --check h2h-transfers.js
+          for file in h2h-*.js; do node --check "$file"; done
           node --check phase230-league-anchor.js
           for file in phase230-dev*.js; do node --check "$file"; done
           node --check phase230-st1-anchor.js
@@ -63,11 +63,17 @@ jobs:
           grep -q "caches.keys" service-worker.js
       - name: Runtime centralization guards
         run: |
-          grep -q "phase230-dev31.js" phase230.js
+          grep -q "h2h-state-core.js" phase230.js
           grep -q "h2h-transfers.js" phase230.js
+          grep -q "h2h-validation.js" phase230.js
+          grep -q "h2h-ownership.js" phase230.js
+          ! grep -q "phase230-dev31.js" phase230.js
           ! grep -q "phase230-dev29.js" phase230.js
           ! grep -q "phase230-dev23.js" phase230.js
           ! grep -q "phase230-dev30.js" phase230.js
+          ! grep -q "phase230-dev26.js" phase230.js
+          ! grep -q "phase230-dev27.js" phase230.js
+          ! grep -q "phase230-dev28.js" phase230.js
           grep -q "runtime-ready" phase230.js
           grep -q "h2h300SyncHornHistoryIntoTransfers" phase230.js
           grep -q "H2H_STATE_CORE" phase230.js
@@ -87,19 +93,20 @@ jobs:
           ! grep -q "setInterval" h2h-transfers.js
       - name: Core state guards
         run: |
-          grep -q "dedupePlayers" phase230-dev31.js
-          grep -q "canonicalName" phase230-dev31.js
-          grep -q "posLabel" phase230-dev31.js
-          grep -q "syncCanonicalRoster" phase230-dev31.js
-          grep -q "repairLineup" phase230-dev31.js
-          grep -q "syncAll" phase230-dev31.js
-          ! grep -q "central-watch" phase230-dev31.js
-          ! grep -q "startup-stabilization" phase230-dev31.js
-          ! grep -q "setInterval" phase230-dev31.js
+          grep -q "dedupePlayers" h2h-state-core.js
+          grep -q "canonicalName" h2h-state-core.js
+          grep -q "posLabel" h2h-state-core.js
+          grep -q "syncCanonicalRoster" h2h-state-core.js
+          grep -q "repairLineup" h2h-state-core.js
+          grep -q "syncAll" h2h-state-core.js
+          ! grep -q "central-watch" h2h-state-core.js
+          ! grep -q "startup-stabilization" h2h-state-core.js
+          ! grep -q "setInterval" h2h-state-core.js
       - name: Ownership and lineup guards
         run: |
-          grep -q "h2h300ReconcileOwnership" phase230-dev27.js
-          grep -q "duplicateSquadOwnership" phase230-dev27.js
+          grep -q "h2h300ReconcileOwnership" h2h-ownership.js
+          grep -q "duplicateSquadOwnership" h2h-ownership.js
+          grep -q "h2h300ApplyOwnershipEvidenceCorrections" h2h-ownership.js
           grep -q "phase230LiveLineups" phase230-dev16.js
           grep -q "writeLiveLineupV1=function" phase230-dev16.js
           ! grep -q "new MutationObserver" phase230-dev16.js
@@ -107,7 +114,7 @@ jobs:
           ! grep -q "new MutationObserver" phase230-dev18.js
       - name: Historical data guards
         run: |
-          grep -q "h2h230ValidateHistoricalPoints" phase230-dev26.js
+          grep -q "h2h230ValidateHistoricalPoints" h2h-validation.js
           grep -q "pointsFinal230" phase230-dev18.js
           grep -q "manual-reconstruction" phase230-dev17.js
           grep -q "/competitions/BL1/matches" scripts/update-club-data.mjs
