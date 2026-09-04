@@ -1,5 +1,5 @@
 (() => {
-  const VERSION='3.0.0-anchor23';
+  const VERSION='3.0.6-anchor23-clean';
   const norm=v=>String(v||'').toLocaleLowerCase('de-DE').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
   const model=()=>window.H2H_CANONICAL_MODEL||null;
   const teamName=id=>model()?.entities?.teams?.[id]?.name||'Liga';
@@ -32,12 +32,13 @@
     return true;
   }
   function ensureBrand(){
-    const version=window.H2H_RELEASE?.version||window.H2H_APP_VERSION||'3.0.0';
+    const version=window.H2H_RELEASE?.version||window.H2H_APP_VERSION||'3.0.6';
     const brand=document.querySelector('#sidebar .brand small');
     if(brand&&!brand.textContent.includes(`Version ${version}`))brand.textContent=`Version ${version} · Cloud-Schreiben AKTIV · 2026/27`;
     document.title=`Kickbase H2H Coach ${version}`;
   }
-  function hook(){patchBaseTransfers();ensureBrand();window.H2H_PHASE300_SCREENSHOT_ANCHORS=true}
-  hook();setTimeout(hook,300);setTimeout(hook,900);
-  console.info(`[H2H] ${VERSION} loaded`,{teams:Object.keys(model()?.entities?.teams||{}).length,transfers:(model()?.events?.transfers||[]).length,md1:model()?.matchdays?.md1?.official_team_totals||{}});
+  patchBaseTransfers();
+  ensureBrand();
+  window.H2H_PHASE300_SCREENSHOT_ANCHORS=true;
+  console.info(`[H2H] ${VERSION} loaded`);
 })();
