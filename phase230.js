@@ -18,20 +18,16 @@
 
   const brandVersion=()=>{
     const small=document.querySelector('#sidebar .brand small');
-    if(small)small.textContent='Version '+APP_VERSION+' · Cloud-Schreiben AKTIV · 2026/27';
-    document.title='Kickbase H2H Coach '+APP_VERSION;
-  };
-  const brandObserver=new MutationObserver(()=>{
-    if(!window.__H2H_RUNTIME_BOOTING__)return;
-    const small=document.querySelector('#sidebar .brand small');
     const wanted='Version '+APP_VERSION+' · Cloud-Schreiben AKTIV · 2026/27';
     if(small&&small.textContent!==wanted)small.textContent=wanted;
     const title='Kickbase H2H Coach '+APP_VERSION;
     if(document.title!==title)document.title=title;
-  });
+  };
+  let brandObserved=false;
+  const brandObserver=new MutationObserver(()=>brandVersion());
   const observeBrand=()=>{
     const small=document.querySelector('#sidebar .brand small');
-    if(small)brandObserver.observe(small,{childList:true,characterData:true,subtree:true});
+    if(small&&!brandObserved){brandObserver.observe(small,{childList:true,characterData:true,subtree:true});brandObserved=true}
     brandVersion();
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',observeBrand,{once:true});else observeBrand();
@@ -43,14 +39,12 @@
   const load=(src,tag)=>new Promise((resolve,reject)=>{if(document.querySelector(`script[data-${tag}]`)){resolve();return}const s=document.createElement('script');s.src=href(src);s.async=false;s.dataset[tag]='1';s.onload=()=>{brandVersion();resolve()};s.onerror=reject;document.head.appendChild(s)});
   modules.reduce((p,src)=>p.then(()=>load(src,src.replace(/[^a-z0-9]/gi,'').toLowerCase())),Promise.resolve()).then(()=>{
     window.__H2H_RUNTIME_BOOTING__=false;
-    brandObserver.disconnect();
     brandVersion();
     document.querySelectorAll('link[data-h2h-runtime-preload]').forEach(n=>n.remove());
     if(originalRender&&(renderQueued||document.getElementById('content')))originalRender();
     window.dispatchEvent(new CustomEvent('h2h:runtime-ready',{detail:{version:APP_VERSION,assetKey:ASSET_KEY}}));
   }).catch(error=>{
     window.__H2H_RUNTIME_BOOTING__=false;
-    brandObserver.disconnect();
     brandVersion();
     console.error(`${APP_VERSION} runtime load failed`,error);
   });
