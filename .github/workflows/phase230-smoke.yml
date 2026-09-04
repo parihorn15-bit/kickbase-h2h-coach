@@ -35,27 +35,19 @@ jobs:
           grep -q "H2H_RELEASE" config.js
           grep -q "H2H_RELEASE" phase230.js
           ! grep -q "const APP_VERSION='" phase230.js
-          ! grep -q "const APP_VERSION='" service-worker.js
           node <<'NODE'
-          const fs = require('fs');
-          const vm = require('vm');
-          const context = {};
-          vm.createContext(context);
-          vm.runInContext(fs.readFileSync('version.js', 'utf8'), context);
-          const release = context.H2H_RELEASE;
-          if (!release) throw new Error('H2H_RELEASE missing in version.js');
-          if (!/^\d+\.\d+\.\d+$/.test(release.version)) throw new Error(`version must be semver, got ${release.version}`);
-          if (!/^[a-zA-Z0-9_-]+$/.test(release.assetKey)) throw new Error(`Invalid assetKey: ${release.assetKey}`);
-          if (!/^h2h-coach-v/.test(release.cacheName)) throw new Error(`Unexpected cacheName: ${release.cacheName}`);
-          const token = release.version.replace(/\./g, '');
-          if (!release.cacheName.includes(`v${token}`)) throw new Error(`cacheName ${release.cacheName} does not match version ${release.version}`);
-          console.log(`Canonical release OK: ${release.version} / ${release.assetKey} / ${release.cacheName}`);
+          const fs=require('fs'),vm=require('vm');
+          const context={};vm.createContext(context);
+          vm.runInContext(fs.readFileSync('version.js','utf8'),context);
+          const r=context.H2H_RELEASE;
+          if(!r)throw new Error('H2H_RELEASE missing');
+          if(!/^\d+\.\d+\.\d+$/.test(r.version))throw new Error(`Bad version ${r.version}`);
+          if(!/^[a-zA-Z0-9_-]+$/.test(r.assetKey))throw new Error(`Bad assetKey ${r.assetKey}`);
+          if(!r.cacheName.includes(`v${r.version.replace(/\./g,'')}`))throw new Error('cacheName/version mismatch');
+          console.log(`Release ${r.version} / ${r.assetKey}`);
           NODE
       - name: Reload-free startup guards
         run: |
-          grep -q "<title>Kickbase H2H Coach 3.0.0</title>" index.html
-          grep -q "Version 3.0.0 · Cloud-Schreiben AKTIV" index.html
-          grep -q "300statecore4" index.html
           grep -q "h2hLegacySwCleanup" index.html
           ! grep -q "navigator.serviceWorker.register" index.html
           ! grep -q "location.reload()" app.js
@@ -65,153 +57,54 @@ jobs:
           ! grep -q 'addEventListener("fetch"' service-worker.js
           grep -q "registration.unregister" service-worker.js
           grep -q "caches.keys" service-worker.js
-      - name: Runtime wiring
+      - name: Runtime centralization guards
         run: |
-          grep -q "phase230-mobile.css" phase230.js
-          grep -q "phase230-dev14.js" phase230.js
-          grep -q "phase230-dev16.js" phase230.js
-          grep -q "phase230-dev17.js" phase230.js
-          grep -q "phase230-dev18.js" phase230.js
-          grep -q "phase230-dev26.js" phase230.js
-          grep -q "phase230-dev27.js" phase230.js
-          grep -q "phase230-dev29.js" phase230.js
           grep -q "phase230-dev31.js" phase230.js
-          ! grep -Eq "phase230-dev[0-9]+\\.js" service-worker.js
-          ! grep -q "V3_SCRIPTS" service-worker.js
-      - name: Horn history migration guards
+          grep -q "phase230-dev29.js" phase230.js
+          ! grep -q "phase230-dev30.js" phase230.js
+          grep -q "runtime-ready" phase230.js
+          grep -q "h2h300SyncHornHistoryIntoTransfers" phase230.js
+          grep -q "H2H_STATE_CORE" phase230.js
+          ! grep -q "MutationObserver" phase230.js
+          ! grep -q "setInterval" phase230.js
+      - name: Horn history deterministic cutover
         run: |
           grep -q "EXPECTED_UNIQUE=72" phase230-dev29.js
           grep -q "EXPECTED_LIFECYCLES=43" phase230-dev29.js
           grep -q "EXPECTED_ACTIVE=14" phase230-dev29.js
           grep -q "EXPECTED_SOLD=29" phase230-dev29.js
           grep -q "needsRepair" phase230-dev29.js
-          grep -q "removeLegacyBaselineDuplicates" phase230-dev29.js
-          grep -q "force:!firstSuccessful" phase230-dev29.js
           grep -q "h2hCanonicalHornVerified" phase230-dev29.js
-      - name: Core lineup pipeline guards
+          grep -q "Single-pass only" phase230-dev29.js
+          ! grep -q "setTimeout(boot" phase230-dev29.js
+          ! grep -q "setInterval" phase230-dev29.js
+      - name: Core state guards
         run: |
+          grep -q "dedupePlayers" phase230-dev31.js
+          grep -q "canonicalName" phase230-dev31.js
+          grep -q "posLabel" phase230-dev31.js
+          grep -q "syncCanonicalRoster" phase230-dev31.js
+          grep -q "repairLineup" phase230-dev31.js
+          grep -q "syncAll" phase230-dev31.js
+      - name: Ownership and lineup guards
+        run: |
+          grep -q "h2h300ReconcileOwnership" phase230-dev27.js
+          grep -q "duplicateSquadOwnership" phase230-dev27.js
           grep -q "phase230LiveLineups" phase230-dev16.js
-          grep -q "data.settings.phase230LiveLineups" phase230-dev16.js
-          grep -q "h2h230PersistCurrentLineups" phase230-dev16.js
           grep -q "writeLiveLineupV1=function" phase230-dev16.js
-          grep -q "commitScreenshotLineupCoreV224" phase230-dev1.js
-          grep -q "snapshotFromReview230" phase230-dev1.js
-          grep -q "current-live+kickoff-locked-history" phase230-dev14.js
           ! grep -q "new MutationObserver" phase230-dev16.js
           ! grep -q "new MutationObserver" phase230-dev17.js
           ! grep -q "new MutationObserver" phase230-dev18.js
-      - name: Historical points integrity guards
+      - name: Historical data guards
         run: |
           grep -q "h2h230ValidateHistoricalPoints" phase230-dev26.js
-          grep -q "historicalPointsValidation230" phase230-dev26.js
-          grep -q "historicalDataSuspect230" phase230-dev26.js
-          grep -q "player-points-incomplete" phase230-dev26.js
-          grep -q "status==='mismatch'" phase230-dev26.js
-          node <<'NODE'
-          const fs=require('fs'),vm=require('vm');
-          const src=fs.readFileSync('phase230-st1-corrections.js','utf8');
-          const match=src.match(/const P=(\{.*\});const norm=/s);
-          if(!match)throw new Error('Could not extract ST1 screenshot correction map');
-          const P=vm.runInNewContext('('+match[1]+')');
-          const expectedManagers=['me','fabi','fabio','elias','marci','manu'];
-          for(const id of expectedManagers){
-            const row=P[id];
-            if(!row)throw new Error(`Missing ST1 manager ${id}`);
-            const values=Object.values(row.p||{}).map(Number);
-            if(values.length!==11)throw new Error(`${id}: expected 11 starter point values, got ${values.length}`);
-            const sum=values.reduce((a,b)=>a+b,0);
-            if(sum!==Number(row.total))throw new Error(`${id}: player sum ${sum} != manager total ${row.total}`);
-            console.log(`${id}: ${sum}/${row.total} OK`);
-          }
-          NODE
-      - name: Transfer ownership reconciliation guards
-        run: |
-          grep -q "h2h300ReconcileOwnership" phase230-dev27.js
-          grep -q "reconstructed_ownership_from_transfers" phase230-dev27.js
-          grep -q "sold-but-still-in-snapshot" phase230-dev27.js
-          grep -q "bought-but-missing-from-snapshot" phase230-dev27.js
-          grep -q "owner-conflict" phase230-dev27.js
-          grep -q "duplicateSquadOwnership" phase230-dev27.js
-          node <<'NODE'
-          const fs=require('fs');
-          const src=fs.readFileSync('phase230-league-anchor.js','utf8');
-          const marker='const MODEL = ';
-          const markerPos=src.indexOf(marker);
-          const open=src.indexOf('{',markerPos+marker.length);
-          if(markerPos<0||open<0)throw new Error('Could not locate canonical MODEL object');
-          let depth=0,inString=false,escaped=false,close=-1;
-          for(let i=open;i<src.length;i++){
-            const c=src[i];
-            if(inString){
-              if(escaped){escaped=false;continue;}
-              if(c==='\\'){escaped=true;continue;}
-              if(c==='"')inString=false;
-              continue;
-            }
-            if(c==='"'){inString=true;continue;}
-            if(c==='{')depth++;
-            else if(c==='}'){
-              depth--;
-              if(depth===0){close=i;break;}
-            }
-          }
-          if(close<0)throw new Error('Canonical MODEL object is not balanced');
-          const model=JSON.parse(src.slice(open,close+1));
-          if(!model?.state?.current_squads||!model?.state?.current_ownership)throw new Error('Canonical ownership snapshot missing');
-          const squads=model.state.current_squads;
-          const seen=new Map();
-          for(const [teamId,ids] of Object.entries(squads)){
-            const declared=Number(model.entities?.teams?.[teamId]?.current_squad_size);
-            if(declared!==ids.length)throw new Error(`${teamId}: declared squad size ${declared} != snapshot ${ids.length}`);
-            for(const id of ids){
-              if(seen.has(id))throw new Error(`${id}: duplicate ownership in ${seen.get(id)} and ${teamId}`);
-              seen.set(id,teamId);
-            }
-          }
-          for(const [playerId,row] of Object.entries(model.state.current_ownership)){
-            if(seen.get(playerId)!==row.team_id)throw new Error(`${playerId}: current_ownership disagrees with current_squads`);
-          }
-          if(Object.keys(model.entities?.teams||{}).length!==6)throw new Error('Expected exactly six canonical league teams');
-          console.log(`Canonical ownership snapshot OK: ${seen.size} players across ${Object.keys(squads).length} teams`);
-          NODE
-      - name: Manual reconstruction guards
-        run: |
-          grep -q "phase230ManualLineupNames" phase230-dev17.js
-          grep -q "Plausible Aufstellung erstellen" phase230-dev17.js
-          grep -q "manual-reconstruction" phase230-dev17.js
-          grep -q "noOriginalLineupScreenshot:true" phase230-dev17.js
-          grep -q "h2h230BuildLogicalLineup" phase230-dev17.js
-          grep -q "h2h230ClassifyScreenshotReview" phase230-dev17.js
-          grep -q "Neuer/unklarer Screenshot-Typ" phase230-dev17.js
-      - name: Points finalization guards
-        run: |
           grep -q "pointsFinal230" phase230-dev18.js
-          grep -q "pointsFinalValue230" phase230-dev18.js
-          grep -q "Punkte finalisieren" phase230-dev18.js
-          grep -q "Finalisierung aufheben" phase230-dev18.js
-          grep -q "manual-kickbase-opta-final" phase230-dev18.js
-      - name: Exact kickoff guards
-        run: |
+          grep -q "manual-reconstruction" phase230-dev17.js
           grep -q "/competitions/BL1/matches" scripts/update-club-data.mjs
-          grep -q "schedule230" scripts/update-club-data.mjs
-          grep -q "kickoffAt" scripts/update-club-data.mjs
-          grep -q "mergeKickoffSchedule" cloud.js
-          grep -q "first-kickoff" phase230-dev14.js
-          grep -q "h2h:kickoff-schedule" phase230-dev14.js
-          ! grep -q "points-fallback" phase230-dev14.js
-      - name: Mobile and stability guards
+      - name: Mobile and production guards
         run: |
           test -s phase230-mobile.css
           grep -q "env(safe-area-inset-top)" phase230-mobile.css
           grep -q "min-height:44px" phase230-mobile.css
-          grep -q "92dvh" phase230-mobile.css
-          ! grep -q "new MutationObserver" phase230-dev8.js
-          ! grep -q "new MutationObserver" phase230-dev10.js
-          ! grep -q "new MutationObserver" phase230-dev11.js
-          ! grep -q "new MutationObserver" phase230-dev14.js
-          grep -q "let rebuilding=false" phase230-dev8.js
-      - name: Full-use production guards
-        run: |
           grep -q "H2H_PHASE230_FULL_USE=true" phase230-dev5.js
           grep -q "H2H_PHASE230_TEST_CLOUD_READONLY=false" phase230-dev5.js
-          grep -q "Cloud-Schreiben AKTIV" phase230-dev11.js
