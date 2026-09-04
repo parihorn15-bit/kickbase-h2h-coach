@@ -1,5 +1,5 @@
 (()=>{
-  const VERSION='3.0.0-transfer-screenshot-import-core1';
+  const VERSION='3.0.1-transfer-screenshot-import-core2';
   function currentPage(){try{return page}catch{return null}}
   function inject(){
     if(currentPage()!=='transfers')return;
@@ -14,6 +14,10 @@
       content.prepend(card);try{data.ui=data.ui||{};data.ui.leagueManager='me'}catch{}try{bind()}catch(e){console.warn('[H2H] transfer screenshot bind failed',e)}
     }
   }
-  function afterCommit(){setTimeout(()=>{try{window.H2H_STATE_CORE?.syncAll({reason:'ai-transfer-import',render:true})||window.h2h300SyncAllDerivedState?.({reason:'ai-transfer-import',render:true})}catch(e){console.warn('Central state sync',e)}},650)}
-  document.addEventListener('click',e=>{if(e.target?.id==='aiCommit')afterCommit();setTimeout(inject,80)},true);window.addEventListener('hashchange',()=>setTimeout(inject,80));setInterval(inject,1200);setTimeout(inject,1400);console.info(`[H2H] ${VERSION} loaded`)
+  function afterCommit(){setTimeout(()=>{try{window.H2H_STATE_CORE?.syncAll({reason:'ai-transfer-import',render:true})||window.h2h300SyncAllDerivedState?.({reason:'ai-transfer-import',render:true})}catch(e){console.warn('Central state sync',e)}},250)}
+  document.addEventListener('click',e=>{if(e.target?.id==='aiCommit')afterCommit();if(e.target?.closest?.('[data-page="transfers"],a[href*="transfers"],button'))setTimeout(inject,60)},true);
+  window.addEventListener('hashchange',()=>setTimeout(inject,60));
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(inject,100),{once:true});
+  setTimeout(inject,250);
+  console.info(`[H2H] ${VERSION} loaded`)
 })();
