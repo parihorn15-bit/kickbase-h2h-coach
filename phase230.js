@@ -50,13 +50,14 @@
       'phase230-st1-anchor.js','phase230-st1-corrections.js','phase230-dev20.js','phase230-dev21.js','phase230-dev22.js',
       'phase230-dev24.js'
     ]),
-    canonicalTransfers:Object.freeze([
+    canonicalTransferData:Object.freeze([
       'phase230-transfer-anchor-core.js','phase230-transfer-al.js','phase230-transfer-cello.js',
-      'phase230-transfer-calcio.js','phase230-transfer-horn.js','phase230-dev23.js'
+      'phase230-transfer-calcio.js','phase230-transfer-horn.js'
     ]),
     validationAndState:Object.freeze([
-      'phase230-dev26.js','phase230-dev27.js','phase230-dev28.js','phase230-dev31.js','phase230-dev29.js'
-    ])
+      'phase230-dev26.js','phase230-dev27.js','phase230-dev28.js','phase230-dev31.js'
+    ]),
+    transfers:Object.freeze(['h2h-transfers.js'])
   });
   const modules=Object.values(RUNTIME_GROUPS).flat();
 
