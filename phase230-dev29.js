@@ -1,5 +1,5 @@
 (()=>{
-  const VERSION='3.0.0-horn-history-adapter3',TEAM_ID='team::horn-capital-fc',BASELINE_LAST_DATE='2026-09-02';
+  const VERSION='3.0.1-horn-history-adapter4',TEAM_ID='team::horn-capital-fc',BASELINE_LAST_DATE='2026-09-02';
   const EXPECTED_UNIQUE=72,EXPECTED_LIFECYCLES=43,EXPECTED_ACTIVE=14,EXPECTED_SOLD=29;
   const norm=v=>String(v||'').toLocaleLowerCase('de-DE').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
   const seq=e=>{const m=String(e?.event_id||'').match(/(\d+)$/);return m?Number(m[1]):0};
@@ -11,9 +11,10 @@
   function currentState(d){const rows=d?.players||[],baseline=rows.filter(p=>String(p?.buyDate||'')<=BASELINE_LAST_DATE),active=baseline.filter(p=>!p.soldDate).length,sold=baseline.filter(p=>p.soldDate).length;return{total:baseline.length,active,sold,allTotal:rows.length}}
   function removeLegacyBaselineDuplicates(d){const before=(d.players||[]).length;d.players=(d.players||[]).filter(p=>p?.h2hCanonicalHornVerified||String(p?.buyDate||'')>BASELINE_LAST_DATE);const removed=before-d.players.length;d.ui=d.ui||{};d.ui.hornLegacyBaselineCleanup={at:new Date().toISOString(),before,after:d.players.length,removed,rule:`canonical baseline through ${BASELINE_LAST_DATE}`};return removed}
   function needsRepair(d){const s=currentState(d);return s.total!==EXPECTED_LIFECYCLES||s.active!==EXPECTED_ACTIVE||s.sold!==EXPECTED_SOLD||(d.players||[]).some(p=>String(p?.buyDate||'')<=BASELINE_LAST_DATE&&!p?.h2hCanonicalHornVerified)}
-  function sync({force=false}={}){const r=report(),core=window.H2H_STATE_CORE;if(!r.complete||!core?.mergeTransferLifecycles)return false;let d;try{d=data}catch{return false}const sig=`horn72-central:${r.canonicalUniqueEvents}:${r.canonicalLifecycles}:${r.active}:${r.sold}:v3`;if(!force&&!needsRepair(d)&&d?.ui?.hornCentralHistorySignature===sig)return true;core.mergeTransferLifecycles(lifecycles(),{expected:EXPECTED_LIFECYCLES});removeLegacyBaselineDuplicates(d);d.ui=d.ui||{};d.ui.hornCentralHistorySignature=sig;try{if(typeof save==='function')save()}catch{}core.syncAll({reason:'horn-history-adapter-v3',render:true});document.getElementById('h2hHornCanonicalTransfers300')?.remove();return !needsRepair(d)}
+  function sync({force=false}={}){const r=report(),core=window.H2H_STATE_CORE;if(!r.complete||!core?.mergeTransferLifecycles)return false;let d;try{d=data}catch{return false}const sig=`horn72-central:${r.canonicalUniqueEvents}:${r.canonicalLifecycles}:${r.active}:${r.sold}:v4`;if(!force&&!needsRepair(d)&&d?.ui?.hornCentralHistorySignature===sig)return true;core.mergeTransferLifecycles(lifecycles(),{expected:EXPECTED_LIFECYCLES});removeLegacyBaselineDuplicates(d);d.ui=d.ui||{};d.ui.hornCentralHistorySignature=sig;try{if(typeof save==='function')save()}catch{}core.syncAll({reason:'horn-history-adapter-v4',render:true});document.getElementById('h2hHornCanonicalTransfers300')?.remove();return !needsRepair(d)}
   window.h2h300HornTransferCompleteness=report;window.h2h300HornLifecycles=lifecycles;window.h2h300SyncHornHistoryIntoTransfers=sync;window.h2h300SyncHornHistoryToLegacyTable=sync;
-  let tries=0,firstSuccessful=false,t=setInterval(()=>{tries++;if(window.H2H_STATE_CORE&&events().length>=EXPECTED_UNIQUE){const ok=sync({force:!firstSuccessful});firstSuccessful=true;if(ok)clearInterval(t)}if(tries>80)clearInterval(t)},250);
-  document.addEventListener('click',()=>setTimeout(()=>{document.getElementById('h2hHornCanonicalTransfers300')?.remove();try{if(needsRepair(data))sync({force:true})}catch{}},60),true);
+  let tries=0,timer=null;
+  const boot=()=>{tries++;if(window.H2H_STATE_CORE&&events().length>=EXPECTED_UNIQUE){const ok=sync({force:true});if(ok){timer=null;return}}if(tries<24)timer=setTimeout(boot,250);else timer=null};
+  setTimeout(boot,0);
   console.info(`[H2H] ${VERSION} loaded`)
 })();
