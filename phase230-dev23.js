@@ -1,5 +1,5 @@
 (() => {
-  const VERSION='3.0.6-anchor23-clean';
+  const VERSION='3.0.7-anchor23-clean';
   const norm=v=>String(v||'').toLocaleLowerCase('de-DE').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
   const model=()=>window.H2H_CANONICAL_MODEL||null;
   const teamName=id=>model()?.entities?.teams?.[id]?.name||'Liga';
@@ -24,21 +24,25 @@
         const key=`${norm(title)}|${date}`;
         if(known.has(key))continue;
         known.add(key);
-        rows.push({date,md:0,type:'canonical-base-transfer',icon:e.direction==='BUY'?'🟦':e.direction==='SELL'?'🟥':'🔄',title,text:[Number(e.price)&&typeof euro==='function'?euro(Number(e.price)):'',e.counterparty_name||'', 'Screenshot-Anker · 3.0'].filter(Boolean).join(' · '),canonicalEventId:e.event_id||null});
+        rows.push({
+          date,md:0,type:'canonical-base-transfer',
+          icon:e.direction==='BUY'?'🟦':e.direction==='SELL'?'🟥':'🔄',
+          title,
+          text:[Number(e.price)&&typeof euro==='function'?euro(Number(e.price)):'',e.counterparty_name||'','Screenshot-Anker · 3.0'].filter(Boolean).join(' · '),
+          canonicalEventId:e.event_id||null
+        });
       }
-      return rows.sort((a,b)=>{const da=a.date?new Date(a.date).getTime():0,db=b.date?new Date(b.date).getTime():0;return db-da||(+b.md||0)-(+a.md||0)});
+      return rows.sort((a,b)=>{
+        const da=a.date?new Date(a.date).getTime():0;
+        const db=b.date?new Date(b.date).getTime():0;
+        return db-da||(+b.md||0)-(+a.md||0);
+      });
     };
     leagueIntelTimeline.__phase300baseanchors=true;
     return true;
   }
-  function ensureBrand(){
-    const version=window.H2H_RELEASE?.version||window.H2H_APP_VERSION||'3.0.6';
-    const brand=document.querySelector('#sidebar .brand small');
-    if(brand&&!brand.textContent.includes(`Version ${version}`))brand.textContent=`Version ${version} · Cloud-Schreiben AKTIV · 2026/27`;
-    document.title=`Kickbase H2H Coach ${version}`;
-  }
+
   patchBaseTransfers();
-  ensureBrand();
   window.H2H_PHASE300_SCREENSHOT_ANCHORS=true;
   console.info(`[H2H] ${VERSION} loaded`);
 })();
